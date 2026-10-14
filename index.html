@@ -25051,7 +25051,7 @@ const PAGlobal = (() => {
     async function refresh() {
         dev.loading = true; dev.err = false;
         try {
-            try { await run(); } catch (e) {} // primero se envía lo pendiente, para ver también lo propio
+            try { await Promise.race([run().catch(() => {}), new Promise(r => setTimeout(r, 3000))]); } catch (e) {} // se intenta enviar lo pendiente, pero sin hacer esperar a la consola
             const d = await SaveSys.call('GET', '/api/g/dev?limit=100');
             dev.arenas = d.arenas || []; dev.species = d.species || {}; dev.saves = d.saves || []; dev.totals = d.totals || null;
         } catch (e) { dev.err = true; dev.errMsg = e && e.status ? 'ERROR ' + e.status : (e && e.message) || 'ERROR'; dev.arenas = dev.species = dev.saves = null; }
@@ -25080,7 +25080,7 @@ const PAGlobal = (() => {
         } catch (e) {}
     }
     const pend = () => q.length ? ' · ' + q.length + ' POR ENVIAR' : '';
-    const status = () => dev.loading ? 'CARGANDO DATOS GLOBALES…' : dev.arenas ? 'GLOBAL · ' + (dev.totals ? dev.totals.accounts + ' cuentas · ' + dev.totals.arenas + ' arenas' : 'todas las cuentas') + pend() + ' · g2' : (SaveSys.canGlobal ? 'SIN CONEXIÓN (' + (dev.errMsg || 'SIN RESPUESTA') + ') · SOLO DATOS DE ESTE DISPOSITIVO' + pend() + ' · g2' : 'SERVIDOR NO CONFIGURADO · SOLO DATOS LOCALES · g2');
+    const status = () => (dev.loading || (!dev.err && !dev.arenas && SaveSys.canGlobal)) ? 'CARGANDO DATOS GLOBALES…' + pend() + ' · g3' : dev.arenas ? 'GLOBAL · ' + (dev.totals ? dev.totals.accounts + ' cuentas · ' + dev.totals.arenas + ' arenas' : 'todas las cuentas') + pend() + ' · g3' : (SaveSys.canGlobal ? 'SIN CONEXIÓN (' + (dev.errMsg || 'SIN RESPUESTA') + ') · SOLO DATOS DE ESTE DISPOSITIVO' + pend() + ' · g3' : 'SERVIDOR NO CONFIGURADO · SOLO DATOS LOCALES · g3');
     function arena(r) { // el resumen y la ficha completa se serializan aquí (el plan gratis del servidor solo tiene 10 ms de CPU por petición)
         const lite = JSON.parse(JSON.stringify(r)); delete lite.ind; (lite.players || []).forEach(p => { if (p) delete p.ind; });
         const sum = JSON.stringify(lite), body = JSON.stringify(r);
@@ -25252,12 +25252,13 @@ const DV = (() => {
     let tab = 'events', view = 'list', gIdx = -1, spSort = 'gen', backFn = null, curSp = '';
 
     // ---------- navegación ----------
-    function open() { $('dev-screen').hidden = false; setTab('events'); sfx('pop'); gRefresh(); }
+    function open() { $('dev-screen').hidden = false; PAGlobal.dev.loading = true; setTab('events'); sfx('pop'); gRefresh(); }
     async function gRefresh() { // trae los datos de TODAS las cuentas y vuelve a pintar la pestaña actual
         try { PAGlobal.migrate(); } catch (e) {}
-        const was = tab; try { await PAGlobal.refresh(); } catch (e) {}
+        const was = tab; try { await PAGlobal.refresh(); } catch (e) { PAGlobal.dev.loading = false; PAGlobal.dev.errMsg = 'FALLO ' + ((e && e.message) || ''); }
         if ($('dev-screen').hidden || view !== 'list' || tab !== was) return;
-        if (tab === 'events') renderEvents(); else if (tab === 'species') renderSpecies(); else if (tab === 'saves') renderSaves();
+        try { if (tab === 'events') renderEvents(); else if (tab === 'species') renderSpecies(); else if (tab === 'saves') renderSaves(); }
+        catch (e) { PAGlobal.dev.errMsg = 'PANTALLA: ' + ((e && e.message) || '').slice(0, 60); PAGlobal.dev.arenas = null; PAGlobal.dev.err = true; const el = $('dv-' + tab); if (el) el.innerHTML = gBanner(); }
     }
     const gBanner = () => '<div class="dv-sv-sum" style="margin-bottom:8px">' + esc(PAGlobal.status()) + '</div>';
     function close() { $('dev-screen').hidden = true; sfx('close'); }

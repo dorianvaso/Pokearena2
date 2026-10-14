@@ -10402,7 +10402,7 @@
         // debilitarlo al instante.
         function updateDevEvoButton() {
             if (!devEvoPanel) return;
-            const c = DEV_TOOLS ? getDevSelected() : null;
+            const c = (DEV_TOOLS && typeof devUnlocked === 'function' && devUnlocked()) ? getDevSelected() : null; // solo si la tarjeta Dev del menú está desbloqueada
             if (!c) {
                 if (devEvoPanel.style.display !== 'none') devEvoPanel.style.display = 'none';
                 if (champDetailEl) champDetailEl.classList.remove('has-dev');
@@ -13080,7 +13080,7 @@
             return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
         }
 
-        function declareWinner(w, raidWin) {
+        function declareWinner(w, raidWin, how) {
             if (gameOver) return;
             if (window.PA_TUT && window.PA_TUT.on) return; // el tutorial no termina con ganador: acaba al capturar a Caterpie
             gameOver = true;
@@ -13089,7 +13089,7 @@
             clearWeather(true);
             if (!w.fainted) commitLife(w);
             const left = speciesLives[w.id] || 0;
-            logMessage(raidWin ? `🏆 ¡${w.name} remata a ${raidWin} y completa la RAID!` : `🏆 ¡${w.name} es el último en pie y gana el combate!`, 'evolve');
+            logMessage(raidWin ? `🏆 ¡${w.name} remata a ${raidWin} y completa la RAID!` : how === 'boss-timeout' ? `🏆 ¡El JEFE ${w.name} resiste el tiempo límite y gana el combate!` : `🏆 ¡${w.name} es el último en pie y gana el combate!`, 'evolve');
             try { GameAudio.startMusic('victory'); } catch (e) {} // música de victoria
             if (w.sound) w.sound.play().catch(() => {});
             if (!w.fainted) { spawnBurst(w.x + 35, w.y + 35, '#fbbf24'); spawnSparks(w.x + 35, w.y + 35, '#fde68a', 24); }
@@ -13550,6 +13550,7 @@
 
         function isRaid() { return arenaMode === 'raids'; }
         let bossC = null;          // JEFE actual de la arena clásica (null = no hay)
+        let bossEndAt = 0, bossClockShown = -1; // límite del jefe actual (tiempo de partida, ms) y último segundo pintado
         let bossNextAt = 0;        // no puede surgir otro jefe hasta este instante (tiempo de partida, ms)
         function raidAlpha() { return raidState ? (combatantsById[raidState.alphaId] || null) : null; }
         // ¿Son rivales? Fuera de una Raid todos lo son (arena de siempre); en Raid, solo ALFA contra equipo.
@@ -13713,6 +13714,7 @@
         const BOSS_SCALE = 3;                // tamaño del sprite
         const BOSS_STAT_MULT = 5;            // multiplicador de estadísticas (todas menos la Velocidad)
         const BOSS_GROW_MS = 2200;           // duración de la animación de crecimiento
+        const BOSS_MAX_MS = 150000;          // tiempo máximo (2:30, tiempo de partida) para derribar al jefe; si se acaba, gana el jefe automáticamente
         const BOSS_COOLDOWN_MS = 25000;      // tras caer un jefe, mínimo de tiempo de partida hasta que pueda surgir otro
         const BOSS_MIN_ALIVE_SPECIES = 3;    // no surge un jefe si quedan menos especies con vidas (sería el final de todos modos)
         let bossEmberAt = 0;
@@ -13751,7 +13753,7 @@
             banner.classList.remove('on'); void banner.offsetWidth; banner.classList.add('on');
         }
         function bossReset() {
-            bossC = null; bossNextAt = 0; bossEmberAt = 0;
+            bossC = null; bossNextAt = 0; bossEmberAt = 0; bossEndAt = 0; bossClockShown = -1;
             bossBeamStop(); bossBeamNextAt = 0;
             bossBarHide();
             const banner = document.getElementById('raid-banner'); if (banner) banner.classList.remove('boss');
@@ -13810,10 +13812,29 @@
             if (bossC !== c || c.fainted) return;
             c.wrapper.classList.remove('boss-growing'); c.wrapper.classList.add('boss-form');
             c.isEvolving = false;
+            bossEndAt = matchElapsedMs + BOSS_MAX_MS; bossClockShown = -1; // empieza la cuenta atrás de 2:30
             bossBeamNextAt = matchElapsedMs + BEAM_FIRST_MS; // primer rayo cargado
             const now = performance.now(); c.lastAttack = now; c.atkRetryAt = 0;
             try { spawnBurst(c.x + 35, c.y + 95 - c.bossH / 2, '#a855f7'); spawnSparks(c.x + 35, c.y + 95 - c.bossH / 2, '#fde047', 24); triggerCameraShake(9, 500 / gameSpeed); } catch (e) {}
             raidBarShown = -1;
+        }
+
+        // Cuenta atrás del jefe: se muestra junto a su nombre y, al llegar a 0, el jefe gana la arena.
+        function bossTimeTick() {
+            const c = bossC;
+            if (!c || !bossEndAt || gameOver || c.fainted) return;
+            const left = Math.max(0, bossEndAt - matchElapsedMs), sec = Math.ceil(left / 1000);
+            if (sec !== bossClockShown) {
+                bossClockShown = sec;
+                const t = document.getElementById('rb-name-t');
+                if (t) t.textContent = (c.shiny ? '✦ ' : '') + c.name.toUpperCase() + (c.shiny ? ' ✦' : '') + ' · ⏱ ' + fmtClock(sec * 1000);
+            }
+            if (left <= 0) bossTimeout(c);
+        }
+        function bossTimeout(c) {
+            bossEndAt = 0;
+            logMessage(`⏱ ¡Se acabó el tiempo! Nadie derribó al JEFE ${c.name} en ${fmtClock(BOSS_MAX_MS)} y gana la arena automáticamente.`, 'evolve');
+            declareWinner(c, null, 'boss-timeout');
         }
 
         // Brasas que suben alrededor del jefe (aura viva), a ritmo fijo.
@@ -13834,7 +13855,7 @@
         // El jefe cae: su especie queda eliminada (aunque le quedaran vidas) y la arena sigue; el resto vuelve a pelear entre sí.
         function bossDown(c, killer) {
             if (bossC !== c) return;
-            bossC = null; bossNextAt = matchElapsedMs + BOSS_COOLDOWN_MS;
+            bossC = null; bossNextAt = matchElapsedMs + BOSS_COOLDOWN_MS; bossEndAt = 0;
             bossBeamStop();
             bossBarHide();
             speciesLives[c.id] = 1; // loseLife (a continuación) le quita la última: queda ELIMINADA y no vuelve a aparecer
@@ -21021,7 +21042,7 @@
             updateWeather(scaledDt);
             updateDayCycle(scaledDt);
             updateDuels(scaledDt); // Duelo 1 vs 1: turnos, posiciones y efectos
-            if (bossC) { bossFxTick(timestamp); bossBeamTick(scaledDt, timestamp); } // brasas del aura del jefe + ataque cargado (rayo giratorio)
+            if (bossC) { bossTimeTick(); bossFxTick(timestamp); bossBeamTick(scaledDt, timestamp); } // brasas del aura del jefe + ataque cargado (rayo giratorio)
             snapshot.forEach(c => {
                 if (c.fainted) { if (c.punchTele) endPunchTele(c); return; }
                 updateProtect(c, scaledDt, timestamp); // Protección: duración, cooldown y pánico

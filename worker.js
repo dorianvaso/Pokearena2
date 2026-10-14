@@ -38,6 +38,9 @@ async function ingest(db, h, b) {
     if (!isObj(b) || typeof b.rid !== 'string' || b.rid.length > 64) return { error: 'registro no válido' };
     if (await db.prepare('SELECT 1 FROM g_seen WHERE rid = ?1').bind(b.rid).first()) return { ok: true, dup: true };
     const acc = h.slice(0, 8), now = Date.now(), st = [];
+    if (isObj(b.a) && typeof b.a.id === 'string' && typeof b.a.sum === 'string' && typeof b.a.body === 'string' && b.a.sum.length < 1500000 && b.a.body.length < 1500000) {
+        st.push(db.prepare('INSERT OR REPLACE INTO g_arenas (k, ts, acc, sum, body) VALUES (?1, ?2, ?3, ?4, ?5)').bind(acc + ':' + b.a.id.slice(0, 20), num(b.a.ts) || now, acc, b.a.sum, b.a.body));
+    }
     if (isObj(b.arena) && typeof b.arena.id === 'string') {
         const a = b.arena, full = JSON.stringify(a);
         const lite = JSON.parse(full); delete lite.ind; (lite.players || []).forEach(p => { if (p) delete p.ind; });

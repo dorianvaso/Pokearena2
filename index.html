@@ -25023,7 +25023,7 @@ function newUid() { const n = (SaveSys.read('pokearena.uidn', 0) | 0) + 1; SaveS
 const PAGlobal = (() => {
     const QK = 'pokearena.gq', FIELDS = ['gen', 'genManual', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
     let q = [], running = null, timer = 0, retry = 0, savesT = 0, lastSaves = '';
-    const dev = { arenas: null, species: null, saves: null, totals: null, err: false, loading: false };
+    const dev = { arenas: null, species: null, saves: null, totals: null, err: false, errMsg: '', loading: false };
     try { q = JSON.parse(localStorage.getItem(QK) || '[]'); if (!Array.isArray(q)) q = []; } catch (e) { q = []; }
     const persist = () => { try { localStorage.setItem(QK, JSON.stringify(q)); } catch (e) { while (q.length > 1) { q.shift(); try { localStorage.setItem(QK, JSON.stringify(q)); break; } catch (e2) {} } } };
     const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -25054,7 +25054,7 @@ const PAGlobal = (() => {
             try { await run(); } catch (e) {} // primero se envía lo pendiente, para ver también lo propio
             const d = await SaveSys.call('GET', '/api/g/dev?limit=100');
             dev.arenas = d.arenas || []; dev.species = d.species || {}; dev.saves = d.saves || []; dev.totals = d.totals || null;
-        } catch (e) { dev.err = true; dev.arenas = dev.species = dev.saves = null; }
+        } catch (e) { dev.err = true; dev.errMsg = e && e.status ? 'ERROR ' + e.status : (e && e.message) || 'ERROR'; dev.arenas = dev.species = dev.saves = null; }
         dev.loading = false;
     }
     async function full(i) { // la lista trae resúmenes; la ficha completa de una arena se pide al tocarla
@@ -25074,13 +25074,19 @@ const PAGlobal = (() => {
             const sp = SaveSys.read('pokearena.spstats', {}), ops = {};
             Object.keys(sp).forEach(l => { const e = sp[l] || {}, add = {}; FIELDS.forEach(k => { if (e[k] > 0) add[k] = e[k]; }); ops[l] = { sprite: e.sprite || '', add, max: { bestKos: e.bestKos | 0 } }; });
             if (Object.keys(ops).length) post({ ops });
-            (SaveSys.read('pokearena.arenalog', []) || []).slice(0, 10).forEach(a => { if (a && a.result && a.result !== 'en curso') post({ arena: a }); });
+            (SaveSys.read('pokearena.arenalog', []) || []).slice(0, 10).forEach(a => { if (a && a.result && a.result !== 'en curso') arena(a); });
             const lg = SaveSys.getLog(); if (lg.length) saves(lg);
             SaveSys.write('pokearena.gmig', 1);
         } catch (e) {}
     }
-    const status = () => dev.loading ? 'CARGANDO DATOS GLOBALES…' : dev.arenas ? 'GLOBAL · ' + (dev.totals ? dev.totals.accounts + ' cuentas · ' + dev.totals.arenas + ' arenas' : 'todas las cuentas') : (SaveSys.canGlobal ? 'SIN CONEXIÓN · SOLO DATOS DE ESTE DISPOSITIVO' : 'SERVIDOR NO CONFIGURADO · SOLO DATOS LOCALES');
-    return { dev, post, ops(o) { post({ ops: o }); }, arena(r) { post({ arena: r }); }, saves, refresh, full, clear, migrate, status, live: () => !!dev.arenas, flush };
+    const pend = () => q.length ? ' · ' + q.length + ' POR ENVIAR' : '';
+    const status = () => dev.loading ? 'CARGANDO DATOS GLOBALES…' : dev.arenas ? 'GLOBAL · ' + (dev.totals ? dev.totals.accounts + ' cuentas · ' + dev.totals.arenas + ' arenas' : 'todas las cuentas') + pend() + ' · g2' : (SaveSys.canGlobal ? 'SIN CONEXIÓN (' + (dev.errMsg || 'SIN RESPUESTA') + ') · SOLO DATOS DE ESTE DISPOSITIVO' + pend() + ' · g2' : 'SERVIDOR NO CONFIGURADO · SOLO DATOS LOCALES · g2');
+    function arena(r) { // el resumen y la ficha completa se serializan aquí (el plan gratis del servidor solo tiene 10 ms de CPU por petición)
+        const lite = JSON.parse(JSON.stringify(r)); delete lite.ind; (lite.players || []).forEach(p => { if (p) delete p.ind; });
+        const sum = JSON.stringify(lite), body = JSON.stringify(r);
+        post({ a: { id: String(r.id || ''), ts: r.ts || Date.now(), sum, body: body.length > 1400000 ? sum : body } });
+    }
+    return { dev, post, ops(o) { post({ ops: o }); }, arena, saves, refresh, full, clear, migrate, status, live: () => !!dev.arenas, flush };
 })();
 window.PAGlobal = PAGlobal;
 SaveSys.ready.then(() => setTimeout(() => { try { PAGlobal.migrate(); } catch (e) {} }, 2500));

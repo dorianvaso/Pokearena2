@@ -3374,41 +3374,81 @@
         .mmt-auto:active { transform: translateY(2px); box-shadow: none; }
         .mmt-auto:disabled { filter: grayscale(1) brightness(0.6); cursor: default; }
         .mmt-go:active { filter: brightness(0.85); }
-        /* ===== Arena multijugador ===== */
-        #mm-multi { position: absolute; inset: 0; z-index: 42; display: flex; flex-direction: column; background: #112a38; color: var(--mm-cream); animation: mmFadeIn 0.2s ease-out both; }
+        /* ===== Arena multijugador (estilo oscuro moderno, como PC y Pokédex) ===== */
+        #mm-multi { position: absolute; inset: 0; z-index: 42; display: flex; flex-direction: column; color: #f4f7f6; animation: mmFadeIn 0.2s ease-out both;
+            background: radial-gradient(80% 26% at 50% 0%, rgba(74,222,128,.2), transparent 72%), linear-gradient(180deg, #0b1412 0%, #070d0c 36%, #050809 100%); }
         #mm-multi[hidden] { display: none; }
-        .mp-body { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 6px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left)); }
-        .mp-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 10px; }
-        .mp-lbl { font-size: 0.42rem; letter-spacing: 0.08em; line-height: 1.7; color: #c7e5f6; margin-bottom: 6px; }
-        .mp-in { box-sizing: border-box; width: 100%; font-family: inherit; font-size: 0.7rem; letter-spacing: 0.1em; padding: 0.8em; color: #fff; background: rgba(0,0,0,0.45); border: 2px solid #81ccf8; border-radius: 6px; outline: none; -webkit-user-select: text; user-select: text; }
-        .mp-in:focus { border-color: #fde047; }
-        .mp-in.code { text-align: center; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.3em; }
-        .mp-row { display: flex; gap: 8px; align-items: stretch; }
-        .mp-row .mp-in { flex: 1 1 0; min-width: 0; }
-        .mp-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; font-family: inherit; font-size: 0.55rem; letter-spacing: 0.08em; color: #fff; padding: 0.9em 1em; border-radius: 6px; background: linear-gradient(180deg, #81ccf8, #2490cf); box-shadow: inset 0 0 0 1px #f7fcff, 0 3px 0 #0e4a73; -webkit-tap-highlight-color: transparent; }
-        .mp-btn:active { transform: translateY(2px); box-shadow: inset 0 0 0 1px #f7fcff; }
-        .mp-btn[disabled] { filter: grayscale(1) brightness(0.6); cursor: default; }
-        .mp-btn.gold { color: #3b2400; background: linear-gradient(180deg, #fff1a8, #facc15); box-shadow: inset 0 0 0 1px #fff7c2, 0 3px 0 #8a6a00; }
-        .mp-btn.ghost { background: rgba(0,0,0,0.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); font-size: 0.5rem; }
-        .mp-btn.danger { background: linear-gradient(180deg, #fca5a5, #dc2626); box-shadow: inset 0 0 0 1px #fee2e2, 0 3px 0 #7f1d1d; }
-        .mp-msg { font-size: 0.45rem; line-height: 1.8; text-align: center; color: #fde047; min-height: 1em; }
-        .mp-msg.err { color: #fca5a5; }
-        .mp-big { font-size: 1.4rem; letter-spacing: 0.35em; text-align: center; color: #fde047; text-shadow: 2px 2px 0 #000; padding-left: 0.35em; cursor: pointer; }
-        .mp-slots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
-        .mp-slot { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.1); border-radius: 5px; background: rgba(0,0,0,0.28); overflow: hidden; }
-        .mp-slot.on { border-color: var(--oc, #81ccf8); background: rgba(255,255,255,0.08); }
-        .mp-slot img { max-width: 92%; max-height: 92%; object-fit: contain; image-rendering: pixelated; pointer-events: none; }
-        .mp-mem { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.5rem; }
-        .mp-mem:last-child { border-bottom: 0; }
-        .mp-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--oc, #81ccf8); box-shadow: 0 0 6px var(--oc, #81ccf8); }
-        .mp-mem b { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; }
-        .mp-mem em { font-style: normal; font-size: 0.4rem; color: #fde047; }
-        .mp-mem .n { flex: 0 0 auto; color: #c7e5f6; }
-        .mp-mem .n.zero { color: #fca5a5; }
-        .mp-win { text-align: center; }
-        .mp-win img { width: 96px; height: 96px; object-fit: contain; image-rendering: pixelated; }
-        .mp-win h3 { margin: 6px 0 2px; font-size: 0.8rem; color: #fde047; font-weight: normal; text-shadow: 2px 2px 0 #000; }
-        .mp-foot { display: flex; flex-direction: column; gap: 8px; }
+        #mm-multi, #mm-multi * { font-family: 'PA Chakra S', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0; text-shadow: none; }
+        #mm-multi .mmt-head { gap: 12px; padding: calc(12px + env(safe-area-inset-top)) 14px 8px; }
+        #mm-multi .mmm-back { all: unset; box-sizing: border-box; cursor: pointer; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); clip-path: none; animation: none; -webkit-tap-highlight-color: transparent; }
+        #mm-multi .mmm-back:active { transform: scale(.95); background: rgba(255,255,255,.2); }
+        #mm-multi .mmt-title { flex: 1; font-size: 20px; font-weight: 800; color: #fff; }
+        #mm-multi .mmt-count { margin: 0; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.75); background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); }
+        #mm-multi .mmt-count:empty { display: none; }
+        .mp-body { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 8px 14px 14px; }
+        .mp-sec { padding: 14px; border-radius: 20px; background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.035)); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
+        .mp-sec h4 { margin: 0 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.55); }
+        .mp-sec h4 em { font-style: normal; color: rgba(255,255,255,.85); }
+        .mp-field { display: flex; flex-direction: column; gap: 6px; }
+        .mp-field > span { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.5); padding-left: 4px; }
+        .mp-in { box-sizing: border-box; width: 100%; font-size: 17px; font-weight: 700; padding: 14px 16px; color: #fff; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 16px; outline: none; -webkit-user-select: text; user-select: text; }
+        .mp-in::placeholder { color: rgba(255,255,255,.3); }
+        .mp-in:focus { border-color: #4ade80; background: rgba(74,222,128,.08); }
+        .mp-in.code { text-align: center; text-transform: uppercase; letter-spacing: .28em; padding-left: calc(16px + .28em); }
+        .mp-join { display: flex; gap: 10px; }
+        .mp-join .mp-in { flex: 1 1 0; min-width: 0; }
+        .mp-or { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.35); font-size: 12px; font-weight: 700; }
+        .mp-or i { flex: 1; height: 1px; background: rgba(255,255,255,.12); }
+        .mp-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; font-size: 16px; font-weight: 800; padding: 15px 22px; border-radius: 999px; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); -webkit-tap-highlight-color: transparent; transition: transform .12s; white-space: nowrap; }
+        .mp-btn:active { transform: scale(.97); }
+        .mp-btn.primary { color: #06090b; background: #fff; border-color: #fff; }
+        .mp-btn.green { color: #04120a; background: #4ade80; border-color: #4ade80; }
+        .mp-btn.danger { color: #fca5a5; background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.3); }
+        .mp-btn[disabled] { opacity: .35; cursor: default; transform: none; }
+        .mp-toast { align-self: center; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #bbf7d0; background: rgba(74,222,128,.12); border: 1px solid rgba(74,222,128,.3); text-align: center; }
+        .mp-toast.err { color: #fecaca; background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.35); }
+        .mp-code { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 14px 16px; border-radius: 20px; background: linear-gradient(160deg, rgba(74,222,128,.18), rgba(74,222,128,.05)); border: 1px solid rgba(74,222,128,.35); -webkit-tap-highlight-color: transparent; }
+        .mp-code:active { transform: scale(.98); }
+        .mp-code small { display: block; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+        .mp-code b { display: block; font-size: 30px; font-weight: 800; letter-spacing: .22em; color: #fff; line-height: 1.15; }
+        .mp-code .cp { margin-left: auto; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #04120a; background: #4ade80; }
+        .mp-state { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); }
+        .mp-state::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+        .mp-state.play::before { background: #facc15; animation: mpPulse 1s ease-in-out infinite; }
+        .mp-state.off::before { background: #f87171; }
+        @keyframes mpPulse { 50% { opacity: .25; } }
+        .mp-slots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+        .mp-slot { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); overflow: hidden; }
+        .mp-slot.on { background: color-mix(in srgb, var(--oc) 20%, transparent); border-color: color-mix(in srgb, var(--oc) 70%, transparent); }
+        .mp-slot img { max-width: 94%; max-height: 94%; object-fit: contain; image-rendering: pixelated; pointer-events: none; }
+        .mp-mem { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+        .mp-mem:last-child { border-bottom: 0; padding-bottom: 0; } .mp-mem:first-of-type { padding-top: 0; }
+        .mp-av { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; font-size: 16px; font-weight: 800; color: #0b1220; background: var(--oc); }
+        .mp-mem .nm { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .mp-mem .nm b { font-size: 16px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mp-mem .tags { display: flex; gap: 6px; }
+        .mp-mem .tags em { font-style: normal; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #ffe9a0; background: rgba(255,224,102,.14); border: 1px solid rgba(255,224,102,.4); }
+        .mp-mem .n { flex: none; min-width: 34px; text-align: center; padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 800; background: rgba(255,255,255,.09); }
+        .mp-mem .n.zero { color: #fca5a5; background: rgba(248,113,113,.12); }
+        .mp-mem .n.stat { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.7); }
+        .mp-win { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+        .mp-win img { width: 104px; height: 104px; object-fit: contain; image-rendering: pixelated; }
+        .mp-win h3 { margin: 4px 0 0; font-size: 22px; font-weight: 800; }
+        .mp-win .pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 6px 0 12px; }
+        .mp-win .pills span { padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.85); background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); }
+        .mp-win .pills span.gold { color: #ffe9a0; background: rgba(255,224,102,.14); border-color: rgba(255,224,102,.45); }
+        .mp-win .mp-mem { width: 100%; text-align: left; }
+        .mp-wait { padding: 30px 0; text-align: center; font-size: 15px; font-weight: 700; color: rgba(255,255,255,.5); }
+        .mp-foot { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); }
+        .mp-foot .row { display: flex; gap: 10px; } .mp-foot .row .mp-btn { flex: 1 1 0; }
+        #mm-multi .mmt-grid { padding: 0; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); overflow: visible; }
+        #mm-multi .mmt-cell { height: auto; min-height: 112px; gap: 6px; padding: 10px 4px; border-radius: 18px; background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+        #mm-multi .mmt-cell img { flex: none; width: 64px; height: 64px; }
+        #mm-multi .mmt-cell span { font-size: 13px; font-weight: 700; color: #fff; }
+        #mm-multi .mmt-cell.sel { border-color: #4ade80; background: rgba(74,222,128,.16); box-shadow: 0 0 0 1px #4ade80; }
+        #mm-multi .mmt-cell.sel::after { content: '✓'; top: 6px; right: 8px; font-size: 14px; font-weight: 800; color: #4ade80; text-shadow: none; }
+        #mm-multi .mmt-cell.shy::before { font-size: 14px; top: 6px; left: 8px; }
+        #mm-multi .mmt-empty { font-size: 15px; font-weight: 700; color: rgba(255,255,255,.5); padding: 50px 10px; }
         .mmt-go:active { filter: brightness(0.85); }
         .mmt-go:disabled { filter: grayscale(1) brightness(0.6); cursor: default; }
         .mmm-head {
@@ -22510,51 +22550,48 @@ function mpClaim(st) { // el equipo ganador cobra el dinero (el anfitrión ya lo
 
 function mpRender() {
     const st = mp.st;
-    let title = 'MULTIJUGADOR', count = '', body = '', foot = '';
-    const msg = mp.msg ? '<div class="mp-msg' + (mp.err ? ' err' : '') + '">' + mpEsc(mp.msg.replace(/^!/, '')) + '</div>' : '';
+    let title = 'Multijugador', count = '', body = '', foot = '';
+    const toast = mp.msg ? '<div class="mp-toast' + (mp.err ? ' err' : '') + '">' + mpEsc(mp.msg.replace(/^!/, '')) + '</div>' : '';
+    const initial = n => mpEsc(String(n || '?').trim().charAt(0).toUpperCase());
     if (mp.view === 'home') {
-        const name = mpLS.get(MP_NAME);
-        body = '<div class="mp-card"><div class="mp-lbl">TU NOMBRE EN LA SALA</div><input id="mp-name" class="mp-in" maxlength="14" autocomplete="off" placeholder="Jugador" value="' + mpEsc(name) + '"></div>' +
-            '<div class="mp-card"><div class="mp-lbl">ABRE UNA SALA NUEVA Y COMPARTE EL CÓDIGO</div>' + mpBtn('create', 'CREAR SALA', 'gold', mp.busy) + '</div>' +
-            '<div class="mp-card"><div class="mp-lbl">¿TIENES UN CÓDIGO? ENTRA EN LA SALA DE UN AMIGO</div><div class="mp-row"><input id="mp-code" class="mp-in code" maxlength="5" autocomplete="off" placeholder="CÓDIGO">' + mpBtn('join', 'UNIRME', '', mp.busy) + '</div></div>' + msg +
-            '<div class="mp-msg" style="color:#c7e5f6">Cada jugador aporta pokémon de su PC (mín. 1) hasta llenar los 30 campos. Los de un mismo jugador no se atacan entre sí.</div>';
+        body = '<label class="mp-field"><span>Tu nombre</span><input id="mp-name" class="mp-in" maxlength="14" autocomplete="off" placeholder="Jugador" value="' + mpEsc(mpLS.get(MP_NAME)) + '"></label>' +
+            mpBtn('create', 'Crear sala', 'green', mp.busy) +
+            '<div class="mp-or"><i></i>o<i></i></div>' +
+            '<div class="mp-join"><input id="mp-code" class="mp-in code" maxlength="5" autocomplete="off" placeholder="CÓDIGO">' + mpBtn('join', 'Unirme', 'primary', mp.busy) + '</div>' + toast;
     } else if (mp.view === 'pick') {
-        title = 'TUS POKÉMON';
+        title = 'Tus pokémon';
         const room = MP_MAX - (mpAll() - mpMine().length);
         count = mp.sel.size + ' / ' + room;
-        body = '<div class="mp-msg" style="color:#c7e5f6">Toca los pokémon que quieres llevar. Puedes repetir especie si la tienes en la PC varias veces.</div><div class="mmt-grid" id="mp-grid" style="padding:0"></div>';
-        foot = mpBtn('picksave', mp.sel.size ? 'CONFIRMAR (' + mp.sel.size + ')' : 'CONFIRMAR', 'gold', mp.busy || !mp.sel.size) + mpBtn('pickcancel', 'CANCELAR', 'ghost');
+        body = '<div class="mmt-grid" id="mp-grid"></div>';
+        foot = '<div class="row">' + mpBtn('pickcancel', 'Cancelar', '') + mpBtn('picksave', mp.sel.size ? 'Confirmar (' + mp.sel.size + ')' : 'Confirmar', 'green', mp.busy || !mp.sel.size) + '</div>';
     } else if (!st) {
-        body = '<div class="mp-msg">CONECTANDO CON LA SALA…</div>' + msg; foot = mpBtn('leave', 'SALIR', 'ghost');
+        body = '<div class="mp-wait">Conectando…</div>' + toast; foot = mpBtn('leave', 'Salir', '');
     } else {
-        title = 'SALA'; count = mpAll() + ' / ' + MP_MAX;
+        title = 'Sala'; count = mpAll() + ' / ' + MP_MAX;
         const host = mpIsHost(), mine = mpMine().length, ready = st.members.every(m => (st.picks[m.acc] || []).length >= 1);
-        body = '<div class="mp-card"><div class="mp-lbl">CÓDIGO DE SALA (TOCA PARA COPIAR)</div><div class="mp-big" data-act="copy">' + mpEsc(st.code) + '</div></div>';
+        const stateTxt = { lobby: 'En sala', playing: 'En juego', done: 'Finalizada', closed: 'Cerrada' }[st.status] || '';
+        body = '<div class="mp-code" data-act="copy"><div><small>Código de sala</small><b>' + mpEsc(st.code) + '</b></div><span class="cp">Copiar</span></div>' +
+            '<div class="mp-state ' + (st.status === 'playing' ? 'play' : st.status === 'closed' ? 'off' : '') + '">' + stateTxt + '</div>';
         const slots = []; st.members.forEach(m => (st.picks[m.acc] || []).forEach(p => slots.push({ p, c: mpCol(m.acc) })));
-        let grid = ''; for (let i = 0; i < MP_MAX; i++) { const s = slots[i]; grid += s ? '<div class="mp-slot on" style="--oc:' + s.c + '"><img alt="" src="' + mpEsc(s.p.sprite) + '"></div>' : '<div class="mp-slot"></div>'; }
-        body += '<div class="mp-card"><div class="mp-lbl">CAMPOS DE LA ARENA · LOS LIBRES SE RELLENAN CON SALVAJES</div><div class="mp-slots">' + grid + '</div></div>';
-        body += '<div class="mp-card"><div class="mp-lbl">JUGADORES (' + st.members.length + ')</div>' + st.members.map(m => {
+        let grid = ''; for (let i = 0; i < MP_MAX; i++) { const q = slots[i]; grid += q ? '<div class="mp-slot on" style="--oc:' + q.c + '"><img alt="" src="' + mpEsc(q.p.sprite) + '"></div>' : '<div class="mp-slot"></div>'; }
+        body += '<section class="mp-sec"><h4>Campos <em>' + slots.length + ' / ' + MP_MAX + '</em></h4><div class="mp-slots">' + grid + '</div></section>';
+        body += '<section class="mp-sec"><h4>Jugadores <em>' + st.members.length + '</em></h4>' + st.members.map(m => {
             const n = (st.picks[m.acc] || []).length;
-            return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '"><i class="mp-dot"></i><b>' + mpEsc(m.name) + '</b>' + (m.acc === st.host ? '<em>ANFITRIÓN</em>' : '') + (m.acc === st.me ? '<em>TÚ</em>' : '') + '<span class="n' + (n ? '' : ' zero') + '">' + n + (n ? ' POKÉMON' : ' · FALTA 1') + '</span></div>';
-        }).join('') + '</div>';
+            return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '"><div class="mp-av">' + initial(m.name) + '</div><div class="nm"><b>' + mpEsc(m.name) + '</b>' + ((m.acc === st.host || m.acc === st.me) ? '<div class="tags">' + (m.acc === st.host ? '<em>Anfitrión</em>' : '') + (m.acc === st.me ? '<em>Tú</em>' : '') + '</div>' : '') + '</div><span class="n' + (n ? '' : ' zero') + '">' + n + '</span></div>';
+        }).join('') + '</section>';
         if (st.status === 'done' && st.result) {
             const r = st.result, me = r.winnerAcc === st.me;
-            body += '<div class="mp-card mp-win"><div class="mp-lbl">RESULTADO DE LA ÚLTIMA ARENA</div>' + (r.sprite ? '<img alt="" src="' + mpEsc(r.sprite) + '">' : '') + '<h3>🏆 ' + mpEsc(r.winnerName || '?') + '</h3>' +
-                '<div class="mp-lbl">' + (r.pokeName ? 'CAMPEÓN: ' + mpEsc(r.pokeName) + ' · ' : '') + 'DURACIÓN ' + fmtClock((r.secs || 0) * 1000) + (me && r.money ? ' · +$' + r.money : '') + '</div>' +
-                (r.teams || []).map(t => '<div class="mp-mem" style="--oc:' + mpCol(t.acc) + '"><i class="mp-dot"></i><b>' + mpEsc(t.name) + '</b><span class="n">' + t.alive + ' EN PIE · ' + t.kos + ' KOs</span></div>').join('') + '</div>';
+            body += '<section class="mp-sec mp-win">' + (r.sprite ? '<img alt="" src="' + mpEsc(r.sprite) + '">' : '') + '<h3>🏆 ' + mpEsc(r.winnerName || '?') + '</h3>' +
+                '<div class="pills">' + (r.pokeName ? '<span>' + mpEsc(r.pokeName) + '</span>' : '') + '<span>⏱ ' + fmtClock((r.secs || 0) * 1000) + '</span>' + (me && r.money ? '<span class="gold">+$' + r.money + '</span>' : '') + '</div>' +
+                (r.teams || []).map(t => '<div class="mp-mem" style="--oc:' + mpCol(t.acc) + '"><div class="mp-av">' + initial(t.name) + '</div><div class="nm"><b>' + mpEsc(t.name) + '</b></div><span class="n stat">' + t.alive + ' en pie · ' + t.kos + ' KOs</span></div>').join('') + '</section>';
         }
-        if (st.status === 'playing') body += '<div class="mp-msg">' + (host ? 'LA ARENA SE ESTÁ SIMULANDO EN TU DISPOSITIVO. SI LA CERRASTE SIN TERMINAR, CIERRA LA SALA.' : 'EL ANFITRIÓN ESTÁ JUGANDO LA ARENA… EL RESULTADO APARECERÁ AQUÍ.') + '</div>';
-        else if (st.status === 'closed') body += '<div class="mp-msg err">LA SALA SE CERRÓ.</div>';
-        else if (st.status === 'lobby') body += '<div class="mp-msg">' + (!mine ? 'AÑADE AL MENOS 1 POKÉMON.' : host ? (ready ? '¡TODOS LISTOS! PUEDES EMPEZAR.' : 'ESPERANDO A QUE TODOS AÑADAN AL MENOS 1 POKÉMON.') : 'ESPERANDO A QUE EL ANFITRIÓN EMPIECE…') + '</div>';
-        body += msg;
+        body += toast;
+        const leave = mpBtn('leave', host ? 'Cerrar sala' : 'Salir de la sala', 'danger');
         if (st.status === 'lobby') {
-            foot = mpBtn('pick', mine ? 'CAMBIAR MIS POKÉMON (' + mine + ')' : 'AÑADIR MIS POKÉMON', mine ? '' : 'gold', mp.busy);
-            if (host) foot += mpBtn('start', '¡EMPEZAR ARENA!', 'gold', mp.busy || !ready || !mine);
-            foot += mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
+            foot = (host ? mpBtn('start', 'Empezar arena', 'green', mp.busy || !ready || !mine) : '') + '<div class="row">' + mpBtn('pick', mine ? 'Mis pokémon (' + mine + ')' : 'Añadir pokémon', mine ? '' : 'primary', mp.busy) + leave + '</div>';
         } else if (st.status === 'done') {
-            if (host) foot += mpBtn('again', 'OTRA RONDA', 'gold', mp.busy);
-            foot += mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
-        } else foot = mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
+            foot = (host ? mpBtn('again', 'Otra ronda', 'green', mp.busy) : '') + leave;
+        } else foot = leave;
     }
     mp.key = mp.view + '|' + JSON.stringify(st) + '|' + mp.msg;
     mpTitle.textContent = title; mpCount.textContent = count;
@@ -22578,12 +22615,12 @@ function mpBuildPick() {
             else if (mp.sel.size >= room) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); mp.msg = ''; GameAudio.sfx('close'); return; }
             else { mp.sel.add(bi); c.classList.add('sel'); GameAudio.sfx('pop'); }
             mpCount.textContent = mp.sel.size + ' / ' + room;
-            const sv = mpFoot.querySelector('[data-act="picksave"]'); if (sv) { sv.disabled = !mp.sel.size; sv.textContent = mp.sel.size ? 'CONFIRMAR (' + mp.sel.size + ')' : 'CONFIRMAR'; }
+            const sv = mpFoot.querySelector('[data-act="picksave"]'); if (sv) { sv.disabled = !mp.sel.size; sv.textContent = mp.sel.size ? 'Confirmar (' + mp.sel.size + ')' : 'Confirmar'; }
         });
         grid.appendChild(c);
     });
     na.forEach(c => grid.appendChild(c));
-    if (!box.length) grid.insertAdjacentHTML('afterbegin', '<div class="mmt-empty">TU PC ESTÁ VACÍA<br>CAPTURA POKÉMON EN LA ARENA<br>PARA PODER ELEGIRLOS</div>');
+    if (!box.length) grid.insertAdjacentHTML('afterbegin', '<div class="mmt-empty">Tu PC está vacía</div>');
 }
 function mpStartPick() {
     const box = capLoad(CAP_BOX_KEY, []), mine = mpMine(); mp.sel = new Set();
@@ -22597,14 +22634,14 @@ async function mpAction(act) {
     GameAudio.sfx('tick');
     if (act === 'create' || act === 'join') {
         const nm = (document.getElementById('mp-name').value || '').trim() || 'Jugador', code = ((document.getElementById('mp-code') || {}).value || '').trim().toUpperCase();
-        if (act === 'join' && code.length < 5) { mp.msg = '!Escribe el código de 5 caracteres.'; mp.err = true; mpRender(); return; }
+        if (act === 'join' && code.length < 5) { mp.msg = '!Escribe el código de 5 caracteres'; mp.err = true; mpRender(); return; }
         mpLS.set(MP_NAME, nm);
         return run(async () => {
             const r = act === 'create' ? await SaveSys.call('POST', '/api/room/create', { name: nm }) : await SaveSys.call('POST', '/api/room/join', { code, name: nm });
             mp.code = r.code; mpLS.set(MP_KEY, r.code); mp.view = 'room'; mp.st = await SaveSys.call('GET', '/api/room/state?code=' + r.code); GameAudio.sfx('confirm');
         });
     }
-    if (act === 'copy') { try { navigator.clipboard.writeText(mp.code); mp.msg = 'Código copiado.'; mp.err = false; mpRender(); } catch (e) {} return; }
+    if (act === 'copy') { try { navigator.clipboard.writeText(mp.code); mp.msg = 'Código copiado'; mp.err = false; mpRender(); } catch (e) {} return; }
     if (act === 'pick') return mpStartPick();
     if (act === 'pickcancel') { mp.view = 'room'; mpRender(); return; }
     if (act === 'picksave') {
@@ -25352,7 +25389,7 @@ capEl('dx-next').addEventListener('click', () => dxStep(1));
 </script>
 <script>
 // ===== v0.76 · DESARROLLADOR: registro de arenas + registro por especie (consola de eventos) + generador de Pokémon para la Caja =====
-const PA_VERSION = 'v0.78';
+const PA_VERSION = 'v0.80';
 // ID interno: cada individuo (generado en una arena o a mano) recibe uno que no se repite (PK-000001, PK-000002…). Va con el guardado.
 function newUid() { const n = (SaveSys.read('pokearena.uidn', 0) | 0) + 1; SaveSys.write('pokearena.uidn', n); return 'PK-' + String(n).padStart(6, '0'); }
 

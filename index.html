@@ -4875,7 +4875,7 @@
     .mm-av img { position:absolute; left:50%; bottom:0; height:112%; width:auto; transform:translateX(-50%); object-fit:contain; pointer-events:none; }
     .mm-av img[hidden], .mm-av b[hidden] { display:none; }
     .mm-av b { font-size:1.3rem; color:rgba(255,255,255,.55); }
-    .mm-mini { display:flex; align-items:center; gap:10px; padding:4px 11px; border-radius:999px; color:#fff;
+    .mm-mini { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:7px 12px; border-radius:16px; color:#fff; margin-right:2px;
         background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.03)), rgba(8,10,24,.55); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.22); }
     .mm-mini-i { display:flex; align-items:center; gap:5px; line-height:1; }
     .mm-mini-i b { font-weight:800; font-size:.78rem; font-variant-numeric:tabular-nums; text-shadow:0 1px 2px rgba(0,0,0,.6); }
@@ -5746,8 +5746,8 @@
     #oak-intro[hidden] { display:none !important; }
     #oak-intro.oak-in { opacity:1; }
     #oak-intro .oak-stage { position:relative; flex:1 1 auto; min-height:0; display:flex; align-items:flex-end; justify-content:center; padding-top:calc(14px + env(safe-area-inset-top)); margin-bottom:-18px; transition:flex-basis .5s ease; }
-    #oak-intro .oak-img { height:auto; width:auto; max-height:100%; max-width:92%; filter:drop-shadow(0 8px 10px rgba(0,30,20,.4)); transform-origin:50% 100%; position:relative; z-index:1; animation:oakIn .7s cubic-bezier(.2,.9,.3,1) both, oakBreathe 4s ease-in-out .8s infinite; transition:height .5s ease; }
-    #oak-intro .oak-box { position:relative; flex:none; margin:0 max(12px,env(safe-area-inset-left)) calc(14px + env(safe-area-inset-bottom)); padding:24px 22px 16px; min-height:122px; border-radius:24px; overflow:visible; cursor:pointer; box-sizing:border-box;
+    #oak-intro .oak-img { height:auto; width:auto; max-height:100%; max-width:92%; filter:drop-shadow(0 8px 10px rgba(0,30,20,.4)); transform-origin:50% 100%; position:relative; z-index:1; animation:oakIn .7s cubic-bezier(.2,.9,.3,1) both, oakBreathe 4s ease-in-out .8s infinite; transition:height .5s ease; will-change:transform; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+    #oak-intro .oak-box { position:relative; flex:none; margin:0 max(12px,env(safe-area-inset-left)) calc(14px + env(safe-area-inset-bottom)); padding:24px 22px 16px; min-height:150px; border-radius:24px; overflow:visible; cursor:pointer; box-sizing:border-box;
         background:linear-gradient(135deg,rgba(255,255,255,.26) 0%,rgba(255,255,255,.08) 55%,rgba(255,255,255,.14) 100%), rgba(12,24,48,.36);
         -webkit-backdrop-filter:blur(20px) saturate(1.6); backdrop-filter:blur(20px) saturate(1.6);
         border:1px solid rgba(255,255,255,.42);
@@ -5805,7 +5805,7 @@
     #oak-intro .oak-mon .oak-gs { width:68%; height:12px; margin-top:-9px; border-radius:50%; background:radial-gradient(ellipse,rgba(0,40,10,.55),transparent 70%); opacity:0; transform:scale(.3); transition:opacity .4s, transform .4s; }
     #oak-intro .oak-mon b { font-size:1rem; font-weight:800; letter-spacing:.03em; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.75); opacity:0; transition:opacity .4s .2s; }
     #oak-intro .oak-mon em { font-style:normal; font-size:.66rem; font-weight:700; color:#fff; padding:3px 9px; border-radius:999px; background:var(--c); text-shadow:0 1px 1px rgba(0,0,0,.4); white-space:nowrap; opacity:0; transition:opacity .4s .3s; box-shadow:0 2px 6px rgba(0,0,0,.3); }
-    #oak-intro .oak-mon.shown .oak-sp { animation:oakMonIn .65s cubic-bezier(.2,1.4,.4,1) forwards, oakIdle 1.7s ease-in-out calc(.65s + var(--b,0s)) infinite; }
+    #oak-intro .oak-mon.shown .oak-sp { opacity:1; transform:none; animation:oakMonIn .65s cubic-bezier(.2,1.4,.4,1) forwards, oakIdle 1.7s ease-in-out calc(.65s + var(--b,0s)) infinite; }
     #oak-intro .oak-mon.shown .oak-gs, #oak-intro .oak-mon.shown b, #oak-intro .oak-mon.shown em { opacity:1; transform:none; }
     #oak-intro .oak-mon:active .oak-sp { filter:brightness(1.15); }
     #oak-intro .oak-cards.has-sel .oak-mon:not(.sel) { opacity:0; transform:scale(.6); pointer-events:none; }
@@ -5858,9 +5858,9 @@
     #oak-intro .oak-gi b { font-size:1.55rem; font-weight:900; letter-spacing:.02em; font-variant-numeric:tabular-nums; text-shadow:0 2px 4px rgba(0,20,50,.6); line-height:1; }
     #oak-intro .oak-gi small { font-size:.62rem; font-weight:800; letter-spacing:.16em; color:rgba(255,255,255,.8); text-transform:uppercase; }
     /* Oak vuelve a entrar para la despedida */
-    #oak-intro.oak-back .oak-cards { opacity:0; pointer-events:none; transition:opacity .45s ease; }
+    #oak-intro.oak-back .oak-cards { opacity:0; pointer-events:none; transition:opacity .4s ease .3s; }
     #oak-intro.oak-back .oak-veil { opacity:0; }
-    #oak-intro.oak-pick.oak-back .oak-img { animation:oakBack .8s cubic-bezier(.2,.9,.3,1) both, oakBreathe 4s ease-in-out .9s infinite; }
+    #oak-intro.oak-pick.oak-back .oak-img { animation:oakBack .6s cubic-bezier(.2,.9,.3,1) both, oakBreathe 4s ease-in-out .7s infinite; }
     #oak-intro.oak-pick.oak-back .oak-shadow { opacity:1; animation:oakShadow 3.6s ease-in-out .9s infinite; transition:opacity .5s .3s; }
     @keyframes oakBack { from { transform:translateX(-135%) rotate(-7deg); opacity:0; } to { transform:none; opacity:1; } }
     @keyframes oakOut { to { transform:translateX(-135%) rotate(-7deg); opacity:0; } }
@@ -5929,7 +5929,7 @@
     <div class="mm-title">
       <div id="mm-title-main" class="mm-title-main"></div>
     </div>
-    <div class="mm-res" id="mm-res"><div class="mm-top"><div class="mm-avw" id="mm-avw"><svg class="mm-ring" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="mm-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><circle class="trk" cx="50" cy="50" r="46"/><circle class="bar" id="mm-lvl-bar" cx="50" cy="50" r="46" pathLength="100"/></svg><div class="mm-av" id="mm-av"><img id="mm-av-img" alt="" draggable="false" hidden><b id="mm-av-q">?</b></div><div class="mm-lvl" id="mm-lvl"><small>LVL</small><b id="mm-lvl-n">1</b></div><span class="mm-lvup" id="mm-lvup"></span></div></div><div class="mm-xp" id="mm-xp" hidden></div><div class="mm-mini"><span class="mm-mini-i"><i class="mm-res-ic mm-res-coin">₽</i><b id="mm-res-money">0</b></span><span class="mm-mini-i"><i class="mm-res-ic mm-res-ball" id="mm-res-ballic"></i><b id="mm-res-n">0</b></span></div></div>
+    <div class="mm-res" id="mm-res"><div class="mm-top"><div class="mm-mini"><span class="mm-mini-i"><i class="mm-res-ic mm-res-coin">₽</i><b id="mm-res-money">0</b></span><span class="mm-mini-i"><i class="mm-res-ic mm-res-ball" id="mm-res-ballic"></i><b id="mm-res-n">0</b></span></div><div class="mm-avw" id="mm-avw"><svg class="mm-ring" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="mm-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><circle class="trk" cx="50" cy="50" r="46"/><circle class="bar" id="mm-lvl-bar" cx="50" cy="50" r="46" pathLength="100"/></svg><div class="mm-av" id="mm-av"><img id="mm-av-img" alt="" draggable="false" hidden><b id="mm-av-q">?</b></div><div class="mm-lvl" id="mm-lvl"><small>LVL</small><b id="mm-lvl-n">1</b></div><span class="mm-lvup" id="mm-lvup"></span></div></div><div class="mm-xp" id="mm-xp" hidden></div></div>
     <div class="mm-head"><small>MENÚ PRINCIPAL</small><b id="mm-head-t"></b></div>
     <nav id="mm-tabs" class="mm-list" role="menu" aria-label="Opciones"></nav>
     <div class="mm-hint" id="mm-info"><i class="mm-q">?</i><span class="mm-hint-t" id="mm-info-t"></span></div>
@@ -23743,7 +23743,7 @@ window.PAOak = (function () {
     const spriteOf = id => { try { return baseSpriteOf(id); } catch (e) { return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/' + STARTERS.find(s => s.id === id).dex + '.gif'; } };
     function finishTyping() { clearInterval(timer); typing = false; txt.textContent = full; if (after) arrow.style.visibility = 'visible'; if (autoFn) { const f = autoFn; autoFn = null; f(); } }
     function say(text, cb) {
-        clearInterval(timer); autoFn = null; full = text; txt.textContent = ''; arrow.style.visibility = 'hidden'; yn.hidden = true; typing = true; after = cb || null;
+        clearInterval(timer); autoFn = null; full = text; txt.style.height = ''; txt.textContent = text; { const h = txt.getBoundingClientRect().height; if (h > 0) txt.style.height = h + 'px'; } txt.textContent = ''; arrow.style.visibility = 'hidden'; yn.hidden = true; typing = true; after = cb || null;
         let i = 0;
         timer = setInterval(() => { i++; txt.textContent = full.slice(0, i); if (i % 3 === 1) tick(); if (i >= full.length) finishTyping(); }, 26);
     }

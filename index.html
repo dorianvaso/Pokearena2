@@ -3374,6 +3374,42 @@
         .mmt-auto:active { transform: translateY(2px); box-shadow: none; }
         .mmt-auto:disabled { filter: grayscale(1) brightness(0.6); cursor: default; }
         .mmt-go:active { filter: brightness(0.85); }
+        /* ===== Arena multijugador ===== */
+        #mm-multi { position: absolute; inset: 0; z-index: 42; display: flex; flex-direction: column; background: #112a38; color: var(--mm-cream); animation: mmFadeIn 0.2s ease-out both; }
+        #mm-multi[hidden] { display: none; }
+        .mp-body { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 6px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left)); }
+        .mp-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.14); border-radius: 10px; padding: 10px; }
+        .mp-lbl { font-size: 0.42rem; letter-spacing: 0.08em; line-height: 1.7; color: #c7e5f6; margin-bottom: 6px; }
+        .mp-in { box-sizing: border-box; width: 100%; font-family: inherit; font-size: 0.7rem; letter-spacing: 0.1em; padding: 0.8em; color: #fff; background: rgba(0,0,0,0.45); border: 2px solid #81ccf8; border-radius: 6px; outline: none; -webkit-user-select: text; user-select: text; }
+        .mp-in:focus { border-color: #fde047; }
+        .mp-in.code { text-align: center; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.3em; }
+        .mp-row { display: flex; gap: 8px; align-items: stretch; }
+        .mp-row .mp-in { flex: 1 1 0; min-width: 0; }
+        .mp-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; font-family: inherit; font-size: 0.55rem; letter-spacing: 0.08em; color: #fff; padding: 0.9em 1em; border-radius: 6px; background: linear-gradient(180deg, #81ccf8, #2490cf); box-shadow: inset 0 0 0 1px #f7fcff, 0 3px 0 #0e4a73; -webkit-tap-highlight-color: transparent; }
+        .mp-btn:active { transform: translateY(2px); box-shadow: inset 0 0 0 1px #f7fcff; }
+        .mp-btn[disabled] { filter: grayscale(1) brightness(0.6); cursor: default; }
+        .mp-btn.gold { color: #3b2400; background: linear-gradient(180deg, #fff1a8, #facc15); box-shadow: inset 0 0 0 1px #fff7c2, 0 3px 0 #8a6a00; }
+        .mp-btn.ghost { background: rgba(0,0,0,0.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3); font-size: 0.5rem; }
+        .mp-btn.danger { background: linear-gradient(180deg, #fca5a5, #dc2626); box-shadow: inset 0 0 0 1px #fee2e2, 0 3px 0 #7f1d1d; }
+        .mp-msg { font-size: 0.45rem; line-height: 1.8; text-align: center; color: #fde047; min-height: 1em; }
+        .mp-msg.err { color: #fca5a5; }
+        .mp-big { font-size: 1.4rem; letter-spacing: 0.35em; text-align: center; color: #fde047; text-shadow: 2px 2px 0 #000; padding-left: 0.35em; cursor: pointer; }
+        .mp-slots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+        .mp-slot { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.1); border-radius: 5px; background: rgba(0,0,0,0.28); overflow: hidden; }
+        .mp-slot.on { border-color: var(--oc, #81ccf8); background: rgba(255,255,255,0.08); }
+        .mp-slot img { max-width: 92%; max-height: 92%; object-fit: contain; image-rendering: pixelated; pointer-events: none; }
+        .mp-mem { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.5rem; }
+        .mp-mem:last-child { border-bottom: 0; }
+        .mp-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--oc, #81ccf8); box-shadow: 0 0 6px var(--oc, #81ccf8); }
+        .mp-mem b { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; }
+        .mp-mem em { font-style: normal; font-size: 0.4rem; color: #fde047; }
+        .mp-mem .n { flex: 0 0 auto; color: #c7e5f6; }
+        .mp-mem .n.zero { color: #fca5a5; }
+        .mp-win { text-align: center; }
+        .mp-win img { width: 96px; height: 96px; object-fit: contain; image-rendering: pixelated; }
+        .mp-win h3 { margin: 6px 0 2px; font-size: 0.8rem; color: #fde047; font-weight: normal; text-shadow: 2px 2px 0 #000; }
+        .mp-foot { display: flex; flex-direction: column; gap: 8px; }
+        .mmt-go:active { filter: brightness(0.85); }
         .mmt-go:disabled { filter: grayscale(1) brightness(0.6); cursor: default; }
         .mmm-head {
             position: absolute; left: 0; right: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 14px;
@@ -6008,6 +6044,11 @@
       <div class="mmt-head"><button id="mmt-back" class="mmm-back" type="button">◀ VOLVER</button><div class="mmt-title">TU EQUIPO</div><div class="mmt-count" id="mmt-count">0 / 20</div></div>
       <div class="mmt-grid" id="mmt-grid"></div>
       <div class="mmt-foot"><button id="mmt-auto" class="mmt-auto" type="button">★ SELECCIÓN AUTOMÁTICA</button><button id="mmt-go" class="mmt-go" type="button" disabled>¡A LA RAID!</button></div>
+    </div>
+    <div id="mm-multi" hidden role="dialog" aria-modal="true" aria-label="Arena multijugador">
+      <div class="mmt-head"><button id="mp-back" class="mmm-back" type="button">◀ VOLVER</button><div class="mmt-title" id="mp-title">MULTIJUGADOR</div><div class="mmt-count" id="mp-count"></div></div>
+      <div class="mp-body" id="mp-body"></div>
+      <div class="mmt-foot mp-foot" id="mp-foot"></div>
     </div>
     <div id="mm-need" hidden role="dialog" aria-modal="true" aria-label="Necesitas un Tiquet de Raid">
       <div class="nd-card">
@@ -9395,6 +9436,43 @@
             if (t.ability) r.ability = t.ability;
             r.mine = true; r.gmax = !!t.gmax;
         }
+        // Arena multijugador: cada pokémon aportado por un jugador ocupa un campo (las especies repetidas usan copias, ver raidEnsureAlias) y los
+        // campos que sobran hasta ARENA_SPECIES_COUNT (30) se rellenan con salvajes de especies que nadie ha traído.
+        function multiBuildPool() {
+            arenaRoster = {}; arenaPool = [];
+            const baseOf = id => String(id).replace(/_\d+$/, ''), taken = new Set();
+            multiPlan.entries.slice(0, ARENA_SPECIES_COUNT).forEach(en => {
+                const meta = speciesMeta[en.id]; if (!meta) return;
+                arenaPool.push(meta); taken.add(baseOf(en.id));
+                const t = en.traits || {}, r = arenaRoster[en.id] = rollArenaIndividual(meta);
+                // los datos vienen de otros jugadores: solo se aceptan valores válidos
+                if (validIVs(t.iv)) r.iv = t.iv;
+                if (NATURES[t.nature]) r.nature = t.nature;
+                if (validBody(t)) { r.gender = t.gender; r.hf = t.hf; r.wf = t.wf; }
+                r.shiny = !!t.shiny;
+                if (typeof t.uid === 'string' && t.uid.length < 60) r.uid = t.uid;
+                r.learnedMove = (t.learnedMove && movesData[t.learnedMove]) ? t.learnedMove : null;
+                if (t.ability && abilitiesData[t.ability]) r.ability = t.ability;
+                r.gmax = false;
+                r.owner = en.owner; r.ownerName = en.ownerName; r.mine = en.owner === multiPlan.me;
+            });
+            const bag = joinPool.filter(m => !taken.has(m.id));
+            for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+            while (arenaPool.length < ARENA_SPECIES_COUNT && bag.length) { const m = bag.pop(); arenaPool.push(m); arenaRoster[m.id] = rollArenaIndividual(m); }
+            return arenaPool;
+        }
+        // Etapa evolutiva con la que entra cada pokémon aportado (tras resetAllEvolutions); las ramas se resuelven como en la arena clásica.
+        function multiApplyStages() {
+            multiPlan.entries.forEach(en => {
+                const t = en.traits || {}, chain = evolutionData[en.id]; if (!speciesMeta[en.id]) return;
+                t.stage = Math.max(0, Math.min(chain ? chain.length : 0, t.stage | 0));
+                if (chain) for (let i = 0; i < (t.stage || 0); i++) {
+                    const st = chain[i];
+                    if (st && st.branches) chain[i] = st.branches[(i === t.stage - 1 && t.bi != null) ? t.bi : Math.floor(Math.random() * st.branches.length)];
+                }
+                speciesEvoStage[en.id] = t.stage || 0;
+            });
+        }
         function pickArenaPool() {
             arenaRoster = {};
             if (window.PA_TUT && window.PA_TUT.on) { // tutorial de Oak: solo el inicial del jugador y un Caterpie
@@ -9404,6 +9482,7 @@
                 classicApplyPick();
                 return arenaPool;
             }
+            if (multiPlan) return multiBuildPool(); // arena multijugador: los pokémon de la sala + salvajes hasta los 30 campos
             if (isRaid() && raidTeam) { arenaPool = Object.keys(raidTeam).map(id => speciesMeta[id]).filter(Boolean); return arenaPool; } // Raid: el equipo elegido de la Caja
             const bag = joinPool.slice();
             for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
@@ -13070,6 +13149,7 @@
             if (gameOver) return;
             if (isRaid() && raidState) return; // en Raid se gana al derrotar al ALFA
             const alive = aliveSpeciesIds();
+            if (multiPlan && alive.length > 1) { const tw = multiTeamWinner(); if (tw) declareWinner(tw); return; } // multijugador: gana el jugador que se queda solo
             if (alive.length !== 1) return;
             const w = combatantsById[alive[0]];
             if (w && !w.fainted && !w.isSpawning && !w.isEvolving) declareWinner(w);
@@ -13095,6 +13175,7 @@
             if (!w.fainted) { spawnBurst(w.x + 35, w.y + 35, '#fbbf24'); spawnSparks(w.x + 35, w.y + 35, '#fde68a', 24); }
             try { classicReturnToBox(); } catch (e) {} // el pokémon propio, si evolucionó, vuelve a la Caja evolucionado
             try { aeBegin(w, raidWin, left); } catch (e) { console.error('aeBegin', e); } // calcula el resumen y entrega las recompensas
+            try { multiFinish(w); } catch (e) { console.error('multiFinish', e); } // multijugador: publica el resultado en la sala
             freezeArena(); // el combate se detiene YA: sin tiempo, ataques ni apariciones
             startVictoryCelebration(w); // el ganador va al centro, baila y cae confeti
             setTimeout(() => {
@@ -13390,14 +13471,14 @@
             const best = key => { const t = list.slice().sort((a, b) => b[key] - a[key])[0]; return t && t[key] > 0 ? t : null; };
             const front = w.currentFrontSrc || (w.imgEl ? w.imgEl.src : '');
             const myId = (!isRaid() && classicPick) ? classicPick.id : null;
-            const mineWon = !!myId && w.id === myId;
+            const mineWon = multiPlan ? w.owner === multiPlan.me : (!!myId && w.id === myId);
             // Campeón que se recibe: el ALFA derrotado en una Raid; en la arena clásica, el ganador (salvo que ya sea el del jugador)
             let champ = null;
             if (raidCapture) {
                 const a = raidCapture;
                 champ = { name: (a.shiny ? '✦ ' : '') + a.name, sprite: a.sprite, how: 'alfa', traits: { iv: a.iv, nature: a.nature, ability: a.ability, learnedMove: null, gender: a.gender, hf: a.hf, wf: a.wf, alpha: true, gmax: !!a.gmax, gmaxSprite: a.gmaxSprite || null },
                          shownName: (a.shownName || a.name) + (a.shiny ? ' ✦' : ''), shownSprite: a.shownSprite || a.sprite };
-            } else if (!mineWon) {
+            } else if (!mineWon && !multiPlan) { // en multijugador no se captura al ganador: es de otro jugador
                 // Se entrega la FORMA BASE de la línea evolutiva (si gana un Charizard, el premio es el Charmander), con sus mismos IV, naturaleza, cuerpo y brillo.
                 const ap = baseAppearance[w.id] || {};
                 const baseName = ap.name || w.name;
@@ -13412,7 +13493,9 @@
             let money = AE_MONEY_BASE + Math.round(secs / 60 * AE_MONEY_PER_MIN) + (w.arenaKOs || 0) * AE_MONEY_PER_KO;
             if (raidWin) money *= AE_RAID_MULT;
             money = Math.max(10, Math.round(money / 10) * 10);
-            const item = aeRollItem();
+            let item = aeRollItem();
+            const multiOther = !!multiPlan && w.owner !== multiPlan.me; // multijugador: solo el equipo ganador cobra (los demás lo reciben desde la sala)
+            window.__mpMoney = money; if (multiOther) { money = 0; item = null; }
             // ---- entrega ----
             let reg = null, balance = 0;
             try { if (champ) reg = registerCapture(champ.name, champ.sprite, champ.how, champ.traits); } catch (e) { console.error(e); }
@@ -13549,12 +13632,25 @@
         let raidState = null;            // null fuera de una Raid; { alphaId, name } durante ella
 
         function isRaid() { return arenaMode === 'raids'; }
+        // ARENA MULTIJUGADOR: plan de la sala en curso (null = arena normal). Cada pokémon de un jugador lleva su 'owner' y los de un mismo dueño nunca se atacan.
+        let multiPlan = null;      // { code, me, entries: [{ id, traits, owner, ownerName, sprite }] }
+        function multiHue(a) { let h = 0; for (const ch of String(a)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; }
+        // Gana el equipo de un jugador cuando todas las especies con vidas son suyas (y no queda ningún salvaje ni rival).
+        function multiTeamWinner() {
+            if (!multiPlan) return null;
+            const alive = aliveSpeciesIds(); if (!alive.length) return null;
+            const owner = arenaRoster[alive[0]] && arenaRoster[alive[0]].owner; if (!owner) return null;
+            if (!alive.every(id => arenaRoster[id] && arenaRoster[id].owner === owner)) return null;
+            const ready = alive.map(id => combatantsById[id]).filter(c => c && !c.fainted && !c.isSpawning && !c.isEvolving);
+            return ready.length ? ready.sort((a, b) => (b.arenaKOs || 0) - (a.arenaKOs || 0))[0] : null;
+        }
         let bossC = null;          // JEFE actual de la arena clásica (null = no hay)
         let bossEndAt = 0, bossClockShown = -1; // límite del jefe actual (tiempo de partida, ms) y último segundo pintado
         let bossNextAt = 0;        // no puede surgir otro jefe hasta este instante (tiempo de partida, ms)
         function raidAlpha() { return raidState ? (combatantsById[raidState.alphaId] || null) : null; }
         // ¿Son rivales? Fuera de una Raid todos lo son (arena de siempre); en Raid, solo ALFA contra equipo.
         function isHostile(a, b) {
+            if (a.owner && a.owner === b.owner) return false; // Arena multijugador: los pokémon de un mismo jugador no se atacan entre sí
             if (bossC && !isRaid()) return !!a.isBoss !== !!b.isBoss; // arena clásica con JEFE: todos contra el jefe, y el jefe contra todos
             if (!raidState || !isRaid()) return true;
             return !!a.isAlpha !== !!b.isAlpha;
@@ -14213,6 +14309,7 @@
             if (!c || c.fainted || !c.wrapper) return 'No disponible';
             if (isRaid()) return 'No disponible en Raid';
             if (c.isAlpha) return 'El ALFA no se puede capturar';
+            if (c.owner) return 'Es de un jugador'; // arena multijugador
             if (c.id === capOwnId()) return 'Es tu Pokémon';
             if (c.isSpawning || c.isEvolving || c.isUnderground || c.isAirborne || c.isPhantom || c.digPhase || c.flyPhase) return 'Ahora no se puede capturar';
             return null;
@@ -15794,6 +15891,7 @@
         function resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, burstColor, sparkColor, hitLabel) {
             if (gameOver) return; // combate terminado: ningún golpe en vuelo hace efecto
             if (defender.fainted) return false;
+            if (attacker && attacker !== defender && attacker.owner && attacker.owner === defender.owner) return false; // multijugador: fuego amigo imposible (rayo del jefe, ondas, nubes...)
             defender.noAttackedMs = 0; // le han lanzado un ataque (acierte o no): reinicia la espera de Munchlax
 
             // Si el objetivo entró en su animación de evolución después de haber sido
@@ -18518,9 +18616,16 @@
             wrapper.classList.remove('gmax-temp'); // Gigamax de un individuo anterior
             wrapper.classList.remove('boss-growing', 'boss-form'); wrapper.querySelectorAll('.boss-ember, .boss-ring').forEach(e => e.remove()); // JEFE de una vida anterior
             wrapper.classList.remove('is-mine'); wrapper.querySelectorAll('.player-mark').forEach(m => m.remove()); // marca de jugador de una vida anterior
-            if (ros && ros.mine) { // arena clásica: el pokémon elegido de la Caja lleva una marca sobre el nombre
+            if (ros && ros.mine && !ros.owner) { // arena clásica: el pokémon elegido de la Caja lleva una marca sobre el nombre
                 const hudM = wrapper.querySelector('.pokemon-hud');
                 if (hudM) { const mk = document.createElement('div'); mk.className = 'player-mark'; mk.innerHTML = '<b>TÚ</b><i></i>'; hudM.appendChild(mk); wrapper.classList.add('is-mine'); }
+            } else if (ros && ros.owner) { // multijugador: cada pokémon lleva el nombre de su jugador (color propio) y los tuyos, "TÚ"
+                const hudM = wrapper.querySelector('.pokemon-hud');
+                if (hudM) {
+                    const mk = document.createElement('div'); mk.className = 'player-mark'; const b = document.createElement('b'), hc = 'hsl(' + multiHue(ros.owner) + ' 85% 62%)';
+                    b.textContent = ros.mine ? 'TÚ' : String(ros.ownerName || '?').slice(0, 10).toUpperCase(); b.style.background = hc; b.style.color = '#0b1220'; b.style.borderColor = '#fff';
+                    const i = document.createElement('i'); i.style.borderTopColor = hc; mk.append(b, i); hudM.appendChild(mk); if (ros.mine) wrapper.classList.add('is-mine');
+                }
             }
             wrapper.classList.remove('retreating', 'fainting'); // animaciones de salida de un individuo anterior de esta especie (Retirada de Golisopod)
             const staleSleepBadge = wrapper.querySelector('.sleep-badge'); // Sueño de un individuo anterior
@@ -18577,6 +18682,7 @@
                 disguiseIntact: !!(ability && abilitiesData[ability] && abilitiesData[ability].disguise), // Disfraz: intacto al entrar; cada vida empieza con él puesto
                 koCount: 0,
                 isBoss: false,        // JEFE de la arena clásica (ver bossStart)
+                owner: (ros && ros.owner) || null, ownerName: (ros && ros.ownerName) || '', // arena multijugador: jugador al que pertenece
                 lifeKOs: 0,           // KOs encadenados en ESTA vida (se pierden al caer): racha para volverse jefe
                 lifeMs: 0,            // tiempo (ms de juego) seguido en la arena en esta vida
                 arenaMs: ros ? ros.arenaMs : 0,   // tiempo en combate ACUMULADO de la partida (ms de juego); en arena clásica continúa tras debilitarse/evolucionar
@@ -21313,7 +21419,7 @@
                     countdownTimers.push(setTimeout(show, 800));
                 }
             };
-            if (isRaid() || (window.PA_TUT && window.PA_TUT.on)) show(); else runSpeciesDraw(ov, chosen, show); // el tutorial de Oak se salta el sorteo // arena clásica: primero el sorteo de especies, luego 3-2-1-¡YA! (en Raid el equipo ya está elegido: directo a la cuenta atrás)
+            if (isRaid() || multiPlan || (window.PA_TUT && window.PA_TUT.on)) show(); else runSpeciesDraw(ov, chosen, show); // el tutorial de Oak se salta el sorteo // arena clásica: primero el sorteo de especies, luego 3-2-1-¡YA! (en Raid el equipo ya está elegido: directo a la cuenta atrás)
         }
 
         function startGameNow() {
@@ -21371,6 +21477,7 @@
             // El centro y el radio son proporcionales al tamaño real del campo; la primera posición
             // queda arriba y el resto sigue el sentido de las agujas del reloj.
             if (isRaid()) { if (raidTeam) raidApplyTeam(); else raidMaxEvolutions(); } // Raid: el equipo de la Caja entra en su forma guardada (si no, todos en su máxima evolución)
+            if (multiPlan) multiApplyStages();
             const startPool = arenaPool.slice();
             let myMeta = null; // arena clásica: el Pokémon de la Caja del jugador entra desde el principio, en su forma guardada
             if (!isRaid() && classicPick) {
@@ -21584,7 +21691,7 @@ const SaveSys = (() => {
         try {
             const h = {}; if (body !== undefined) h['Content-Type'] = 'application/json'; if (token) h.Authorization = 'Bearer ' + token;
             const r = await fetch(API + p, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body), signal: ctl.signal, keepalive: !!keepalive, cache: 'no-store' });
-            if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+            if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; try { e.msg = (await r.json()).error; } catch (x) {} throw e; }
             return await r.json();
         } finally { clearTimeout(t); }
     }
@@ -22088,6 +22195,7 @@ document.getElementById('mmm-back').addEventListener('click', closeArenaModes);
 function pickArenaMode(mode, cardId) {
     if (mainMenuEl.classList.contains('leaving')) return;
     GameAudio.sfx('confirm');
+    multiPlan = null;
     if (mode !== 'raids') { raidTeam = null; classicPick = null; } // fuera de las Raids no hay equipo fijo; en la clásica el pokémon propio se añade (opcional) durante el sorteo
     document.getElementById(cardId).classList.add('chosen'); document.getElementById('mmm-cards').classList.add('picked');
     hideMainMenu(() => { mmModeEl.hidden = true; setArenaMode(mode); startGame(); });
@@ -22337,14 +22445,221 @@ function startRaidWithTeam() {
     });
     if (!Object.keys(team).length) return;
     if (!bagUse('raidticket', 1)) { mmTeamEl.hidden = true; showNeedTicket(); return; } // el tiquet se consume al empezar
-    raidTeam = team;
+    raidTeam = team; multiPlan = null;
     GameAudio.sfx('confirm');
     hideMainMenu(() => { mmModeEl.hidden = true; mmTeamEl.hidden = true; setArenaMode('raids'); startGame(); });
 }
 document.getElementById('mmt-back').addEventListener('click', closeRaidTeam);
 mmtGo.addEventListener('click', () => { if (teamMode === 'classic') startClassicWithPick(); else startRaidWithTeam(); });
 document.getElementById('mmm-classic').addEventListener('click', () => pickArenaMode('classic', 'mmm-classic'));
-document.getElementById('mmm-raids').addEventListener('click', () => { GameAudio.sfx('tick'); showMenuPopup('Arena multijugador'); });
+document.getElementById('mmm-raids').addEventListener('click', () => { GameAudio.sfx('tick'); openMulti(); });
+
+// ===== ARENA MULTIJUGADOR =====
+// Se abre una SALA (código de 5 letras). Cada jugador que entra añade pokémon de su PC hasta llenar los 30 campos (mín. 1 por jugador).
+// El ANFITRIÓN pulsa EMPEZAR y la arena se simula en su dispositivo con los pokémon de todos (los de un mismo jugador no se atacan; los
+// campos que sobran se rellenan con salvajes). Al terminar, el resultado se publica en la sala y el equipo ganador cobra.
+const mmMultiEl = document.getElementById('mm-multi'), mpBody = document.getElementById('mp-body'), mpFoot = document.getElementById('mp-foot');
+const mpTitle = document.getElementById('mp-title'), mpCount = document.getElementById('mp-count');
+const MP_MAX = 30, MP_KEY = 'pokearena.room', MP_NAME = 'pokearena.mpname', MP_CLAIM = 'pokearena.mpclaim';
+const mp = { view: 'home', code: '', st: null, sel: new Set(), cells: [], msg: '', err: false, busy: false, timer: 0, key: '' };
+const mpLS = { get(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} } };
+const mpEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mpCol = a => 'hsl(' + multiHue(a) + ' 80% 62%)';
+const mpErr = e => (e && e.msg) || (e && e.status === 0 ? 'Necesitas conexión con el servidor para jugar en multijugador.' : 'Sin conexión con el servidor. Inténtalo de nuevo.');
+const mpAll = () => { const st = mp.st; return st ? st.members.reduce((n, m) => n + ((st.picks[m.acc] || []).length), 0) : 0; };
+const mpMine = () => (mp.st && mp.st.picks[mp.st.me]) || [];
+const mpIsHost = () => !!(mp.st && mp.st.host === mp.st.me);
+const mpBtn = (act, label, cls, dis) => '<button type="button" class="mp-btn ' + (cls || '') + '" data-act="' + act + '"' + (dis ? ' disabled' : '') + '>' + label + '</button>';
+
+function openMulti() {
+    mmMultiEl.hidden = false; mainMenuEl.hidden = false;
+    mp.msg = ''; mp.err = false; mp.busy = false;
+    const saved = mpLS.get(MP_KEY);
+    if (saved && SaveSys.canGlobal) { mp.code = saved; mp.view = 'room'; mp.st = null; mpRender(); mpPoll(true); }
+    else { mp.code = ''; mp.view = 'home'; mpRender(); }
+    clearInterval(mp.timer); mp.timer = setInterval(() => mpPoll(false), 2000);
+}
+function closeMulti() { clearInterval(mp.timer); mp.timer = 0; mmMultiEl.hidden = true; }
+function mpBack() {
+    GameAudio.sfx('close');
+    if (mp.view === 'pick') { mp.view = 'room'; mpRender(); return; }
+    closeMulti();
+}
+async function mpPoll(first) {
+    if (mmMultiEl.hidden || !mp.code || mp.busy) return;
+    try {
+        const st = await SaveSys.call('GET', '/api/room/state?code=' + encodeURIComponent(mp.code));
+        mp.st = st; if (mp.view === 'room' && !mp.msg.startsWith('!')) mp.msg = '';
+        if (st.status === 'done' && st.result) mpClaim(st);
+        if (st.status === 'closed' && mp.view !== 'pick') { mpForget(); mp.view = 'home'; mp.msg = '!La sala se cerró.'; mp.err = true; }
+    } catch (e) {
+        if (e.status === 403 || e.status === 404) { mpForget(); mp.view = 'home'; mp.msg = '!La sala ya no existe.'; mp.err = true; }
+        else if (first) { mp.msg = '!' + mpErr(e); mp.err = true; }
+    }
+    if (mp.view === 'pick') return;
+    const key = mp.view + '|' + JSON.stringify(mp.st) + '|' + mp.msg;
+    if (key !== mp.key) mpRender();
+}
+function mpForget() { mpLS.set(MP_KEY, ''); mp.code = ''; mp.st = null; }
+function mpClaim(st) { // el equipo ganador cobra el dinero (el anfitrión ya lo cobró al terminar la arena)
+    const r = st.result, id = st.code + ':' + (r.ts || 0);
+    if (!r.winnerAcc || r.winnerAcc !== st.me || st.host === st.me || mpLS.get(MP_CLAIM) === id) return;
+    mpLS.set(MP_CLAIM, id);
+    try { capMoneyAdd(r.money || 0); GameAudio.sfx('confirm'); } catch (e) {}
+}
+
+function mpRender() {
+    const st = mp.st;
+    let title = 'MULTIJUGADOR', count = '', body = '', foot = '';
+    const msg = mp.msg ? '<div class="mp-msg' + (mp.err ? ' err' : '') + '">' + mpEsc(mp.msg.replace(/^!/, '')) + '</div>' : '';
+    if (mp.view === 'home') {
+        const name = mpLS.get(MP_NAME);
+        body = '<div class="mp-card"><div class="mp-lbl">TU NOMBRE EN LA SALA</div><input id="mp-name" class="mp-in" maxlength="14" autocomplete="off" placeholder="Jugador" value="' + mpEsc(name) + '"></div>' +
+            '<div class="mp-card"><div class="mp-lbl">ABRE UNA SALA NUEVA Y COMPARTE EL CÓDIGO</div>' + mpBtn('create', 'CREAR SALA', 'gold', mp.busy) + '</div>' +
+            '<div class="mp-card"><div class="mp-lbl">¿TIENES UN CÓDIGO? ENTRA EN LA SALA DE UN AMIGO</div><div class="mp-row"><input id="mp-code" class="mp-in code" maxlength="5" autocomplete="off" placeholder="CÓDIGO">' + mpBtn('join', 'UNIRME', '', mp.busy) + '</div></div>' + msg +
+            '<div class="mp-msg" style="color:#c7e5f6">Cada jugador aporta pokémon de su PC (mín. 1) hasta llenar los 30 campos. Los de un mismo jugador no se atacan entre sí.</div>';
+    } else if (mp.view === 'pick') {
+        title = 'TUS POKÉMON';
+        const room = MP_MAX - (mpAll() - mpMine().length);
+        count = mp.sel.size + ' / ' + room;
+        body = '<div class="mp-msg" style="color:#c7e5f6">Toca los pokémon que quieres llevar. Puedes repetir especie si la tienes en la PC varias veces.</div><div class="mmt-grid" id="mp-grid" style="padding:0"></div>';
+        foot = mpBtn('picksave', mp.sel.size ? 'CONFIRMAR (' + mp.sel.size + ')' : 'CONFIRMAR', 'gold', mp.busy || !mp.sel.size) + mpBtn('pickcancel', 'CANCELAR', 'ghost');
+    } else if (!st) {
+        body = '<div class="mp-msg">CONECTANDO CON LA SALA…</div>' + msg; foot = mpBtn('leave', 'SALIR', 'ghost');
+    } else {
+        title = 'SALA'; count = mpAll() + ' / ' + MP_MAX;
+        const host = mpIsHost(), mine = mpMine().length, ready = st.members.every(m => (st.picks[m.acc] || []).length >= 1);
+        body = '<div class="mp-card"><div class="mp-lbl">CÓDIGO DE SALA (TOCA PARA COPIAR)</div><div class="mp-big" data-act="copy">' + mpEsc(st.code) + '</div></div>';
+        const slots = []; st.members.forEach(m => (st.picks[m.acc] || []).forEach(p => slots.push({ p, c: mpCol(m.acc) })));
+        let grid = ''; for (let i = 0; i < MP_MAX; i++) { const s = slots[i]; grid += s ? '<div class="mp-slot on" style="--oc:' + s.c + '"><img alt="" src="' + mpEsc(s.p.sprite) + '"></div>' : '<div class="mp-slot"></div>'; }
+        body += '<div class="mp-card"><div class="mp-lbl">CAMPOS DE LA ARENA · LOS LIBRES SE RELLENAN CON SALVAJES</div><div class="mp-slots">' + grid + '</div></div>';
+        body += '<div class="mp-card"><div class="mp-lbl">JUGADORES (' + st.members.length + ')</div>' + st.members.map(m => {
+            const n = (st.picks[m.acc] || []).length;
+            return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '"><i class="mp-dot"></i><b>' + mpEsc(m.name) + '</b>' + (m.acc === st.host ? '<em>ANFITRIÓN</em>' : '') + (m.acc === st.me ? '<em>TÚ</em>' : '') + '<span class="n' + (n ? '' : ' zero') + '">' + n + (n ? ' POKÉMON' : ' · FALTA 1') + '</span></div>';
+        }).join('') + '</div>';
+        if (st.status === 'done' && st.result) {
+            const r = st.result, me = r.winnerAcc === st.me;
+            body += '<div class="mp-card mp-win"><div class="mp-lbl">RESULTADO DE LA ÚLTIMA ARENA</div>' + (r.sprite ? '<img alt="" src="' + mpEsc(r.sprite) + '">' : '') + '<h3>🏆 ' + mpEsc(r.winnerName || '?') + '</h3>' +
+                '<div class="mp-lbl">' + (r.pokeName ? 'CAMPEÓN: ' + mpEsc(r.pokeName) + ' · ' : '') + 'DURACIÓN ' + fmtClock((r.secs || 0) * 1000) + (me && r.money ? ' · +$' + r.money : '') + '</div>' +
+                (r.teams || []).map(t => '<div class="mp-mem" style="--oc:' + mpCol(t.acc) + '"><i class="mp-dot"></i><b>' + mpEsc(t.name) + '</b><span class="n">' + t.alive + ' EN PIE · ' + t.kos + ' KOs</span></div>').join('') + '</div>';
+        }
+        if (st.status === 'playing') body += '<div class="mp-msg">' + (host ? 'LA ARENA SE ESTÁ SIMULANDO EN TU DISPOSITIVO. SI LA CERRASTE SIN TERMINAR, CIERRA LA SALA.' : 'EL ANFITRIÓN ESTÁ JUGANDO LA ARENA… EL RESULTADO APARECERÁ AQUÍ.') + '</div>';
+        else if (st.status === 'closed') body += '<div class="mp-msg err">LA SALA SE CERRÓ.</div>';
+        else if (st.status === 'lobby') body += '<div class="mp-msg">' + (!mine ? 'AÑADE AL MENOS 1 POKÉMON.' : host ? (ready ? '¡TODOS LISTOS! PUEDES EMPEZAR.' : 'ESPERANDO A QUE TODOS AÑADAN AL MENOS 1 POKÉMON.') : 'ESPERANDO A QUE EL ANFITRIÓN EMPIECE…') + '</div>';
+        body += msg;
+        if (st.status === 'lobby') {
+            foot = mpBtn('pick', mine ? 'CAMBIAR MIS POKÉMON (' + mine + ')' : 'AÑADIR MIS POKÉMON', mine ? '' : 'gold', mp.busy);
+            if (host) foot += mpBtn('start', '¡EMPEZAR ARENA!', 'gold', mp.busy || !ready || !mine);
+            foot += mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
+        } else if (st.status === 'done') {
+            if (host) foot += mpBtn('again', 'OTRA RONDA', 'gold', mp.busy);
+            foot += mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
+        } else foot = mpBtn('leave', host ? 'CERRAR SALA' : 'SALIR DE LA SALA', 'ghost');
+    }
+    mp.key = mp.view + '|' + JSON.stringify(st) + '|' + mp.msg;
+    mpTitle.textContent = title; mpCount.textContent = count;
+    mpBody.innerHTML = body; mpFoot.innerHTML = foot;
+    if (mp.view === 'pick') mpBuildPick();
+}
+
+function mpBuildPick() {
+    const grid = document.getElementById('mp-grid'), box = capLoad(CAP_BOX_KEY, []), look = raidFormLookup(), room = MP_MAX - (mpAll() - mpMine().length);
+    mp.cells = []; const na = [];
+    box.forEach((e, bi) => {
+        const f = look[capClean(e.name)];
+        const c = document.createElement('div');
+        c.className = 'mmt-cell' + (e.shiny ? ' shy' : '') + (f ? '' : ' na') + (mp.sel.has(bi) ? ' sel' : '');
+        c.innerHTML = '<img alt="" draggable="false"><span></span>';
+        c.querySelector('img').src = e.sprite; c.querySelector('span').textContent = dispName(capClean(e.name));
+        if (!f) { na.push(c); return; }
+        mp.cells[bi] = { e, f };
+        c.addEventListener('click', () => {
+            if (mp.sel.has(bi)) { mp.sel.delete(bi); c.classList.remove('sel'); GameAudio.sfx('tick'); }
+            else if (mp.sel.size >= room) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); mp.msg = ''; GameAudio.sfx('close'); return; }
+            else { mp.sel.add(bi); c.classList.add('sel'); GameAudio.sfx('pop'); }
+            mpCount.textContent = mp.sel.size + ' / ' + room;
+            const sv = mpFoot.querySelector('[data-act="picksave"]'); if (sv) { sv.disabled = !mp.sel.size; sv.textContent = mp.sel.size ? 'CONFIRMAR (' + mp.sel.size + ')' : 'CONFIRMAR'; }
+        });
+        grid.appendChild(c);
+    });
+    na.forEach(c => grid.appendChild(c));
+    if (!box.length) grid.insertAdjacentHTML('afterbegin', '<div class="mmt-empty">TU PC ESTÁ VACÍA<br>CAPTURA POKÉMON EN LA ARENA<br>PARA PODER ELEGIRLOS</div>');
+}
+function mpStartPick() {
+    const box = capLoad(CAP_BOX_KEY, []), mine = mpMine(); mp.sel = new Set();
+    mine.forEach(p => { const k = box.findIndex((e, i) => e && !mp.sel.has(i) && ((p.traits && p.traits.uid && e.uid === p.traits.uid) || (e.ts === p.ts && dispName(capClean(e.name)) === p.name))); if (k >= 0) mp.sel.add(k); });
+    mp.view = 'pick'; mp.msg = ''; mpRender(); mpBody.scrollTop = 0;
+}
+
+async function mpAction(act) {
+    if (mp.busy) return;
+    const run = async fn => { mp.busy = true; mp.msg = ''; mpRender(); try { await fn(); } catch (e) { mp.msg = '!' + mpErr(e); mp.err = true; } mp.busy = false; if (mp.view !== 'pick' || mp.msg) mpRender(); };
+    GameAudio.sfx('tick');
+    if (act === 'create' || act === 'join') {
+        const nm = (document.getElementById('mp-name').value || '').trim() || 'Jugador', code = ((document.getElementById('mp-code') || {}).value || '').trim().toUpperCase();
+        if (act === 'join' && code.length < 5) { mp.msg = '!Escribe el código de 5 caracteres.'; mp.err = true; mpRender(); return; }
+        mpLS.set(MP_NAME, nm);
+        return run(async () => {
+            const r = act === 'create' ? await SaveSys.call('POST', '/api/room/create', { name: nm }) : await SaveSys.call('POST', '/api/room/join', { code, name: nm });
+            mp.code = r.code; mpLS.set(MP_KEY, r.code); mp.view = 'room'; mp.st = await SaveSys.call('GET', '/api/room/state?code=' + r.code); GameAudio.sfx('confirm');
+        });
+    }
+    if (act === 'copy') { try { navigator.clipboard.writeText(mp.code); mp.msg = 'Código copiado.'; mp.err = false; mpRender(); } catch (e) {} return; }
+    if (act === 'pick') return mpStartPick();
+    if (act === 'pickcancel') { mp.view = 'room'; mpRender(); return; }
+    if (act === 'picksave') {
+        const picks = [...mp.sel].sort((a, b) => a - b).map(bi => mp.cells[bi]).filter(Boolean).map(({ e, f }) => ({ id: f.id, traits: raidTraitsFromEntry(f, e), sprite: e.sprite, name: dispName(capClean(e.name)), ts: e.ts || 0 }));
+        return run(async () => {
+            await SaveSys.call('POST', '/api/room/picks', { code: mp.code, picks });
+            mp.st = await SaveSys.call('GET', '/api/room/state?code=' + mp.code); mp.view = 'room'; GameAudio.sfx('confirm');
+        });
+    }
+    if (act === 'leave') {
+        return run(async () => { try { await SaveSys.call('POST', '/api/room/leave', { code: mp.code }); } catch (e) {} mpForget(); mp.view = 'home'; });
+    }
+    if (act === 'again') return run(async () => { await SaveSys.call('POST', '/api/room/reset', { code: mp.code }); mp.st = await SaveSys.call('GET', '/api/room/state?code=' + mp.code); });
+    if (act === 'start') {
+        return run(async () => {
+            await SaveSys.call('POST', '/api/room/start', { code: mp.code });
+            const st = await SaveSys.call('GET', '/api/room/state?code=' + mp.code); mp.st = st; mpLaunch(st);
+        });
+    }
+}
+mmMultiEl.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && !b.disabled) mpAction(b.dataset.act); });
+document.getElementById('mp-back').addEventListener('click', mpBack);
+mmMultiEl.addEventListener('input', e => { if (e.target.id === 'mp-code') e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+
+// El anfitrión arranca la arena: todos los pokémon de la sala (con copias para las especies repetidas) + salvajes hasta los 30 campos.
+function mpLaunch(st) {
+    const entries = [], used = {};
+    st.members.forEach(m => (st.picks[m.acc] || []).forEach(p => {
+        if (!speciesMeta[p.id]) return;
+        used[p.id] = (used[p.id] || 0) + 1;
+        entries.push({ id: raidEnsureAlias(p.id, used[p.id]), traits: p.traits || {}, owner: m.acc, ownerName: m.name, sprite: p.sprite });
+    }));
+    if (!entries.length) { mp.msg = '!No hay pokémon válidos en la sala.'; mp.err = true; mpRender(); return; }
+    multiPlan = { code: st.code, me: st.me, entries, names: Object.fromEntries(st.members.map(m => [m.acc, m.name])) };
+    classicPick = null; raidTeam = null;
+    GameAudio.sfx('confirm'); clearInterval(mp.timer); mp.timer = 0;
+    hideMainMenu(() => { mmModeEl.hidden = true; mmMultiEl.hidden = true; setArenaMode('classic'); startGame(); });
+}
+// Fin de la arena (se llama desde declareWinner): se calcula el resultado y se publica en la sala.
+function multiFinish(w) {
+    const plan = multiPlan; if (!plan) return;
+    multiPlan = null;
+    const teams = {}; plan.entries.forEach(en => { teams[en.owner] = teams[en.owner] || { acc: en.owner, name: en.ownerName, alive: 0, kos: 0 }; });
+    arenaPool.forEach(m => { const o = arenaRoster[m.id] && arenaRoster[m.id].owner; if (o && teams[o] && (speciesLives[m.id] || 0) > 0) teams[o].alive++; });
+    Object.keys(arenaTally).forEach(k => { const o = arenaRoster[k] && arenaRoster[k].owner, t = arenaTally[k]; if (o && teams[o]) teams[o].kos += t.kos || 0; });
+    const base = baseAppearance[w.id] || {};
+    const result = {
+        ts: Date.now(), winnerAcc: w.owner || '', winnerName: w.owner ? (plan.names[w.owner] || w.ownerName) : 'Salvaje',
+        pokeName: dispName(w.dexName || w.name), sprite: w.currentFrontSrc || (w.imgEl ? w.imgEl.src : '') || base.sprite || '',
+        secs: Math.floor(matchElapsedMs / 1000), money: Math.max(0, Math.round(window.__mpMoney || 0)),
+        teams: Object.values(teams).sort((a, b) => b.alive - a.alive || b.kos - a.kos)
+    };
+    mpLS.set(MP_KEY, plan.code);
+    SaveSys.call('POST', '/api/room/result', { code: plan.code, result }).catch(() => SaveSys.call('POST', '/api/room/result', { code: plan.code, result }).catch(() => {}));
+}
 
 // ===== AUDIO (menú y arena) =====
 // Todo se sintetiza con Web Audio (sin archivos externos): dos temas en bucle (menú tranquilo y
@@ -22815,6 +23130,7 @@ document.addEventListener('keydown', e => {
     if (!document.getElementById('cfg-pop').hidden) { if (e.key === 'Escape') cfgBack(); return; }
     if (!mmNeed.hidden) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { closeNeedTicket(); e.preventDefault(); } return; }
     if (!mmPopup.hidden && !mmModeEl.hidden) { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { closeMenuPopup(); e.preventDefault(); } return; }
+    if (!mmMultiEl.hidden) { if (e.key === 'Escape') { mpBack(); e.preventDefault(); } return; }
     if (!mmTeamEl.hidden) { if (e.key === 'Escape') { closeRaidTeam(); e.preventDefault(); } return; }
     if (!mmModeEl.hidden) { if (e.key === 'Escape') { closeArenaModes(); e.preventDefault(); } return; }
     if (!mmPopup.hidden) {

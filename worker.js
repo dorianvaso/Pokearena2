@@ -17,6 +17,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS g_species (line TEXT PRIMARY KEY, sprite TEXT, gen INTEGER DEFAULT 0, genManual INTEGER DEFAULT 0, arenas INTEGER DEFAULT 0, wins INTEGER DEFAULT 0, kos INTEGER DEFAULT 0, faints INTEGER DEFAULT 0, elims INTEGER DEFAULT 0, caps INTEGER DEFAULT 0, ms INTEGER DEFAULT 0, dealt INTEGER DEFAULT 0, taken INTEGER DEFAULT 0, bestKos INTEGER DEFAULT 0, raids INTEGER DEFAULT 0, raidWins INTEGER DEFAULT 0, bosses INTEGER DEFAULT 0, last INTEGER DEFAULT 0)'),
         db.prepare('CREATE TABLE IF NOT EXISTS g_saves (id TEXT PRIMARY KEY, acc TEXT NOT NULL, updated INTEGER NOT NULL, body TEXT NOT NULL)'),
         db.prepare('CREATE TABLE IF NOT EXISTS g_seen (rid TEXT PRIMARY KEY, ts INTEGER NOT NULL)'),
+        // ---- arena multijugador: salas, miembros y pokémon aportados ----
+        db.prepare('CREATE TABLE IF NOT EXISTS rooms (code TEXT PRIMARY KEY, host TEXT NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, result TEXT)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS room_members (code TEXT NOT NULL, acc TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (code, acc))'),
+        db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
     ]).catch(e => { ready = null; throw e; }));
 }
 async function readKey(db, h, k) {
@@ -27,6 +31,107 @@ async function writeKey(db, h, k, text) {
     const st = [db.prepare('DELETE FROM blobs WHERE h = ?1 AND k = ?2').bind(h, k)];
     for (let i = 0, n = 0; i < text.length || n === 0; i += CHUNK, n++) st.push(db.prepare('INSERT INTO blobs (h, k, i, part) VALUES (?1, ?2, ?3, ?4)').bind(h, k, n, text.slice(i, i + CHUNK)));
     await db.batch(st);
+}
+
+// ---- Arena multijugador ----
+const ROOM_MAX = 30, ROOM_TTL = 864e5, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const cleanName = v => (typeof v === 'string' ? v.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 14) : '') || 'Jugador';
+const cleanCode = v => (typeof v === 'string' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) : '');
+async function roomState(db, code, acc) {
+    const room = await db.prepare('SELECT code, host, status, result FROM rooms WHERE code = ?1').bind(code).first();
+    if (!room) return null;
+    const [mem, pk] = await db.batch([
+        db.prepare('SELECT acc, name FROM room_members WHERE code = ?1 ORDER BY ts').bind(code),
+        db.prepare('SELECT acc, n, data FROM room_picks WHERE code = ?1 ORDER BY acc, n').bind(code),
+    ]);
+    const picks = {}; for (const r of pk.results) (picks[r.acc] = picks[r.acc] || []).push(r.data);
+    return '{"code":"' + room.code + '","status":"' + room.status + '","host":"' + room.host + '","me":"' + acc + '","result":' + (room.result || 'null') +
+        ',"members":' + JSON.stringify(mem.results.map(m => ({ acc: m.acc, name: m.name }))) +
+        ',"picks":{' + Object.keys(picks).map(a => '"' + a + '":[' + picks[a].join(',') + ']').join(',') + '}}';
+}
+async function roomApi(db, h, route, req, url) {
+    const acc = h.slice(0, 12), now = Date.now();
+    if (Math.random() < 0.05) await db.batch([
+        db.prepare('DELETE FROM room_picks WHERE code IN (SELECT code FROM rooms WHERE ts < ?1)').bind(now - ROOM_TTL),
+        db.prepare('DELETE FROM room_members WHERE code IN (SELECT code FROM rooms WHERE ts < ?1)').bind(now - ROOM_TTL),
+        db.prepare('DELETE FROM rooms WHERE ts < ?1').bind(now - ROOM_TTL),
+    ]);
+    if (route === '/api/room/state' && req.method === 'GET') {
+        const code = cleanCode(url.searchParams.get('code'));
+        const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+        if (!mine) return reply({ error: 'no estás en esa sala' }, 403);
+        const st = await roomState(db, code, acc); return st ? reply(st) : reply({ error: 'la sala no existe' }, 404);
+    }
+    if (req.method !== 'POST') return reply({ error: 'no existe' }, 404);
+    const t = await req.text(); if (t.length > 2e6) return reply({ error: 'demasiado grande' }, 413);
+    let b; try { b = JSON.parse(t || '{}'); } catch (e) { return reply({ error: 'json no válido' }, 400); }
+    if (!isObj(b)) return reply({ error: 'petición no válida' }, 400);
+    if (route === '/api/room/create') {
+        let code = '';
+        for (let tries = 0; tries < 8; tries++) {
+            code = Array.from(crypto.getRandomValues(new Uint8Array(5)), x => CODE_CHARS[x % CODE_CHARS.length]).join('');
+            if (!(await db.prepare('SELECT 1 FROM rooms WHERE code = ?1').bind(code).first())) break; code = '';
+        }
+        if (!code) return reply({ error: 'inténtalo de nuevo' }, 500);
+        await db.batch([
+            db.prepare('INSERT INTO rooms (code, host, status, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, 'lobby', now),
+            db.prepare('INSERT INTO room_members (code, acc, name, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, cleanName(b.name), now),
+        ]);
+        return reply({ code });
+    }
+    const code = cleanCode(b.code);
+    const room = await db.prepare('SELECT host, status FROM rooms WHERE code = ?1').bind(code).first();
+    if (!room) return reply({ error: 'la sala no existe' }, 404);
+    if (route === '/api/room/join') {
+        const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+        if (!mine) {
+            if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
+            const n = await db.prepare('SELECT COUNT(*) AS n FROM room_members WHERE code = ?1').bind(code).first();
+            if (n.n >= ROOM_MAX) return reply({ error: 'sala llena' }, 409);
+            await db.prepare('INSERT OR IGNORE INTO room_members (code, acc, name, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, cleanName(b.name), now).run();
+        }
+        return reply({ ok: true, code });
+    }
+    const member = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+    if (!member) return reply({ error: 'no estás en esa sala' }, 403);
+    if (route === '/api/room/picks') {
+        if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
+        const list = Array.isArray(b.picks) ? b.picks.slice(0, ROOM_MAX) : [];
+        const others = await db.prepare('SELECT COUNT(*) AS n FROM room_picks WHERE code = ?1 AND acc != ?2').bind(code, acc).first();
+        if (others.n + list.length > ROOM_MAX) return reply({ error: 'no caben más: quedan ' + Math.max(0, ROOM_MAX - others.n) + ' huecos' }, 409);
+        const st = [db.prepare('DELETE FROM room_picks WHERE code = ?1 AND acc = ?2').bind(code, acc)];
+        let i = 0;
+        for (const p of list) {
+            if (!isObj(p) || typeof p.id !== 'string' || p.id.length > 40) continue;
+            const d = JSON.stringify(p); if (d.length > 4000) continue;
+            st.push(db.prepare('INSERT INTO room_picks (code, acc, n, data) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, i++, d));
+        }
+        st.push(db.prepare('UPDATE rooms SET ts = ?1 WHERE code = ?2').bind(now, code));
+        await db.batch(st); return reply({ ok: true });
+    }
+    if (route === '/api/room/leave') {
+        const st = [db.prepare('DELETE FROM room_picks WHERE code = ?1 AND acc = ?2').bind(code, acc), db.prepare('DELETE FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc)];
+        if (room.host === acc) st.push(db.prepare("UPDATE rooms SET status = 'closed', ts = ?1 WHERE code = ?2").bind(now, code)); // si se va el anfitrión, la sala se cierra
+        await db.batch(st); return reply({ ok: true });
+    }
+    if (room.host !== acc) return reply({ error: 'solo el anfitrión puede hacerlo' }, 403);
+    if (route === '/api/room/start') {
+        if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
+        const { results } = await db.prepare('SELECT m.acc AS acc, (SELECT COUNT(*) FROM room_picks p WHERE p.code = m.code AND p.acc = m.acc) AS n FROM room_members m WHERE m.code = ?1').bind(code).all();
+        if (results.some(r => r.n < 1)) return reply({ error: 'todos los jugadores deben añadir al menos 1 pokémon' }, 409);
+        await db.prepare("UPDATE rooms SET status = 'playing', ts = ?1 WHERE code = ?2").bind(now, code).run();
+        return reply({ ok: true });
+    }
+    if (route === '/api/room/reset') { // otra ronda: vuelve al lobby con los mismos jugadores y pokémon
+        await db.prepare("UPDATE rooms SET status = 'lobby', result = NULL, ts = ?1 WHERE code = ?2").bind(now, code).run();
+        return reply({ ok: true });
+    }
+    if (route === '/api/room/result') {
+        const r = JSON.stringify(isObj(b.result) ? b.result : {}); if (r.length > 100000) return reply({ error: 'resultado demasiado grande' }, 413);
+        await db.prepare("UPDATE rooms SET status = 'done', result = ?1, ts = ?2 WHERE code = ?3").bind(r, now, code).run();
+        return reply({ ok: true });
+    }
+    return reply({ error: 'no existe' }, 404);
 }
 
 const NUM = ['gen', 'genManual', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
@@ -90,6 +195,7 @@ export default {
                 const slots = SLOTS.filter(n => by['slot' + n]).map(n => '"' + n + '":' + by['slot' + n]).join(',');
                 return reply('{"fresh":' + (results.length ? 'false' : 'true') + ',"settings":' + (by.settings || '{}') + ',"slots":{' + slots + '}}');
             }
+            if (route.startsWith('/api/room/')) return await roomApi(db, h, route, req, url);
             // ---- consola de desarrollador GLOBAL ----
             if (route === '/api/g/record' && req.method === 'POST') {
                 const t = await req.text(); if (t.length > 3e6) return reply({ error: 'demasiado grande' }, 413);

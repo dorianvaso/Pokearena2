@@ -1,0 +1,8 @@
+node_modules
+package.json
+package-lock.json
+bun.lock
+bun.lockb
+worker.js
+wrangler.jsonc
+.assetsignore

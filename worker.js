@@ -19,9 +19,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS g_seen (rid TEXT PRIMARY KEY, ts INTEGER NOT NULL)'),
         // ---- arena multijugador: salas, miembros y pokémon aportados ----
         db.prepare('CREATE TABLE IF NOT EXISTS rooms (code TEXT PRIMARY KEY, host TEXT NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, result TEXT)'),
-        db.prepare('CREATE TABLE IF NOT EXISTS room_members (code TEXT NOT NULL, acc TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (code, acc))'),
+        db.prepare('CREATE TABLE IF NOT EXISTS room_members (code TEXT NOT NULL, acc TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, avatar TEXT, PRIMARY KEY (code, acc))'),
         db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
-    ]).catch(e => { ready = null; throw e; }));
+    ]).then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
+      .catch(e => { ready = null; throw e; }));
 }
 async function readKey(db, h, k) {
     const { results } = await db.prepare('SELECT part FROM blobs WHERE h = ?1 AND k = ?2 ORDER BY i').bind(h, k).all();
@@ -36,17 +37,18 @@ async function writeKey(db, h, k, text) {
 // ---- Arena multijugador ----
 const ROOM_MAX = 30, ROOM_TTL = 864e5, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const cleanName = v => (typeof v === 'string' ? v.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 14) : '') || 'Jugador';
+const cleanAvatar = v => (typeof v === 'string' && /^[a-z0-9_-]{1,20}$/i.test(v)) ? v : '';
 const cleanCode = v => (typeof v === 'string' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) : '');
 async function roomState(db, code, acc) {
     const room = await db.prepare('SELECT code, host, status, result FROM rooms WHERE code = ?1').bind(code).first();
     if (!room) return null;
     const [mem, pk] = await db.batch([
-        db.prepare('SELECT acc, name FROM room_members WHERE code = ?1 ORDER BY ts').bind(code),
+        db.prepare('SELECT acc, name, avatar FROM room_members WHERE code = ?1 ORDER BY ts').bind(code),
         db.prepare('SELECT acc, n, data FROM room_picks WHERE code = ?1 ORDER BY acc, n').bind(code),
     ]);
     const picks = {}; for (const r of pk.results) (picks[r.acc] = picks[r.acc] || []).push(r.data);
     return '{"code":"' + room.code + '","status":"' + room.status + '","host":"' + room.host + '","me":"' + acc + '","result":' + (room.result || 'null') +
-        ',"members":' + JSON.stringify(mem.results.map(m => ({ acc: m.acc, name: m.name }))) +
+        ',"members":' + JSON.stringify(mem.results.map(m => ({ acc: m.acc, name: m.name, avatar: m.avatar || '' }))) +
         ',"picks":{' + Object.keys(picks).map(a => '"' + a + '":[' + picks[a].join(',') + ']').join(',') + '}}';
 }
 async function roomApi(db, h, route, req, url) {
@@ -75,7 +77,7 @@ async function roomApi(db, h, route, req, url) {
         if (!code) return reply({ error: 'inténtalo de nuevo' }, 500);
         await db.batch([
             db.prepare('INSERT INTO rooms (code, host, status, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, 'lobby', now),
-            db.prepare('INSERT INTO room_members (code, acc, name, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, cleanName(b.name), now),
+            db.prepare('INSERT INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, acc, cleanName(b.name), now, cleanAvatar(b.avatar)),
         ]);
         return reply({ code });
     }
@@ -84,11 +86,12 @@ async function roomApi(db, h, route, req, url) {
     if (!room) return reply({ error: 'la sala no existe' }, 404);
     if (route === '/api/room/join') {
         const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+        if (mine) await db.prepare('UPDATE room_members SET name = ?1, avatar = ?2 WHERE code = ?3 AND acc = ?4').bind(cleanName(b.name), cleanAvatar(b.avatar), code, acc).run(); // el perfil pudo cambiar
         if (!mine) {
             if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
             const n = await db.prepare('SELECT COUNT(*) AS n FROM room_members WHERE code = ?1').bind(code).first();
             if (n.n >= ROOM_MAX) return reply({ error: 'sala llena' }, 409);
-            await db.prepare('INSERT OR IGNORE INTO room_members (code, acc, name, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, cleanName(b.name), now).run();
+            await db.prepare('INSERT OR IGNORE INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, acc, cleanName(b.name), now, cleanAvatar(b.avatar)).run();
         }
         return reply({ ok: true, code });
     }

@@ -3423,7 +3423,12 @@
         .mp-slot img { max-width: 94%; max-height: 94%; object-fit: contain; image-rendering: pixelated; pointer-events: none; }
         .mp-mem { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
         .mp-mem:last-child { border-bottom: 0; padding-bottom: 0; } .mp-mem:first-of-type { padding-top: 0; }
-        .mp-av { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; font-size: 16px; font-weight: 800; color: #0b1220; background: var(--oc); }
+        .mp-av { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; overflow: hidden; font-size: 17px; font-weight: 800; color: #0b1220; background: var(--oc); box-shadow: 0 0 0 2px var(--oc), 0 0 0 4px rgba(0,0,0,.4); }
+        .mp-av img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+        .mp-av.big { width: 64px; height: 64px; --oc: #4ade80; }
+        .mp-me { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 20px; background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.035)); border: 1px solid rgba(255,255,255,.1); }
+        .mp-me small { display: block; font-size: 12px; font-weight: 700; color: rgba(255,255,255,.5); }
+        .mp-me b { display: block; font-size: 22px; font-weight: 800; }
         .mp-mem .nm { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
         .mp-mem .nm b { font-size: 16px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .mp-mem .tags { display: flex; gap: 6px; }
@@ -22506,6 +22511,10 @@ const mpLS = { get(k) { try { return localStorage.getItem(k) || ''; } catch (e) 
 const mpEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const mpCol = a => 'hsl(' + multiHue(a) + ' 80% 62%)';
 const mpErr = e => (e && e.msg) || (e && e.status === 0 ? 'Necesitas conexión con el servidor para jugar en multijugador.' : 'Sin conexión con el servidor. Inténtalo de nuevo.');
+// Perfil de la cuenta: nombre y avatar elegidos al empezar (pokearena.trainer). El avatar viaja solo como clave (girl, boy...): cada dispositivo lo dibuja.
+const mpProfile = () => { let t = null; try { t = SaveSys.read('pokearena.trainer', null); } catch (e) {} return { name: ((t && t.name) || '').trim(), avatar: (t && t.avatar) || '' }; };
+const mpAvSrc = k => { try { return k ? PAOak.avatarSrc(k) : ''; } catch (e) { return ''; } };
+const mpAv = (name, key, cls) => { const src = mpAvSrc(key); return '<div class="mp-av ' + (cls || '') + '">' + (src ? '<img alt="" src="' + src + '">' : mpEsc(String(name || '?').trim().charAt(0).toUpperCase())) + '</div>'; };
 const mpAll = () => { const st = mp.st; return st ? st.members.reduce((n, m) => n + ((st.picks[m.acc] || []).length), 0) : 0; };
 const mpMine = () => (mp.st && mp.st.picks[mp.st.me]) || [];
 const mpIsHost = () => !!(mp.st && mp.st.host === mp.st.me);
@@ -22515,7 +22524,7 @@ function openMulti() {
     mmMultiEl.hidden = false; mainMenuEl.hidden = false;
     mp.msg = ''; mp.err = false; mp.busy = false;
     const saved = mpLS.get(MP_KEY);
-    if (saved && SaveSys.canGlobal) { mp.code = saved; mp.view = 'room'; mp.st = null; mpRender(); mpPoll(true); }
+    if (saved && SaveSys.canGlobal) { { const pf = mpProfile(); if (pf.name) SaveSys.call('POST', '/api/room/join', { code: saved, name: pf.name, avatar: pf.avatar }).catch(() => {}); } mp.code = saved; mp.view = 'room'; mp.st = null; mpRender(); mpPoll(true); }
     else { mp.code = ''; mp.view = 'home'; mpRender(); }
     clearInterval(mp.timer); mp.timer = setInterval(() => mpPoll(false), 2000);
 }
@@ -22552,9 +22561,10 @@ function mpRender() {
     const st = mp.st;
     let title = 'Multijugador', count = '', body = '', foot = '';
     const toast = mp.msg ? '<div class="mp-toast' + (mp.err ? ' err' : '') + '">' + mpEsc(mp.msg.replace(/^!/, '')) + '</div>' : '';
-    const initial = n => mpEsc(String(n || '?').trim().charAt(0).toUpperCase());
     if (mp.view === 'home') {
-        body = '<label class="mp-field"><span>Tu nombre</span><input id="mp-name" class="mp-in" maxlength="14" autocomplete="off" placeholder="Jugador" value="' + mpEsc(mpLS.get(MP_NAME)) + '"></label>' +
+        const pf = mpProfile();
+        body = (pf.name ? '<div class="mp-me">' + mpAv(pf.name, pf.avatar, 'big') + '<div><small>Jugarás como</small><b>' + mpEsc(pf.name) + '</b></div></div>'
+            : '<label class="mp-field"><span>Tu nombre</span><input id="mp-name" class="mp-in" maxlength="14" autocomplete="off" placeholder="Jugador" value="' + mpEsc(mpLS.get(MP_NAME)) + '"></label>') +
             mpBtn('create', 'Crear sala', 'green', mp.busy) +
             '<div class="mp-or"><i></i>o<i></i></div>' +
             '<div class="mp-join"><input id="mp-code" class="mp-in code" maxlength="5" autocomplete="off" placeholder="CÓDIGO">' + mpBtn('join', 'Unirme', 'primary', mp.busy) + '</div>' + toast;
@@ -22577,13 +22587,13 @@ function mpRender() {
         body += '<section class="mp-sec"><h4>Campos <em>' + slots.length + ' / ' + MP_MAX + '</em></h4><div class="mp-slots">' + grid + '</div></section>';
         body += '<section class="mp-sec"><h4>Jugadores <em>' + st.members.length + '</em></h4>' + st.members.map(m => {
             const n = (st.picks[m.acc] || []).length;
-            return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '"><div class="mp-av">' + initial(m.name) + '</div><div class="nm"><b>' + mpEsc(m.name) + '</b>' + ((m.acc === st.host || m.acc === st.me) ? '<div class="tags">' + (m.acc === st.host ? '<em>Anfitrión</em>' : '') + (m.acc === st.me ? '<em>Tú</em>' : '') + '</div>' : '') + '</div><span class="n' + (n ? '' : ' zero') + '">' + n + '</span></div>';
+            return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '">' + mpAv(m.name, m.avatar) + '<div class="nm"><b>' + mpEsc(m.name) + '</b>' + ((m.acc === st.host || m.acc === st.me) ? '<div class="tags">' + (m.acc === st.host ? '<em>Anfitrión</em>' : '') + (m.acc === st.me ? '<em>Tú</em>' : '') + '</div>' : '') + '</div><span class="n' + (n ? '' : ' zero') + '">' + n + '</span></div>';
         }).join('') + '</section>';
         if (st.status === 'done' && st.result) {
             const r = st.result, me = r.winnerAcc === st.me;
             body += '<section class="mp-sec mp-win">' + (r.sprite ? '<img alt="" src="' + mpEsc(r.sprite) + '">' : '') + '<h3>🏆 ' + mpEsc(r.winnerName || '?') + '</h3>' +
                 '<div class="pills">' + (r.pokeName ? '<span>' + mpEsc(r.pokeName) + '</span>' : '') + '<span>⏱ ' + fmtClock((r.secs || 0) * 1000) + '</span>' + (me && r.money ? '<span class="gold">+$' + r.money + '</span>' : '') + '</div>' +
-                (r.teams || []).map(t => '<div class="mp-mem" style="--oc:' + mpCol(t.acc) + '"><div class="mp-av">' + initial(t.name) + '</div><div class="nm"><b>' + mpEsc(t.name) + '</b></div><span class="n stat">' + t.alive + ' en pie · ' + t.kos + ' KOs</span></div>').join('') + '</section>';
+                (r.teams || []).map(t => '<div class="mp-mem" style="--oc:' + mpCol(t.acc) + '">' + mpAv(t.name, t.avatar) + '<div class="nm"><b>' + mpEsc(t.name) + '</b></div><span class="n stat">' + t.alive + ' en pie · ' + t.kos + ' KOs</span></div>').join('') + '</section>';
         }
         body += toast;
         const leave = mpBtn('leave', host ? 'Cerrar sala' : 'Salir de la sala', 'danger');
@@ -22633,11 +22643,11 @@ async function mpAction(act) {
     const run = async fn => { mp.busy = true; mp.msg = ''; mpRender(); try { await fn(); } catch (e) { mp.msg = '!' + mpErr(e); mp.err = true; } mp.busy = false; if (mp.view !== 'pick' || mp.msg) mpRender(); };
     GameAudio.sfx('tick');
     if (act === 'create' || act === 'join') {
-        const nm = (document.getElementById('mp-name').value || '').trim() || 'Jugador', code = ((document.getElementById('mp-code') || {}).value || '').trim().toUpperCase();
+        const pf = mpProfile(), nmEl = document.getElementById('mp-name'), nm = pf.name || (nmEl && nmEl.value || '').trim() || 'Jugador', code = ((document.getElementById('mp-code') || {}).value || '').trim().toUpperCase();
         if (act === 'join' && code.length < 5) { mp.msg = '!Escribe el código de 5 caracteres'; mp.err = true; mpRender(); return; }
-        mpLS.set(MP_NAME, nm);
+        mpLS.set(MP_NAME, nm); const av = pf.avatar;
         return run(async () => {
-            const r = act === 'create' ? await SaveSys.call('POST', '/api/room/create', { name: nm }) : await SaveSys.call('POST', '/api/room/join', { code, name: nm });
+            const r = act === 'create' ? await SaveSys.call('POST', '/api/room/create', { name: nm, avatar: av }) : await SaveSys.call('POST', '/api/room/join', { code, name: nm, avatar: av });
             mp.code = r.code; mpLS.set(MP_KEY, r.code); mp.view = 'room'; mp.st = await SaveSys.call('GET', '/api/room/state?code=' + r.code); GameAudio.sfx('confirm');
         });
     }
@@ -22675,7 +22685,7 @@ function mpLaunch(st) {
         entries.push({ id: raidEnsureAlias(p.id, used[p.id]), traits: p.traits || {}, owner: m.acc, ownerName: m.name, sprite: p.sprite });
     }));
     if (!entries.length) { mp.msg = '!No hay pokémon válidos en la sala.'; mp.err = true; mpRender(); return; }
-    multiPlan = { code: st.code, me: st.me, entries, names: Object.fromEntries(st.members.map(m => [m.acc, m.name])) };
+    multiPlan = { code: st.code, me: st.me, entries, names: Object.fromEntries(st.members.map(m => [m.acc, m.name])), avatars: Object.fromEntries(st.members.map(m => [m.acc, m.avatar || ''])) };
     classicPick = null; raidTeam = null;
     GameAudio.sfx('confirm'); clearInterval(mp.timer); mp.timer = 0;
     hideMainMenu(() => { mmModeEl.hidden = true; mmMultiEl.hidden = true; setArenaMode('classic'); startGame(); });
@@ -22684,7 +22694,7 @@ function mpLaunch(st) {
 function multiFinish(w) {
     const plan = multiPlan; if (!plan) return;
     multiPlan = null;
-    const teams = {}; plan.entries.forEach(en => { teams[en.owner] = teams[en.owner] || { acc: en.owner, name: en.ownerName, alive: 0, kos: 0 }; });
+    const teams = {}; plan.entries.forEach(en => { teams[en.owner] = teams[en.owner] || { acc: en.owner, name: en.ownerName, avatar: (plan.avatars || {})[en.owner] || '', alive: 0, kos: 0 }; });
     arenaPool.forEach(m => { const o = arenaRoster[m.id] && arenaRoster[m.id].owner; if (o && teams[o] && (speciesLives[m.id] || 0) > 0) teams[o].alive++; });
     Object.keys(arenaTally).forEach(k => { const o = arenaRoster[k] && arenaRoster[k].owner, t = arenaTally[k]; if (o && teams[o]) teams[o].kos += t.kos || 0; });
     const base = baseAppearance[w.id] || {};
@@ -25389,7 +25399,7 @@ capEl('dx-next').addEventListener('click', () => dxStep(1));
 </script>
 <script>
 // ===== v0.76 · DESARROLLADOR: registro de arenas + registro por especie (consola de eventos) + generador de Pokémon para la Caja =====
-const PA_VERSION = 'v0.80';
+const PA_VERSION = 'v0.81';
 // ID interno: cada individuo (generado en una arena o a mano) recibe uno que no se repite (PK-000001, PK-000002…). Va con el guardado.
 function newUid() { const n = (SaveSys.read('pokearena.uidn', 0) | 0) + 1; SaveSys.write('pokearena.uidn', n); return 'PK-' + String(n).padStart(6, '0'); }
 

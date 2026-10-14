@@ -12949,6 +12949,7 @@
             battleLogEl.scrollTop = battleLogEl.scrollHeight;
         }
         function logMessage(text, type = 'info') {
+            if (multiPlan) { try { mpHostLog(text, type); } catch (e) {} } // multijugador: el registro también llega a los espectadores
             const entry = document.createElement('div');
             entry.className = 'log-entry log-' + type;
             entry.textContent = text;
@@ -21589,6 +21590,7 @@
 
         function exitGame() {
             if (!gameRunning) return;
+            try { mpHostAbort(); } catch (e) {} // multijugador: si el anfitrión abandona, la sala vuelve al lobby
             try { if (window.PA_TUT && window.PA_TUT.on && window.PA_TUT.cleanup) window.PA_TUT.cleanup(); } catch (e) {} // sale del tutorial de Oak (si estaba activo)
             try { ArenaLog.end(null, 'abandonada'); } catch (e) {} // consola de eventos: arena cancelada (si ya terminó, no hace nada)
             try { classicReturnToBox(); } catch (e) {} // si el pokémon propio evolucionó, vuelve a la Caja evolucionado
@@ -22500,12 +22502,12 @@ document.getElementById('mmm-classic').addEventListener('click', () => pickArena
 document.getElementById('mmm-raids').addEventListener('click', () => { GameAudio.sfx('tick'); openMulti(); });
 
 // ===== ARENA MULTIJUGADOR =====
-// Se abre una SALA (código de 5 letras). Cada jugador que entra añade pokémon de su PC hasta llenar los 30 campos (mín. 1 por jugador).
+// Se abre una SALA (código de 5 letras) para un máximo de 3 JUGADORES. Cada jugador que entra añade pokémon de su PC hasta llenar los 30 campos (mín. 1 por jugador).
 // El ANFITRIÓN pulsa EMPEZAR y la arena se simula en su dispositivo con los pokémon de todos (los de un mismo jugador no se atacan; los
 // campos que sobran se rellenan con salvajes). Al terminar, el resultado se publica en la sala y el equipo ganador cobra.
 const mmMultiEl = document.getElementById('mm-multi'), mpBody = document.getElementById('mp-body'), mpFoot = document.getElementById('mp-foot');
 const mpTitle = document.getElementById('mp-title'), mpCount = document.getElementById('mp-count');
-const MP_MAX = 30, MP_KEY = 'pokearena.room', MP_NAME = 'pokearena.mpname', MP_CLAIM = 'pokearena.mpclaim';
+const MP_MAX = 30, MP_PLAYERS = 3, MP_KEY = 'pokearena.room', MP_NAME = 'pokearena.mpname', MP_CLAIM = 'pokearena.mpclaim';
 const mp = { view: 'home', code: '', st: null, sel: new Set(), cells: [], msg: '', err: false, busy: false, timer: 0, key: '' };
 const mpLS = { get(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} } };
 const mpEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22540,6 +22542,9 @@ async function mpPoll(first) {
         const st = await SaveSys.call('GET', '/api/room/state?code=' + encodeURIComponent(mp.code));
         mp.st = st; if (mp.view === 'room' && !mp.msg.startsWith('!')) mp.msg = '';
         if (st.status === 'done' && st.result) mpClaim(st);
+        if (st.status === 'playing') { // la arena la simula el anfitrión; los demás la ven en directo
+            if (!mpIsHost() && !mpSpec.on && !mpSpec.dismissed) { if (mp.view === 'pick') mp.view = 'room'; mpSpecStart(); return; }
+        } else mpSpec.dismissed = false;
         if (st.status === 'closed' && mp.view !== 'pick') { mpForget(); mp.view = 'home'; mp.msg = '!La sala se cerró.'; mp.err = true; }
     } catch (e) {
         if (e.status === 403 || e.status === 404) { mpForget(); mp.view = 'home'; mp.msg = '!La sala ya no existe.'; mp.err = true; }
@@ -22585,7 +22590,7 @@ function mpRender() {
         const slots = []; st.members.forEach(m => (st.picks[m.acc] || []).forEach(p => slots.push({ p, c: mpCol(m.acc) })));
         let grid = ''; for (let i = 0; i < MP_MAX; i++) { const q = slots[i]; grid += q ? '<div class="mp-slot on" style="--oc:' + q.c + '"><img alt="" src="' + mpEsc(q.p.sprite) + '"></div>' : '<div class="mp-slot"></div>'; }
         body += '<section class="mp-sec"><h4>Campos <em>' + slots.length + ' / ' + MP_MAX + '</em></h4><div class="mp-slots">' + grid + '</div></section>';
-        body += '<section class="mp-sec"><h4>Jugadores <em>' + st.members.length + '</em></h4>' + st.members.map(m => {
+        body += '<section class="mp-sec"><h4>Jugadores <em>' + st.members.length + ' / ' + MP_PLAYERS + '</em></h4>' + st.members.map(m => {
             const n = (st.picks[m.acc] || []).length;
             return '<div class="mp-mem" style="--oc:' + mpCol(m.acc) + '">' + mpAv(m.name, m.avatar) + '<div class="nm"><b>' + mpEsc(m.name) + '</b>' + ((m.acc === st.host || m.acc === st.me) ? '<div class="tags">' + (m.acc === st.host ? '<em>Anfitrión</em>' : '') + (m.acc === st.me ? '<em>Tú</em>' : '') + '</div>' : '') + '</div><span class="n' + (n ? '' : ' zero') + '">' + n + '</span></div>';
         }).join('') + '</section>';
@@ -22601,6 +22606,8 @@ function mpRender() {
             foot = (host ? mpBtn('start', 'Empezar arena', 'green', mp.busy || !ready || !mine) : '') + '<div class="row">' + mpBtn('pick', mine ? 'Mis pokémon (' + mine + ')' : 'Añadir pokémon', mine ? '' : 'primary', mp.busy) + leave + '</div>';
         } else if (st.status === 'done') {
             foot = (host ? mpBtn('again', 'Otra ronda', 'green', mp.busy) : '') + leave;
+        } else if (st.status === 'playing' && !host) {
+            foot = mpBtn('watch', '👁 Ver partida en directo', 'green') + leave;
         } else foot = leave;
     }
     mp.key = mp.view + '|' + JSON.stringify(st) + '|' + mp.msg;
@@ -22652,6 +22659,7 @@ async function mpAction(act) {
         });
     }
     if (act === 'copy') { try { navigator.clipboard.writeText(mp.code); mp.msg = 'Código copiado'; mp.err = false; mpRender(); } catch (e) {} return; }
+    if (act === 'watch') { mpSpec.dismissed = false; mpSpecStart(); return; }
     if (act === 'pick') return mpStartPick();
     if (act === 'pickcancel') { mp.view = 'room'; mpRender(); return; }
     if (act === 'picksave') {
@@ -22688,15 +22696,15 @@ function mpLaunch(st) {
     multiPlan = { code: st.code, me: st.me, entries, names: Object.fromEntries(st.members.map(m => [m.acc, m.name])), avatars: Object.fromEntries(st.members.map(m => [m.acc, m.avatar || ''])) };
     classicPick = null; raidTeam = null;
     GameAudio.sfx('confirm'); clearInterval(mp.timer); mp.timer = 0;
+    mpHostBegin(st.code); // la arena se simula aquí, pero se publica para que todos la vean
     hideMainMenu(() => { mmModeEl.hidden = true; mmMultiEl.hidden = true; setArenaMode('classic'); startGame(); });
 }
 // Fin de la arena (se llama desde declareWinner): se calcula el resultado y se publica en la sala.
 function multiFinish(w) {
     const plan = multiPlan; if (!plan) return;
+    mpHostEnd(); // deja de publicar instantáneas: el resultado cierra la partida para los espectadores
     multiPlan = null;
-    const teams = {}; plan.entries.forEach(en => { teams[en.owner] = teams[en.owner] || { acc: en.owner, name: en.ownerName, avatar: (plan.avatars || {})[en.owner] || '', alive: 0, kos: 0 }; });
-    arenaPool.forEach(m => { const o = arenaRoster[m.id] && arenaRoster[m.id].owner; if (o && teams[o] && (speciesLives[m.id] || 0) > 0) teams[o].alive++; });
-    Object.keys(arenaTally).forEach(k => { const o = arenaRoster[k] && arenaRoster[k].owner, t = arenaTally[k]; if (o && teams[o]) teams[o].kos += t.kos || 0; });
+    const teams = mpTeamStats(plan);
     const base = baseAppearance[w.id] || {};
     const result = {
         ts: Date.now(), winnerAcc: w.owner || '', winnerName: w.owner ? (plan.names[w.owner] || w.ownerName) : 'Salvaje',
@@ -22706,6 +22714,231 @@ function multiFinish(w) {
     };
     mpLS.set(MP_KEY, plan.code);
     SaveSys.call('POST', '/api/room/result', { code: plan.code, result }).catch(() => SaveSys.call('POST', '/api/room/result', { code: plan.code, result }).catch(() => {}));
+}
+
+// ===== ARENA MULTIJUGADOR: EN DIRECTO =====
+// La arena solo se simula en el dispositivo del ANFITRIÓN, pero la ven todos: el anfitrión publica una instantánea ligera
+// (posiciones, PS, estados, registro y marcador) cada MP_SNAP_MS y el resto de jugadores la dibujan en un visor de espectador
+// con las posiciones interpoladas. Si quieres menos peticiones al servidor, sube MP_SNAP_MS (p. ej. 1200).
+const MP_SNAP_MS = 800;
+const mpHost = { timer: 0, busy: false, log: [], logId: 0 };
+const mpSpec = { on: false, dismissed: false, seq: 0, tm: 0, raf: 0, ents: {}, W: 0, H: 0, sc: 1, lastAt: 0, prevAt: 0, dur: MP_SNAP_MS, logSeen: 0, fails: 0, wall: null, lastFrame: 0 };
+
+// ---- Anfitrión: publicar instantáneas ----
+function mpHostLog(text, type) {
+    mpHost.log.push([++mpHost.logId, String(type || 'info'), String(text).slice(0, 160)]);
+    if (mpHost.log.length > 25) mpHost.log.shift();
+}
+function mpTeamStats(plan) {
+    const teams = {}; plan.entries.forEach(en => { teams[en.owner] = teams[en.owner] || { acc: en.owner, name: en.ownerName, avatar: (plan.avatars || {})[en.owner] || '', alive: 0, kos: 0 }; });
+    arenaPool.forEach(m => { const o = arenaRoster[m.id] && arenaRoster[m.id].owner; if (o && teams[o] && (speciesLives[m.id] || 0) > 0) teams[o].alive++; });
+    Object.keys(arenaTally).forEach(k => { const o = arenaRoster[k] && arenaRoster[k].owner, t = arenaTally[k]; if (o && teams[o]) teams[o].kos += t.kos || 0; });
+    return teams;
+}
+function mpSnapshot(plan) {
+    // Réplica de la arena REAL: se copia el DOM de cada pokémon visible (clases, HUD, efectos, sprite) para que los demás lo reconstruyan igual.
+    const e = [], noId = s => s.replace(/ id="[^"]*"/g, '');
+    document.querySelectorAll('#camera-layer .pokemon-wrapper').forEach(w => {
+        if (!w.style.display || w.style.display === 'none' || w.classList.contains('mp-ghost')) return;
+        const id = w.id.replace(/-wrapper$/, ''), c = combatantsById[id], hud = w.querySelector('.pokemon-hud'), pk = w.querySelector('.pokemon'), im = pk && pk.querySelector('img');
+        let hh = ''; if (hud) { const hc = hud.cloneNode(true); hc.querySelectorAll('.player-mark').forEach(m => m.remove()); hh = noId(hc.innerHTML); if (hh.length > 1500) hh = ''; }
+        let fx = ''; for (let ch = w.firstElementChild; ch; ch = ch.nextElementSibling) if (ch !== hud && ch !== pk) fx += ch.outerHTML; fx = noId(fx); if (fx.length > 2500) fx = '';
+        let src = im ? (im.src || '') : ''; if (src.length > 500) src = '';
+        e.push({
+            i: id, x: Math.round(parseFloat(w.style.left) || 0), y: Math.round(parseFloat(w.style.top) || 0),
+            k: w.className.replace(/\b(camera-focus|is-mine)\b/g, '').replace(/\s+/g, ' ').trim(), h: hh, f: fx, s: src,
+            ps: pk ? pk.style.cssText : '', is: im ? im.style.cssText : '', z: w.style.zIndex || '', o: (c && c.owner) || ''
+        });
+    });
+    let cm = null, dm = null;
+    try { cm = [cam.x, cam.y, cam.z, cam.roll].map(v => Math.round(v * 100) / 100); } catch (ex) {}
+    try { dm = Math.round(dayMs); } catch (ex) {}
+    const snap = { t: matchElapsedMs | 0, w: Math.round(bounds.width), h: Math.round(bounds.height), p: isPaused ? 1 : 0, go: gameOver ? 1 : 0, e, cm, dm,
+        tm: Object.values(mpTeamStats(plan)).map(t => [t.acc, t.alive, t.kos]), lg: mpHost.log.slice(-15) };
+    if (JSON.stringify(snap).length > 200000) snap.e.forEach(q => { q.h = ''; q.f = ''; }); // red lenta: se manda solo lo imprescindible
+    return snap;
+}
+function mpHostBegin(code) {
+    mpHostEnd(); mpHost.log = []; mpHost.logId = 0;
+    mpHost.timer = setInterval(() => {
+        const plan = multiPlan; if (!plan || !gameRunning || mpHost.busy) return;
+        mpHost.busy = true;
+        SaveSys.call('POST', '/api/room/snap', { code, snap: mpSnapshot(plan) }).catch(() => {}).then(() => { mpHost.busy = false; });
+    }, MP_SNAP_MS);
+}
+function mpHostEnd() { clearInterval(mpHost.timer); mpHost.timer = 0; mpHost.busy = false; }
+// El anfitrión sale de la arena antes de que termine: la sala vuelve al lobby para que nadie se quede mirando una partida parada.
+function mpHostAbort() {
+    const plan = multiPlan; if (!plan) return;
+    mpHostEnd(); multiPlan = null; mpLS.set(MP_KEY, plan.code);
+    SaveSys.call('POST', '/api/room/reset', { code: plan.code }).catch(() => {});
+}
+
+// ---- Espectador: la MISMA arena que ve el anfitrión (mismo campo, cámara, sprites y HUD), reconstruida con las instantáneas ----
+(function () {
+    const css = document.createElement('style');
+    css.textContent = `
+body.mp-spec-on #champion-bar > #hud-pager,body.mp-spec-on #champion-bar > #raid-boss-bar,body.mp-spec-on #icon-toolbar{display:none!important}
+.pokemon-wrapper.mp-ghost{pointer-events:none}
+#mp-spec-msg{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font:700 15px 'PA Chakra S',system-ui,sans-serif;color:#fff;text-shadow:0 2px 6px #000;pointer-events:none}
+#mp-spec{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:14px;border:4px solid #1e293b;overflow:hidden;color:#f4f7f6;font-family:'PA Chakra S',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:radial-gradient(120% 90% at 50% 0%,#17264a 0%,#0e1832 52%,#080e20 100%);box-shadow:0 0 25px rgba(0,0,0,.5),inset 0 0 0 1px rgba(125,211,252,.18),inset 0 0 28px rgba(0,0,0,.5)}
+#mp-spec[hidden]{display:none}
+#mp-spec .sp-top{display:flex;align-items:center;gap:8px;flex:none}
+#mp-spec .sp-exit{all:unset;box-sizing:border-box;cursor:pointer;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,255,255,.12);color:#fff}
+#mp-spec .sp-exit:active{transform:scale(.95)}
+#mp-spec .sp-title{flex:1;font-size:13px;font-weight:800;text-align:center}
+#mp-spec .sp-live{font-size:10px;font-weight:800;letter-spacing:.08em;padding:3px 7px;border-radius:999px;background:#e8262d;color:#fff;animation:spPulse 1.4s ease-in-out infinite}
+#mp-spec .sp-live.off{background:#64748b;animation:none}
+@keyframes spPulse{50%{opacity:.55}}
+#mp-spec .sp-clock{font-variant-numeric:tabular-nums;font-size:13px;font-weight:800;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+#mp-spec .sp-teams{display:flex;gap:6px;overflow-x:auto;flex:none;scrollbar-width:none}
+#mp-spec .sp-teams::-webkit-scrollbar{display:none}
+#mp-spec .sp-team{flex:none;display:flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;background:rgba(255,255,255,.08);border:2px solid var(--oc);font-size:12px;font-weight:700;white-space:nowrap}
+#mp-spec .sp-team.me{background:rgba(255,255,255,.18)}
+#mp-spec .sp-team.dead{opacity:.4}
+#mp-spec .sp-team .mp-av{width:22px;height:22px;font-size:11px}
+#mp-spec .sp-team em{font-style:normal;opacity:.8;font-weight:600}
+#mp-spec .sp-log{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;font-size:12px;line-height:1.25}
+#mp-spec .sp-log div{opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mp-spec .sp-log div:last-child{opacity:1;font-weight:700}
+#mp-spec .sp-log .log-spawn{color:#86efac}#mp-spec .sp-log .log-ko,#mp-spec .sp-log .log-faint{color:#fca5a5}`;
+    document.head.appendChild(css);
+})();
+
+function mpSpecEl() {
+    let el = document.getElementById('mp-spec'); if (el) return el;
+    el = document.createElement('div'); el.id = 'mp-spec'; el.hidden = true;
+    el.innerHTML = '<div class="sp-top"><button type="button" class="sp-exit">‹ Salir</button><span class="sp-live">EN DIRECTO</span><span class="sp-title">Arena</span><span class="sp-clock">0:00</span></div><div class="sp-teams"></div><div class="sp-log"></div>';
+    (document.getElementById('champion-bar') || document.body).appendChild(el); // va en la barra inferior de la arena real
+    el.querySelector('.sp-exit').addEventListener('click', () => mpSpecEnd('exit'));
+    return el;
+}
+function mpSpecClear() { // deja la pantalla de juego tal cual estaba antes de espectar
+    Object.values(mpSpec.ents).forEach(g => g.el.remove()); mpSpec.ents = {};
+    document.querySelectorAll('#camera-layer .mp-ghost').forEach(n => n.remove());
+    const el = document.getElementById('mp-spec'); if (el) el.hidden = true;
+    const m = document.getElementById('mp-spec-msg'); if (m) m.remove();
+    document.body.classList.remove('mp-spec-on');
+    try { resetDayCycle(); } catch (ex) {}
+    try { resetCamera(); } catch (ex) {}
+}
+function mpSpecToMenu() { // vuelve al menú de la sala
+    mainMenuEl.hidden = false; mmMultiEl.hidden = false;
+    try { GameAudio.stopMusic(); GameAudio.startMusic('menu'); } catch (ex) {}
+}
+
+function mpSpecStart() {
+    if (mpSpec.on) return;
+    const el = mpSpecEl(), st = mp.st; if (!st) return;
+    Object.assign(mpSpec, { on: true, seq: 0, ents: {}, W: 0, H: 0, kx: 1, ky: 1, lastAt: performance.now(), prevAt: 0, dur: MP_SNAP_MS, logSeen: 0, fails: 0, code: st.code, cam: null, camT: null, dm: null, dmAt: 0, ltAt: 0, lastTs: 0, paused: false });
+    clearInterval(mp.timer); mp.timer = 0;
+    mainMenuEl.hidden = true; mmMultiEl.hidden = true; mmModeEl.hidden = true; // se ve la arena real, igual que en el anfitrión
+    try { GameAudio.stopMusic(); GameAudio.startMusic('battle'); } catch (ex) {}
+    document.body.classList.add('mp-spec-on');
+    setArenaMode('classic'); // mismo mapa, escala y límites que el anfitrión
+    cameraLayer.style.transition = 'none';
+    el.hidden = false;
+    el.querySelector('.sp-log').innerHTML = ''; el.querySelector('.sp-teams').innerHTML = ''; el.querySelector('.sp-clock').textContent = '0:00';
+    el.querySelector('.sp-live').classList.remove('off');
+    const msg = document.createElement('div'); msg.id = 'mp-spec-msg'; msg.textContent = 'Preparando la arena…'; viewport.appendChild(msg);
+    GameAudio.sfx('confirm');
+    mpSpecPoll();
+    cancelAnimationFrame(mpSpec.raf); mpSpec.raf = requestAnimationFrame(mpSpecFrame);
+}
+function mpSpecEnd(why) {
+    if (!mpSpec.on) return;
+    mpSpec.on = false; clearTimeout(mpSpec.tm); cancelAnimationFrame(mpSpec.raf);
+    mpSpecClear(); mpSpecToMenu();
+    if (why === 'exit') mpSpec.dismissed = true; // sigue en la sala; puede volver con "Ver partida"
+    clearInterval(mp.timer); mp.timer = setInterval(() => mpPoll(false), 2000);
+    mp.msg = ''; mp.view = 'room'; mpPoll(true); mpRender();
+}
+async function mpSpecPoll() {
+    if (!mpSpec.on) return;
+    try {
+        const r = await SaveSys.call('GET', '/api/room/snap?code=' + encodeURIComponent(mpSpec.code) + '&since=' + mpSpec.seq);
+        if (!mpSpec.on) return;
+        mpSpec.fails = 0;
+        if (r.status !== 'playing') { mpSpecEnd(r.status); return; } // terminó (resultado en la sala), se reinició o se cerró
+        if (r.snap && r.seq > mpSpec.seq) { mpSpec.seq = r.seq; mpSpecApply(r.snap); }
+    } catch (e) {
+        if (!mpSpec.on) return;
+        if (e && (e.status === 403 || e.status === 404)) { mpSpec.on = false; clearTimeout(mpSpec.tm); cancelAnimationFrame(mpSpec.raf); mpSpecClear(); mpForget(); mpSpecToMenu(); mp.view = 'home'; mp.msg = '!La sala ya no existe.'; mp.err = true; mp.timer = setInterval(() => mpPoll(false), 2000); mpRender(); return; }
+        mpSpec.fails++;
+    }
+    const el = mpSpecEl(), stale = performance.now() - mpSpec.lastAt > 15000 && mpSpec.seq > 0, noconn = mpSpec.fails >= 3;
+    const live = el.querySelector('.sp-live'); live.classList.toggle('off', stale || noconn); live.textContent = noconn ? 'SIN CONEXIÓN' : stale ? 'SIN SEÑAL' : 'EN DIRECTO';
+    mpSpec.tm = setTimeout(mpSpecPoll, MP_SNAP_MS);
+}
+function mpSpecApply(s) {
+    const el = mpSpecEl(), now = performance.now();
+    mpSpec.dur = mpSpec.prevAt ? Math.max(450, Math.min(1600, now - mpSpec.prevAt)) : MP_SNAP_MS; mpSpec.prevAt = now; mpSpec.lastAt = now;
+    const kx = mpSpec.kx = bounds.width / (s.w || bounds.width), ky = mpSpec.ky = bounds.height / (s.h || bounds.height); // el anfitrión puede tener otra pantalla: se reescalan las posiciones
+    el.querySelector('.sp-clock').textContent = (s.p ? '⏸ ' : '') + fmtClock(s.t || 0);
+    const members = (mp.st && mp.st.members) || [], me = mp.st && mp.st.me, nameOf = a => (members.find(m => m.acc === a) || {}).name || '?';
+    const seen = new Set();
+    (s.e || []).forEach(c => {
+        seen.add(c.i);
+        let g = mpSpec.ents[c.i];
+        if (!g) { // pokémon nuevo: misma estructura que los de la arena real (los estilos del juego hacen el resto)
+            const d = document.createElement('div'); d.className = 'pokemon-wrapper mp-ghost'; d.style.display = 'block';
+            d.innerHTML = '<div class="pokemon-hud"></div><div class="pokemon"><img alt="" draggable="false"></div>';
+            cameraLayer.appendChild(d);
+            g = mpSpec.ents[c.i] = { el: d, hud: d.firstChild, pk: d.lastChild, img: d.lastChild.firstChild, fx0: c.x * kx, fy0: c.y * ky, tx: c.x * kx, ty: c.y * ky, t0: now, cls: null, hk: null, fx: null, src: null, ps: null, is: null, z: null };
+        }
+        g.fx0 = g.cx != null ? g.cx : g.tx; g.fy0 = g.cy != null ? g.cy : g.ty; g.tx = c.x * kx; g.ty = c.y * ky; g.t0 = now;
+        const mine = !!c.o && c.o === me, cls = c.k + (mine ? ' is-mine' : '') + ' mp-ghost';
+        if (cls !== g.cls) { g.cls = cls; g.el.className = cls; }
+        const hk = c.h + '|' + c.o + '|' + me;
+        if (hk !== g.hk) { // HUD (nombre, PS, estados) tal cual; la marca de jugador se pinta desde TU punto de vista
+            g.hk = hk; g.hud.innerHTML = c.h;
+            if (c.o) {
+                const mk = document.createElement('div'); mk.className = 'player-mark'; const b = document.createElement('b'), hc = 'hsl(' + multiHue(c.o) + ' 85% 62%)';
+                b.textContent = mine ? 'TÚ' : nameOf(c.o).slice(0, 10).toUpperCase(); b.style.background = hc; b.style.color = '#0b1220'; b.style.borderColor = '#fff';
+                const i = document.createElement('i'); i.style.borderTopColor = hc; mk.append(b, i); g.hud.appendChild(mk);
+            }
+        }
+        if (c.f !== g.fx) { // efectos del propio pokémon (auras, burbujas, pokeball de aparición...)
+            g.fx = c.f; [...g.el.children].forEach(ch => { if (ch !== g.hud && ch !== g.pk) ch.remove(); });
+            if (c.f) g.el.insertAdjacentHTML('beforeend', c.f);
+        }
+        if (c.s && c.s !== g.src) { g.src = c.s; g.img.src = c.s; }
+        if (c.ps !== g.ps) { g.ps = c.ps; g.pk.style.cssText = c.ps; }
+        if (c.is !== g.is) { g.is = c.is; g.img.style.cssText = c.is; }
+        if (c.z !== g.z) { g.z = c.z; g.el.style.zIndex = c.z; }
+    });
+    Object.keys(mpSpec.ents).forEach(id => { if (!seen.has(id)) { mpSpec.ents[id].el.remove(); delete mpSpec.ents[id]; } }); // ya no están en la arena
+    if (s.cm) { // cámara del anfitrión (mismo encuadre), suavizada en cada fotograma
+        mpSpec.camT = { x: s.cm[0] * kx, y: s.cm[1] * ky, z: s.cm[2], r: s.cm[3] };
+        if (!mpSpec.cam) mpSpec.cam = { x: mpSpec.camT.x, y: mpSpec.camT.y, z: mpSpec.camT.z, r: mpSpec.camT.r };
+    }
+    if (s.dm != null) { mpSpec.dm = s.dm; mpSpec.dmAt = now; mpSpec.paused = !!s.p; } // ciclo día/noche sincronizado
+    const tmEl = el.querySelector('.sp-teams');
+    tmEl.innerHTML = (s.tm || []).slice().sort((a, b) => b[1] - a[1] || b[2] - a[2]).map(t => {
+        const m = members.find(x => x.acc === t[0]) || {};
+        return '<div class="sp-team' + (t[0] === me ? ' me' : '') + (t[1] ? '' : ' dead') + '" style="--oc:' + mpCol(t[0]) + '">' + mpAv(m.name, m.avatar) + '<span>' + mpEsc(t[0] === me ? 'Tú' : (m.name || '?')) + '</span><em>' + t[1] + ' en pie · ' + t[2] + ' KOs</em></div>';
+    }).join('');
+    const logEl = el.querySelector('.sp-log'); let added = false;
+    (s.lg || []).forEach(l => { if (l[0] <= mpSpec.logSeen) return; mpSpec.logSeen = l[0]; const d = document.createElement('div'); d.className = 'log-' + l[1]; d.textContent = l[2]; logEl.appendChild(d); added = true; });
+    if (added) while (logEl.children.length > 4) logEl.firstChild.remove();
+    const msg = document.getElementById('mp-spec-msg'); if (msg && s.e && s.e.length) msg.remove();
+}
+function mpSpecFrame(ts) {
+    if (!mpSpec.on) return;
+    const dt = Math.min(0.1, mpSpec.lastTs ? (ts - mpSpec.lastTs) / 1000 : 0.016); mpSpec.lastTs = ts;
+    for (const id in mpSpec.ents) { // posiciones interpoladas entre instantáneas
+        const g = mpSpec.ents[id], k = Math.min(1, (ts - g.t0) / mpSpec.dur);
+        g.cx = g.fx0 + (g.tx - g.fx0) * k; g.cy = g.fy0 + (g.ty - g.fy0) * k;
+        g.el.style.left = g.cx.toFixed(1) + 'px'; g.el.style.top = g.cy.toFixed(1) + 'px';
+    }
+    const T = mpSpec.camT || { x: bounds.width / 2, y: bounds.height / 2, z: BASE_ZOOM, r: 0 }, C = mpSpec.cam || (mpSpec.cam = { x: T.x, y: T.y, z: T.z, r: T.r }), a = 1 - Math.exp(-dt * 5);
+    C.x += (T.x - C.x) * a; C.y += (T.y - C.y) * a; C.r += (T.r - C.r) * a; C.z = Math.exp(Math.log(C.z) + (Math.log(T.z) - Math.log(C.z)) * a);
+    cameraLayer.style.transform = 'translate(' + view.width / 2 + 'px,' + view.height / 2 + 'px) rotate(' + C.r.toFixed(2) + 'deg) scale(' + C.z.toFixed(4) + ') translate(' + (-C.x).toFixed(1) + 'px,' + (-C.y).toFixed(1) + 'px)';
+    if (mpSpec.dm != null && ts - mpSpec.ltAt > 100) { // luz del día/noche
+        mpSpec.ltAt = ts;
+        try { const r = dayParamsAt(mpSpec.dm + (mpSpec.paused ? 0 : performance.now() - mpSpec.dmAt)); renderLighting(r.P, r.ph, r.local); } catch (ex) {}
+    }
+    mpSpec.raf = requestAnimationFrame(mpSpecFrame);
 }
 
 // ===== AUDIO (menú y arena) =====

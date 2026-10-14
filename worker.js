@@ -21,6 +21,8 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS rooms (code TEXT PRIMARY KEY, host TEXT NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, result TEXT)'),
         db.prepare('CREATE TABLE IF NOT EXISTS room_members (code TEXT NOT NULL, acc TEXT NOT NULL, name TEXT NOT NULL, ts INTEGER NOT NULL, avatar TEXT, PRIMARY KEY (code, acc))'),
         db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
+        // última instantánea de la arena que publica el anfitrión (la simula él; el resto de jugadores la ve en directo)
+        db.prepare('CREATE TABLE IF NOT EXISTS room_snap (code TEXT PRIMARY KEY, seq INTEGER NOT NULL, data TEXT NOT NULL)'),
     ]).then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
       .catch(e => { ready = null; throw e; }));
 }
@@ -35,7 +37,7 @@ async function writeKey(db, h, k, text) {
 }
 
 // ---- Arena multijugador ----
-const ROOM_MAX = 30, ROOM_TTL = 864e5, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ROOM_MAX = 30, ROOM_PLAYERS = 3, ROOM_TTL = 864e5, CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const cleanName = v => (typeof v === 'string' ? v.replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 14) : '') || 'Jugador';
 const cleanAvatar = v => (typeof v === 'string' && /^[a-z0-9_-]{1,20}$/i.test(v)) ? v : '';
 const cleanCode = v => (typeof v === 'string' ? v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) : '');
@@ -55,6 +57,7 @@ async function roomApi(db, h, route, req, url) {
     const acc = h.slice(0, 12), now = Date.now();
     if (Math.random() < 0.05) await db.batch([
         db.prepare('DELETE FROM room_picks WHERE code IN (SELECT code FROM rooms WHERE ts < ?1)').bind(now - ROOM_TTL),
+        db.prepare('DELETE FROM room_snap WHERE code IN (SELECT code FROM rooms WHERE ts < ?1)').bind(now - ROOM_TTL),
         db.prepare('DELETE FROM room_members WHERE code IN (SELECT code FROM rooms WHERE ts < ?1)').bind(now - ROOM_TTL),
         db.prepare('DELETE FROM rooms WHERE ts < ?1').bind(now - ROOM_TTL),
     ]);
@@ -63,6 +66,16 @@ async function roomApi(db, h, route, req, url) {
         const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
         if (!mine) return reply({ error: 'no estás en esa sala' }, 403);
         const st = await roomState(db, code, acc); return st ? reply(st) : reply({ error: 'la sala no existe' }, 404);
+    }
+    if (route === '/api/room/snap' && req.method === 'GET') { // los jugadores piden la última instantánea de la arena (solo si es más nueva que 'since')
+        const code = cleanCode(url.searchParams.get('code')), since = Math.max(0, +url.searchParams.get('since') || 0);
+        const [mine, row] = await db.batch([
+            db.prepare('SELECT 1 AS ok FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc),
+            db.prepare('SELECT r.status AS status, s.seq AS seq, CASE WHEN s.seq > ?2 THEN s.data END AS data FROM rooms r LEFT JOIN room_snap s ON s.code = r.code WHERE r.code = ?1').bind(code, since),
+        ]);
+        if (!mine.results.length) return reply({ error: 'no estás en esa sala' }, 403);
+        const r = row.results[0]; if (!r) return reply({ error: 'la sala no existe' }, 404);
+        return reply('{"status":"' + r.status + '","seq":' + (r.seq || 0) + ',"snap":' + (r.data || 'null') + '}'); // el texto de la instantánea se reenvía tal cual, sin parsearlo
     }
     if (req.method !== 'POST') return reply({ error: 'no existe' }, 404);
     const t = await req.text(); if (t.length > 2e6) return reply({ error: 'demasiado grande' }, 413);
@@ -90,7 +103,7 @@ async function roomApi(db, h, route, req, url) {
         if (!mine) {
             if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
             const n = await db.prepare('SELECT COUNT(*) AS n FROM room_members WHERE code = ?1').bind(code).first();
-            if (n.n >= ROOM_MAX) return reply({ error: 'sala llena' }, 409);
+            if (n.n >= ROOM_PLAYERS) return reply({ error: 'sala llena (máximo ' + ROOM_PLAYERS + ' jugadores)' }, 409);
             await db.prepare('INSERT OR IGNORE INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, acc, cleanName(b.name), now, cleanAvatar(b.avatar)).run();
         }
         return reply({ ok: true, code });
@@ -122,11 +135,23 @@ async function roomApi(db, h, route, req, url) {
         if (room.status !== 'lobby') return reply({ error: 'la sala ya empezó' }, 409);
         const { results } = await db.prepare('SELECT m.acc AS acc, (SELECT COUNT(*) FROM room_picks p WHERE p.code = m.code AND p.acc = m.acc) AS n FROM room_members m WHERE m.code = ?1').bind(code).all();
         if (results.some(r => r.n < 1)) return reply({ error: 'todos los jugadores deben añadir al menos 1 pokémon' }, 409);
-        await db.prepare("UPDATE rooms SET status = 'playing', ts = ?1 WHERE code = ?2").bind(now, code).run();
+        await db.batch([
+            db.prepare("UPDATE rooms SET status = 'playing', ts = ?1 WHERE code = ?2").bind(now, code),
+            db.prepare('DELETE FROM room_snap WHERE code = ?1').bind(code), // sin restos de la ronda anterior
+        ]);
+        return reply({ ok: true });
+    }
+    if (route === '/api/room/snap') { // el anfitrión publica el estado de la arena que está simulando
+        if (room.status !== 'playing') return reply({ ok: true, stale: true });
+        const d = JSON.stringify(isObj(b.snap) ? b.snap : {}); if (d.length > 250000) return reply({ error: 'instantánea demasiado grande' }, 413);
+        await db.prepare('INSERT INTO room_snap (code, seq, data) VALUES (?1, 1, ?2) ON CONFLICT(code) DO UPDATE SET seq = seq + 1, data = excluded.data').bind(code, d).run();
         return reply({ ok: true });
     }
     if (route === '/api/room/reset') { // otra ronda: vuelve al lobby con los mismos jugadores y pokémon
-        await db.prepare("UPDATE rooms SET status = 'lobby', result = NULL, ts = ?1 WHERE code = ?2").bind(now, code).run();
+        await db.batch([
+            db.prepare("UPDATE rooms SET status = 'lobby', result = NULL, ts = ?1 WHERE code = ?2").bind(now, code),
+            db.prepare('DELETE FROM room_snap WHERE code = ?1').bind(code),
+        ]);
         return reply({ ok: true });
     }
     if (route === '/api/room/result') {

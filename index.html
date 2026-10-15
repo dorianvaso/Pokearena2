@@ -5443,6 +5443,8 @@
     .dv-head h1 { margin:0; font-size:1.05rem; font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .dv-icon { all:unset; cursor:pointer; flex:none; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:14px; background:var(--dv-surf); border:1px solid var(--dv-line); color:#f4f4f6; -webkit-tap-highlight-color:transparent; }
     .dv-icon:active { transform:scale(.94); background:#16171d; }
+    #dv-refresh.spin svg { animation:dvspin .8s linear infinite; }
+    @keyframes dvspin { to { transform:rotate(360deg); } }
     .dv-icon svg { width:22px; height:22px; fill:currentColor; }
     .dv-tabs { display:flex; gap:6px; width:100%; max-width:860px; align-self:center; padding:4px 14px 10px; border-bottom:1px solid var(--dv-line); }
     .dv-tab { all:unset; cursor:pointer; flex:1; text-align:center; padding:.8em .4em; border-radius:12px; font-size:.78rem; font-weight:700; color:var(--dv-mut); background:transparent; border:1px solid transparent; -webkit-tap-highlight-color:transparent; }
@@ -5988,7 +5990,7 @@
       </div>
     </div>
     <div id="dev-screen" hidden>
-      <div class="dv-head"><button id="dv-back" class="dv-icon" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button><h1 id="dv-title">Desarrollador</h1></div>
+      <div class="dv-head"><button id="dv-back" class="dv-icon" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></button><h1 id="dv-title">Desarrollador</h1><button id="dv-refresh" class="dv-icon" type="button" aria-label="Refrescar estadísticas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg></button></div>
       <div class="dv-tabs" id="dv-tabs"><button type="button" class="dv-tab on" data-t="events">EVENTOS</button><button type="button" class="dv-tab" data-t="species">ESPECIES</button><button type="button" class="dv-tab" data-t="gen">GENERADOR</button><button type="button" class="dv-tab" data-t="saves">GUARDADOS</button></div>
       <div class="dv-body" id="dv-events"></div>
       <div class="dv-body" id="dv-species" hidden></div>
@@ -26021,7 +26023,32 @@ const DV = (() => {
     let tab = 'events', view = 'list', gIdx = -1, spSort = 'gen', backFn = null, curSp = '';
 
     // ---------- navegación ----------
-    function open() { $('dev-screen').hidden = false; PAGlobal.dev.loading = true; setTab('events'); sfx('pop'); gRefresh(); }
+    // Entrar a la consola exige la clave de desarrollador del servidor (se pide al abrir; se recuerda mientras la página siga abierta).
+    let authed = false, autoT = 0;
+    async function devAuth() {
+        if (authed) return true;
+        if (!SaveSys.canGlobal) { authed = true; return true; } // sin servidor configurado no hay clave que comprobar (solo datos locales)
+        const key = (window.prompt('Clave de desarrollador (DEV KEY del servidor):') || '').trim();
+        if (!key) return false;
+        try { await SaveSys.call('POST', '/api/g/clear', { what: 'verify', key }); }
+        catch (e) {
+            if (e && e.status === 403) { window.alert('Clave incorrecta.'); return false; }
+            if (!(e && (e.status === 400 || e.status === 422))) { window.alert('No se pudo comprobar la clave: sin conexión con el servidor.'); return false; }
+        }
+        try { localStorage.setItem('pokearena.adminkey', key); } catch (e) {}
+        authed = true; return true;
+    }
+    async function open() {
+        if (!(await devAuth())) return;
+        $('dev-screen').hidden = false; PAGlobal.dev.loading = true; setTab('events'); sfx('pop'); gRefresh();
+        clearInterval(autoT); autoT = setInterval(() => { if (!$('dev-screen').hidden && view === 'list' && tab !== 'gen' && !document.hidden) gRefresh(); }, 30000); // estadísticas en vivo
+    }
+    async function manualRefresh() {
+        const b = $('dv-refresh'); if (b.classList.contains('spin')) return;
+        b.classList.add('spin'); sfx('tick');
+        const wasSub = view === 'sub';
+        try { await gRefresh(); if (wasSub) setTab(tab); } finally { b.classList.remove('spin'); }
+    }
     async function gRefresh() { // trae los datos de TODAS las cuentas y vuelve a pintar la pestaña actual
         try { PAGlobal.migrate(); } catch (e) {}
         const was = tab; try { await PAGlobal.refresh(); } catch (e) { PAGlobal.dev.loading = false; PAGlobal.dev.errMsg = 'FALLO ' + ((e && e.message) || ''); }
@@ -26030,7 +26057,7 @@ const DV = (() => {
         catch (e) { PAGlobal.dev.errMsg = 'PANTALLA: ' + ((e && e.message) || '').slice(0, 60); PAGlobal.dev.arenas = null; PAGlobal.dev.err = true; const el = $('dv-' + tab); if (el) el.innerHTML = gBanner(); }
     }
     const gBanner = () => '<div class="dv-sv-sum" style="margin-bottom:8px">' + esc(PAGlobal.status()) + '</div>';
-    function close() { $('dev-screen').hidden = true; sfx('close'); }
+    function close() { $('dev-screen').hidden = true; clearInterval(autoT); sfx('close'); }
     function show(v, title) { // v: 'list' (pestañas) | 'sub' (pantalla de detalle)
         view = v; $('dv-tabs').hidden = v === 'sub'; $('dv-title').textContent = title || 'Desarrollador';
         const ids = { events: 'dv-events', species: 'dv-species', gen: 'dv-gen', saves: 'dv-saves' };
@@ -26082,8 +26109,7 @@ const DV = (() => {
                 + (g.status === 'eliminada' && g.deleted ? '<span class="dl">Eliminada ' + esc(fmtDate(g.deleted)) + '</span>' : '') + '</div>'
                 + '<span class="dv-chip ' + st[1] + '">' + st[0] + '</span></div>';
         });
-        let hasSlots = false; try { hasSlots = [1, 2, 3].some(n => { const i = SaveSys.info(n); return i.exists && !i.empty; }); } catch (e) {}
-        if (hasSlots || log.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">ELIMINAR PARTIDAS Y VACIAR REGISTRO</button></div>';
+        if (log.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">BORRAR REGISTRO DE PARTIDAS</button></div>';
         el.innerHTML = h; el.scrollTop = 0;
     }
     function spriteImg(u) { return u ? '<img src="' + esc(u) + '" alt="" loading="lazy" onerror="var n=sprNext(this.src);if(n)this.src=n;else this.style.visibility=\'hidden\'">' : ''; }
@@ -26311,6 +26337,7 @@ const DV = (() => {
     // ---------- eventos ----------
     function armBtn(x, label, fn) { if (x.dataset.arm) { fn(); sfx('close'); } else { x.dataset.arm = '1'; x.textContent = 'TOCA OTRA VEZ PARA CONFIRMAR'; setTimeout(() => { if (x.isConnected) { delete x.dataset.arm; x.textContent = label; } }, 3000); } }
     function bind() {
+        $('dv-refresh').addEventListener('click', manualRefresh);
         $('dv-back').addEventListener('click', () => { if (view === 'sub') { back(); sfx('tick'); } else close(); });
         $('dv-tabs').addEventListener('click', e => { const b = e.target.closest('.dv-tab'); if (b) { setTab(b.dataset.t); sfx('tick'); } });
         $('dv-events').addEventListener('click', e => {
@@ -26324,15 +26351,11 @@ const DV = (() => {
         });
         $('dv-saves').addEventListener('click', e => {
             const x = e.target.closest('#dv-delsaves'); if (!x) return;
-            armBtn(x, 'ELIMINAR PARTIDAS Y VACIAR REGISTRO', async () => {
-                x.disabled = true;
-                try {
-                    for (const n of [1, 2, 3]) { if (SaveSys.info(n).exists) await SaveSys.remove(n); }
-                    const old = SaveSys.getLog().map(y => y.id);
-                    await SaveSys.setSetting('saveLog', []); // el registro también se vacía
-                    try { if (PAGlobal.live()) PAGlobal.dev.saves = PAGlobal.dev.saves.filter(g => old.indexOf(g.id) < 0); } catch (e2) {}
-                    try { PAGlobal.saves([]); } catch (e2) {}
-                } catch (err) { window.alert('No se pudieron eliminar todas las partidas.'); }
+            armBtn(x, 'BORRAR REGISTRO DE PARTIDAS', async () => { // igual que arenas y especies: vacía el registro (las partidas guardadas no se tocan)
+                if (!(await PAGlobal.clear('saves'))) return;
+                try { await SaveSys.setSetting('saveLog', []); } catch (e2) {}
+                try { if (PAGlobal.live()) PAGlobal.dev.saves = []; } catch (e2) {}
+                await PAGlobal.refresh();
                 renderSaves();
             });
         });

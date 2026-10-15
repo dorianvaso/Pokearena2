@@ -4879,6 +4879,78 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
     @keyframes mmLvUp { 0% { opacity:0; transform:translate(-50%,-8px) scale(.6); } 12% { opacity:1; transform:translate(-50%,0) scale(1.1); } 20% { transform:translate(-50%,0) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translate(-50%,6px); } }
     .mm-xp { font-size:.58rem; font-weight:800; letter-spacing:.08em; color:#e0f2fe; padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums; background:rgba(8,14,40,.6); border:1px solid rgba(125,211,252,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
     .mm-xp[hidden] { display:none; }
+    /* v0.82 · caramelos raros: pestaña Evolución y animación */
+    #pc-detail .pce { display:flex; flex-direction:column; gap:11px; padding:4px 2px; color:#fff; }
+    #pc-detail .pce-head { display:flex; align-items:center; gap:8px; }
+    #pc-detail .pce-head img { width:30px; height:30px; image-rendering:pixelated; flex:none; }
+    #pc-detail .pce-head span { font-weight:900; font-size:.82rem; letter-spacing:.1em; }
+    #pc-detail .pce-head em { margin-left:auto; font-style:normal; font-size:.6rem; font-weight:800; letter-spacing:.08em; color:#cfe8ff; white-space:nowrap; }
+    #pc-detail .pce-head em b { color:#fde68a; font-size:.85rem; }
+    #pc-detail .pce-nxs { display:flex; flex-wrap:wrap; gap:8px; }
+    #pc-detail .pce-nx { display:flex; align-items:center; gap:6px; padding:4px 11px 4px 5px; border-radius:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22); }
+    #pc-detail .pce-nx img, #pc-detail .pce-opt img { width:40px; height:40px; object-fit:contain; image-rendering:pixelated; flex:none; }
+    #pc-detail .pce-nx b, #pc-detail .pce-opt b { font-size:.8rem; font-weight:800; }
+    #pc-detail .pce-bar { position:relative; height:24px; border-radius:999px; overflow:hidden; background:rgba(2,8,30,.7); border:1.5px solid rgba(125,211,252,.6); box-shadow:inset 0 2px 5px rgba(0,0,0,.55); }
+    #pc-detail .pce-bar i { position:absolute; left:0; top:0; bottom:0; width:0; border-radius:999px; overflow:hidden; background:linear-gradient(90deg,#0284c7,#38bdf8 62%,#7dd3fc); box-shadow:0 0 12px rgba(56,189,248,.85); transition:width .7s cubic-bezier(.2,.8,.3,1); }
+    #pc-detail .pce-bar i::after { content:''; position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%); translate:-100% 0; animation:pceShine 2.4s ease-in-out infinite; }
+    #pc-detail .pce-bar span { position:absolute; inset:0; display:grid; place-items:center; font-size:.72rem; font-weight:900; letter-spacing:.06em; text-shadow:0 1px 3px rgba(0,0,0,.9); }
+    #pc-detail .pce-bar.bump { animation:pceBump .5s cubic-bezier(.2,1.5,.4,1); }
+    #pc-detail .pce-cnt { font-size:.78rem; color:#d6e8ff; } #pc-detail .pce-cnt b { color:#fff; font-size:.9rem; }
+    #pc-detail .pce-acts, #pc-detail .pce-pick { display:flex; flex-wrap:wrap; gap:8px; }
+    #pc-detail .pce-pt { font-size:.62rem; font-weight:900; letter-spacing:.14em; color:#fde68a; }
+    #pc-detail .pce-btn { all:unset; box-sizing:border-box; cursor:pointer; padding:10px 18px; border-radius:999px; font-size:.76rem; font-weight:900; letter-spacing:.1em; color:#fff; text-align:center; text-shadow:0 1px 0 rgba(0,0,0,.4);
+        background:linear-gradient(135deg,#38bdf8,#2563eb); box-shadow:0 3px 0 rgba(0,0,0,.4), 0 6px 14px rgba(37,99,235,.45); -webkit-tap-highlight-color:transparent; }
+    #pc-detail .pce-btn:active { translate:0 2px; box-shadow:0 1px 0 rgba(0,0,0,.4); }
+    #pc-detail .pce-btn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+    #pc-detail .pce-btn:disabled { opacity:.4; cursor:default; box-shadow:none; }
+    #pc-detail .pce-btn.go { background:linear-gradient(135deg,#fde68a,#f59e0b); color:#5a3300; text-shadow:none; animation:pceGo 1.3s ease-in-out infinite; }
+    #pc-detail .pce-opt { display:flex; align-items:center; gap:6px; padding:5px 14px 5px 6px; border-radius:14px; }
+    #pc-detail .pce-final { font-weight:900; letter-spacing:.14em; color:#fde68a; }
+    #pc-detail .pce-hint { margin:0; font-size:.7rem; line-height:1.4; color:#a9c9ee; }
+    @keyframes pceShine { 0%,35% { translate:-100% 0; } 100% { translate:100% 0; } }
+    @keyframes pceBump { 0% { scale:1; } 40% { scale:1.04; filter:brightness(1.4); } 100% { scale:1; } }
+    @keyframes pceGo { 50% { box-shadow:0 3px 0 rgba(0,0,0,.4), 0 0 22px rgba(251,191,36,.95); } }
+    #evo-cel { position:absolute; inset:0; z-index:310; display:grid; grid-template-rows:1fr auto auto; justify-items:center; gap:10px; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); overflow:hidden; color:#fff; font-family:var(--mm-font);
+        background:radial-gradient(ellipse at 50% 38%, #163a82 0%, #070d28 72%); opacity:0; transition:opacity .45s; -webkit-tap-highlight-color:transparent; }
+    #evo-cel.on { opacity:1; } #evo-cel.out { opacity:0; transition:opacity .3s; }
+    .ev-stage { position:relative; align-self:center; width:min(88vw,52vh,380px); aspect-ratio:1; display:grid; place-items:center; }
+    .ev-glow { position:absolute; inset:-28%; border-radius:50%; background:radial-gradient(circle, rgba(190,230,255,.9), rgba(56,189,248,.38) 40%, transparent 68%); opacity:0; transition:opacity 1s; pointer-events:none; }
+    #evo-cel.charge .ev-glow { opacity:.8; animation:evBreath 1.1s ease-in-out infinite; } #evo-cel.p3 .ev-glow { animation-duration:.4s; }
+    .ev-ring { position:absolute; inset:20%; border-radius:50%; border:3px solid rgba(190,228,255,.95); opacity:0; pointer-events:none; }
+    #evo-cel.charge .ev-ring { animation:evRing 1.2s ease-out infinite; } #evo-cel.charge .ev-ring.r2 { animation-delay:.4s; } #evo-cel.charge .ev-ring.r3 { animation-delay:.8s; }
+    #evo-cel.p2.charge .ev-ring { animation-duration:.8s; } #evo-cel.p3.charge .ev-ring { animation-duration:.5s; }
+    .ev-wave { position:absolute; inset:20%; border-radius:50%; border:5px solid #fff; opacity:0; pointer-events:none; }
+    #evo-cel.burst .ev-wave { animation:evWave 1.1s ease-out forwards; }
+    .ev-spr { position:relative; width:64%; aspect-ratio:1; }
+    .ev-spr img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; filter:brightness(1) invert(0) drop-shadow(0 0 0 rgba(160,215,255,0)); transition:filter .8s ease-out, scale .8s ease-out; }
+    .ev-new { opacity:0; }
+    #evo-cel.charge .ev-old { filter:brightness(0) invert(1) drop-shadow(0 0 16px rgba(160,215,255,.95)); transition:filter 1s ease-in; animation:evPulse .9s ease-in-out infinite; }
+    #evo-cel.p2 .ev-old { animation-duration:.55s; } #evo-cel.p3 .ev-old { animation-duration:.34s; }
+    #evo-cel.swap .ev-old { opacity:0; animation:none; }
+    #evo-cel.swap .ev-new { opacity:1; scale:1.18; filter:brightness(0) invert(1) drop-shadow(0 0 20px rgba(190,230,255,1)); transition:none; }
+    #evo-cel.reveal .ev-new { scale:1; filter:brightness(1) invert(0) drop-shadow(0 0 0 rgba(160,215,255,0)); transition:filter .9s ease-out, scale .9s cubic-bezier(.2,1.4,.4,1); }
+    .ev-stage s { position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:#d8eeff; box-shadow:0 0 10px #7dd3fc; opacity:0; pointer-events:none; }
+    #evo-cel.charge s { animation:evIn 1.1s var(--t) ease-in infinite; } #evo-cel.burst s { animation:evOut 1.3s var(--t) cubic-bezier(.1,.7,.3,1) forwards; }
+    .ev-flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:5; }
+    #evo-cel.flash .ev-flash { animation:evFlash 1s ease-out forwards; }
+    .ev-txt { min-height:78px; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+    .ev-l { font-size:clamp(1rem,4.8vw,1.35rem); font-weight:900; letter-spacing:.05em; text-shadow:0 3px 0 rgba(0,0,0,.45), 0 0 18px rgba(56,189,248,.7); }
+    .ev-l.in { animation:evText .5s cubic-bezier(.2,1.4,.4,1); }
+    .ev-tag { font-size:.62rem; font-weight:900; letter-spacing:.14em; padding:4px 11px; border-radius:999px; background:linear-gradient(135deg,#38bdf8,#2563eb); box-shadow:0 4px 12px rgba(37,99,235,.6); animation:evText .5s .15s both; }
+    .ev-tag[hidden] { display:none; }
+    .ev-ok { min-width:170px; padding:11px 22px; border:0; border-radius:999px; font:inherit; font-size:.85rem; font-weight:900; letter-spacing:.14em; color:#fff; cursor:pointer; opacity:0; pointer-events:none; translate:0 8px;
+        background:linear-gradient(135deg,#7dd3fc,#2563eb); box-shadow:0 5px 0 rgba(0,0,0,.35), 0 8px 20px rgba(56,189,248,.5); text-shadow:0 2px 0 rgba(0,0,0,.35); transition:opacity .3s, translate .3s; }
+    #evo-cel.ready .ev-ok { opacity:1; pointer-events:auto; translate:0 0; } .ev-ok:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+    #evo-cel.calm *, #evo-cel.calm { animation-duration:.01s !important; animation-delay:0s !important; transition-duration:.01s !important; transition-delay:0s !important; }
+    @media (max-height:520px) { #evo-cel { padding:8px 12px 10px; gap:4px; } .ev-stage { width:min(60vw,58vh,300px); } .ev-txt { min-height:56px; gap:4px; } .ev-l { font-size:1rem; } .ev-ok { padding:7px 18px; font-size:.75rem; } }
+    @keyframes evBreath { 50% { scale:1.12; } }
+    @keyframes evRing { 0% { scale:.55; opacity:.95; } 100% { scale:1.9; opacity:0; } }
+    @keyframes evWave { 0% { scale:.5; opacity:1; } 100% { scale:2.4; opacity:0; } }
+    @keyframes evPulse { 50% { scale:1.1; } }
+    @keyframes evIn { 0% { transform:translate(calc(var(--dx) * 1.7), calc(var(--dy) * 1.7)) scale(.4); opacity:0; } 30% { opacity:1; } 100% { transform:translate(0,0) scale(1.1); opacity:0; } }
+    @keyframes evOut { 0% { transform:translate(0,0) scale(.3); opacity:1; } 100% { transform:translate(calc(var(--dx) * 2.2), calc(var(--dy) * 2.2)) scale(.9); opacity:0; } }
+    @keyframes evFlash { 0% { opacity:0; } 18% { opacity:1; } 100% { opacity:0; } }
+    @keyframes evText { from { opacity:0; transform:translateY(10px) scale(.92); } to { opacity:1; transform:none; } }
     /* v0.81 · subida de nivel con premios */
     #lvl-cel { position:absolute; inset:0; z-index:300; display:grid; place-items:center; padding:12px; overflow-y:auto; color:#fff; font-family:var(--mm-font); -webkit-tap-highlight-color:transparent;
         background:radial-gradient(ellipse at 50% 38%, rgba(37,99,235,.6), rgba(5,9,26,.94) 68%); animation:lcFade .35s ease-out both; --lc-a:#7dd3fc; --lc-b:#2563eb; --lc-glow:56,189,248; }
@@ -6038,6 +6110,7 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
           <button type="button" class="pdl-tab" data-pg="1" aria-label="Info"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M6 3h9l4 4v14H6zm3 8v1.6h7V11zm0 3.500V16h7v-1.500z"/></svg><span>Info</span></button>
           <button type="button" class="pdl-tab" data-pg="2" aria-label="Combate"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Combate</span></button>
           <button type="button" class="pdl-tab" data-pg="3" aria-label="Estadísticas"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z"/></svg><span>Stats</span></button>
+          <button type="button" class="pdl-tab" data-pg="4" aria-label="Evolución"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM7 9.5 3 7v10l4-2.500zM17 9.500 21 7v10l-4-2.500z"/></svg><span>Evolución</span></button>
         </div>
         <div class="pdl-main">
           <div class="pdl-text">
@@ -23415,6 +23488,15 @@ const GameAudio = (() => {
             tone('square', 1568, t + 0.5, 0.5, 0.05, d); noise(t + 0.5, 0.5, 0.05, 2500, d);
         }
         else if (name === 'coin') { tone('square', 988, t, 0.07, 0.09, d); tone('square', 1319, t + 0.07, 0.2, 0.09, d); }
+        else if (name === 'candy') { tone('square', 784, t, 0.06, 0.08, d); tone('square', 1175, t + 0.06, 0.06, 0.08, d); tone('triangle', 1568, t + 0.12, 0.2, 0.09, d); }
+        else if (name === 'evolve') { // tensión creciente (~2,3 s) mientras brilla
+            tone('sawtooth', 220, t, 2.3, 0.05, d, 880); tone('triangle', 330, t, 2.3, 0.07, d, 1320);
+            for (let i = 0; i < 14; i++) tone('square', 660 + i * 70, t + 0.3 + i * 0.15, 0.08, 0.05, d);
+        }
+        else if (name === 'evolved') { // fanfarria al terminar la evolución
+            [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f, i) => tone('square', f, t + i * 0.09, 0.14, 0.10, d));
+            [523.25, 659.25, 783.99, 1046.5].forEach(f => tone('triangle', f, t + 0.6, 0.9, 0.07, d)); noise(t, 0.6, 0.06, 2000, d);
+        }
     }
     document.addEventListener('visibilitychange', () => {
         if (!ctx) return;
@@ -25410,7 +25492,7 @@ function renderPCDetail() {
     const b = pcBox[pcSel]; if (!b) return;
     if (!pcInfoMap) pcInfoMap = pcBuildInfo();
     const info = pcInfoMap[b.name] || { types: [], move: null, ability: null };
-    capEl('pd-pg').textContent = pcPage + '/3'; pcApplyTheme(capEl('pc-detail'), info.types);
+    capEl('pd-pg').textContent = pcPage + '/4'; pcApplyTheme(capEl('pc-detail'), info.types);
     capEl('pc-detail').querySelectorAll('.pdl-tab').forEach(t => t.classList.toggle('on', +t.dataset.pg === pcPage));
     capEl('pd-no').textContent = bxName(b.box | 0, b.sub | 0) + ' · Nº ' + String((b.slot | 0) + 1).padStart(2, '0');
     capEl('pd-shiny').textContent = (b.shiny ? '✦ VARIOCOLOR' : '') + (b.gmax ? (b.shiny ? ' · ' : '') + 'G GIGAMAX' : '');
@@ -25427,6 +25509,8 @@ function renderPCDetail() {
             + (bv ? pcRowTap('TAMAÑO', pcFmtM(bv.h) + pcExtremeChip(b.hf), 'body') + pcRowTap('PESO', pcFmtKg(bv.w) + pcExtremeChip(b.wf), 'body') : '')
             + (b.gmax ? pcRow('FORMA', 'GIGAMAX<br>(5 s en Raid)') : '');
         memo.textContent = b.how === 'alfa' ? 'Capturado en raid' : b.how === 'ganador' ? 'Capturado ganador de la arena' : 'Capturado en la arena';
+    } else if (pcPage === 4) {
+        pcRenderEvo(b, rows, memo);
     } else if (pcPage === 3) {
         // Estadísticas REALES de este ejemplar (las mismas que usa en combate): base + IVs + naturaleza.
         const s3 = info.stats ? deriveStats(info.stats, b.iv, b.nature) : null, nat3 = NATURES[b.nature];
@@ -25468,6 +25552,141 @@ capEl('pd-rows').addEventListener('click', e => {
         pcOpenPop(ab ? pcEsc(ab.name).toUpperCase() : 'SIN HABILIDAD', '<div class="pd-popdesc">' + (ab ? pcEsc(ab.desc || 'Habilidad especial de este Pokémon.') : 'Este Pokémon no tiene habilidad.') + '</div>');
     }
 });
+// ===== CARAMELOS RAROS (evolución de los Pokémon de la Caja) =====
+// Se compran en la Tienda (750 ₽). En la ficha de un Pokémon (pestaña Evolución) se le dan: la barra azul muestra el % que lleva y, al completarla,
+// evoluciona conservando IVs, naturaleza, brillo, cuerpo y movimiento. Los caramelos dados se guardan en la propia entrada (b.candy).
+// Cuántos hacen falta depende de la fuerza de la evolución (suma de estadísticas base): Metapod 2, Raichu 7, Charizard 9, Tyranitar 10...
+const CANDY_ID = 'rarecandy', CANDY_MIN = 2, CANDY_MAX = 14;
+const candyStatSum = st => st ? ['hp', 'attack', 'defense', 'spAttack', 'spDefense', 'speed'].reduce((a, k) => a + (st[k] || 0), 0) : 0;
+function candyNeed(opts) { // con varias ramas (Eevee...) se usa la media de todas
+    const avg = opts.reduce((a, o) => a + candyStatSum(o.stats), 0) / Math.max(1, opts.length);
+    return Math.max(CANDY_MIN, Math.min(CANDY_MAX, Math.round((avg - 150) / 45)));
+}
+function pcEvoInfo(b) { // null = forma desconocida; { final } = sin más evoluciones; si no: { opts, branched, need }
+    let look = null; try { look = raidFormLookup()[capClean(b.name)]; } catch (e) {}
+    if (!look) return null;
+    const chain = evolutionData[look.id] || [], st = chain[look.stage]; // la etapa actual es 'look.stage' (0 = base): la siguiente es chain[look.stage]
+    if (!st) return { final: look.stage > 0, line: look.id, stage: look.stage };
+    const opts = (st.branches || [st]).filter(o => o && o.sprite).map(o => ({ name: o.dexName || o.name, sprite: o.sprite, stats: o.stats }));
+    if (!opts.length) return null;
+    return { line: look.id, stage: look.stage, opts: opts, branched: !!st.branches, need: candyNeed(opts) };
+}
+let pcEvoBusy = false, pcEvoFrom = null;
+function pcRenderEvo(b, rows, memo) {
+    const ev = pcEvoInfo(b), have = bagCount(CANDY_ID), cd = SHOP_ITEMS.find(i => i.id === CANDY_ID);
+    const head = '<div class="pce-head">' + (cd && cd.img ? '<img src="' + cd.img + '" alt="" draggable="false">' : '') + '<span>CARAMELOS RAROS</span><em>EN LA BOLSA <b>×' + have + '</b></em></div>';
+    memo.textContent = 'Cada Caramelo Raro cuesta ' + fmtMoney(750) + ' en la Tienda. Al llenar la barra evoluciona y conserva sus IVs, naturaleza y brillo.';
+    if (!ev || !ev.need) {
+        const fin = !!(ev && ev.final);
+        rows.innerHTML = '<div class="pce">' + head + '<div class="pce-final">' + (fin ? 'FORMA FINAL' : 'NO EVOLUCIONA') + '</div><p class="pce-hint">' + (fin ? 'Este Pokémon ya está en su última evolución.' : 'Esta especie no tiene evoluciones.') + '</p></div>';
+        return;
+    }
+    const got = Math.min(b.candy | 0, ev.need), pct = Math.round(got / ev.need * 100), left = ev.need - got, full = left <= 0;
+    const spr = o => '<img src="' + o.sprite + '" alt="" draggable="false">';
+    let h = '<div class="pce">' + head
+        + '<div class="pce-nxs">' + ev.opts.map(o => '<span class="pce-nx">' + spr(o) + '<b>' + pcEsc(dispName(o.name)) + '</b></span>').join('') + '</div>'
+        + '<div class="pce-bar" role="progressbar" aria-label="Progreso de evolución" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i><span>' + pct + '%</span></div>'
+        + '<div class="pce-cnt"><b>' + got + ' / ' + ev.need + '</b> caramelos · ' + (full ? '¡listo para evolucionar!' : 'faltan ' + left) + '</div>';
+    if (full && ev.branched) {
+        h += '<div class="pce-pt">ELIGE SU EVOLUCIÓN</div><div class="pce-pick">' + ev.opts.map((o, k) => '<button type="button" class="pce-btn pce-opt" data-a="evo" data-k="' + k + '">' + spr(o) + '<b>' + pcEsc(dispName(o.name)) + '</b></button>').join('') + '</div>';
+    } else if (full) {
+        h += '<div class="pce-acts"><button type="button" class="pce-btn go" data-a="evo" data-k="0">¡EVOLUCIONAR!</button></div>';
+    } else {
+        const n = Math.min(have, left);
+        h += '<div class="pce-acts"><button type="button" class="pce-btn" data-a="give" data-n="1"' + (have < 1 ? ' disabled' : '') + '>DAR 1</button>'
+            + (n > 1 ? '<button type="button" class="pce-btn" data-a="give" data-n="max">DAR ' + n + '</button>' : '') + '</div>'
+            + (have < 1 ? '<p class="pce-hint">No tienes caramelos raros. Cómpralos en la Tienda del menú.</p>' : '');
+    }
+    rows.innerHTML = h + '</div>';
+    const fill = rows.querySelector('.pce-bar i');
+    if (fill && pcEvoFrom != null) { const to = fill.style.width; fill.style.width = pcEvoFrom + '%'; void fill.offsetWidth; fill.style.width = to; } // la barra sube animada
+    pcEvoFrom = null;
+}
+function pcCandyGive(n) {
+    const b = pcBox[pcSel]; if (!b || pcEvoBusy) return;
+    const ev = pcEvoInfo(b); if (!ev || !ev.need) return;
+    const cur = Math.min(b.candy | 0, ev.need), k = Math.min(n, bagCount(CANDY_ID), ev.need - cur);
+    if (k < 1) { try { GameAudio.sfx('close'); } catch (e) {} return; }
+    if (!bagUse(CANDY_ID, k)) return;
+    pcEvoFrom = Math.round(cur / ev.need * 100);
+    b.candy = cur + k; capSave(CAP_BOX_KEY, pcBox);
+    try { GameAudio.sfx('candy'); } catch (e) {}
+    renderPCDetail();
+    const bar = capEl('pd-rows').querySelector('.pce-bar'); if (bar) { bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); }
+    if (b.candy >= ev.need && !ev.branched) { pcEvoBusy = true; setTimeout(() => { pcEvoBusy = false; pcEvolveStart(0); }, 800); } // barra llena: evoluciona sola
+}
+function pcEvolveApply(b, o) { // cambia la entrada de la Caja a la nueva forma (mismos IVs, naturaleza, brillo, cuerpo, género y movimiento)
+    if (!pcInfoMap) pcInfoMap = pcBuildInfo();
+    const oldName = capClean(b.name), newName = o.name, norm = unshinyUrl(String(o.sprite)), shiny = !!b.shiny;
+    b.name = newName; b.sprite = shiny ? shinyUrl(norm) : norm; b.candy = 0;
+    const oi = pcInfoMap[oldName], ni = pcInfoMap[newName]; // habilidad: la de la misma posición en la nueva forma (Pikachu -> Raichu...)
+    if (ni && ni.abilities && ni.abilities.length && (!b.ability || ni.abilities.indexOf(b.ability) < 0)) {
+        const idx = Math.max(0, ((oi && oi.abilities) || []).indexOf(b.ability));
+        if (b.ability) b.ability = ni.abilities[Math.min(idx, ni.abilities.length - 1)];
+    }
+    const dex = capLoad(CAP_DEX_KEY, {}), cn = capClean(newName); let d = dex[cn], dirty = false, isNew = false;
+    if (!d) { d = dex[cn] = { sprite: norm, ts: Date.now() }; dirty = true; isNew = true; }
+    if (shiny && !d.shiny) { d.shiny = true; d.shinySprite = shinyUrl(norm); dirty = true; }
+    if (dirty) capSave(CAP_DEX_KEY, dex);
+    capSave(CAP_BOX_KEY, pcBox);
+    return { isNew: isNew };
+}
+function pcEvolveStart(k) {
+    const b = pcBox[pcSel]; if (!b || pcEvoBusy) return;
+    const ev = pcEvoInfo(b); if (!ev || !ev.need || (b.candy | 0) < ev.need) return;
+    const o = ev.opts[k] || ev.opts[0]; pcEvoBusy = true;
+    const before = { name: b.name, sprite: b.sprite };
+    const res = pcEvolveApply(b, o); // los datos cambian ya: si se cierra el juego a mitad de la animación no se pierde nada
+    pcEvoAnim(before, b, res, () => { pcEvoBusy = false; try { renderBox(); } catch (e) {} try { renderPCDetail(); } catch (e) {} });
+}
+capEl('pd-rows').addEventListener('click', e => {
+    const bt = e.target.closest('.pce-btn'); if (!bt || bt.disabled) return;
+    if (bt.dataset.a === 'give') pcCandyGive(bt.dataset.n === 'max' ? 999 : (+bt.dataset.n || 1));
+    else if (bt.dataset.a === 'evo') pcEvolveStart(+bt.dataset.k || 0);
+});
+// Animación: el sprite brilla y se vuelve silueta blanca (pulsos cada vez más rápidos, anillos y chispas que convergen) -> destello -> aparece la nueva forma con ráfaga.
+function pcEvoAnim(before, b, res, done) {
+    const sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const oldN = dispName(capClean(before.name)), newN = dispName(capClean(b.name)), esc = pcEsc;
+    let sp = ''; for (let i = 0; i < 26; i++) { const a = (i / 26) * 6.2832 + Math.random() * 0.5, r = 80 + Math.random() * 70; sp += '<s style="--dx:' + (Math.cos(a) * r).toFixed(0) + 'px;--dy:' + (Math.sin(a) * r).toFixed(0) + 'px;--t:' + (Math.random() * 0.9).toFixed(2) + 's"></s>'; }
+    const el = document.createElement('div'); el.id = 'evo-cel'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Evolución');
+    el.innerHTML = '<div class="ev-stage"><i class="ev-glow"></i><i class="ev-ring"></i><i class="ev-ring r2"></i><i class="ev-ring r3"></i><i class="ev-wave"></i>'
+        + '<div class="ev-spr"><img class="ev-old" alt="" draggable="false" src="' + esc(before.sprite) + '"><img class="ev-new" alt="" draggable="false"></div>' + sp + '</div>'
+        + '<div class="ev-txt"><div class="ev-l" id="ev-l">¿Qué? ¡' + esc(oldN) + ' está evolucionando!</div><div class="ev-tag" id="ev-tag" hidden>¡NUEVO EN LA POKÉDEX!</div></div>'
+        + '<button class="ev-ok" type="button">CONTINUAR</button><i class="ev-flash"></i>';
+    mainMenuEl.appendChild(el);
+    const T = [], later = (fn, ms) => { T.push(setTimeout(fn, ms)); };
+    const lEl = el.querySelector('#ev-l'), nImg = el.querySelector('.ev-new'), ok = el.querySelector('.ev-ok');
+    let closed = false, ready = false;
+    const setText = t => { lEl.textContent = t; lEl.classList.remove('in'); void lEl.offsetWidth; lEl.classList.add('in'); };
+    const finalText = () => { setText('¡' + oldN + ' evolucionó a ' + newN + '!'); if (res && res.isNew) el.querySelector('#ev-tag').hidden = false; };
+    const close = () => {
+        if (closed || !ready) return; closed = true; T.forEach(clearTimeout); sfx('close');
+        document.removeEventListener('keydown', onKey, true); el.classList.add('out');
+        setTimeout(() => { el.remove(); done(); }, reduce ? 0 : 300);
+    };
+    const onKey = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } };
+    document.addEventListener('keydown', onKey, true);
+    ok.addEventListener('click', e => { e.stopPropagation(); close(); }); el.addEventListener('click', close);
+    const start = () => {
+        requestAnimationFrame(() => el.classList.add('on'));
+        if (reduce) { // sin movimiento: se muestra el resultado directamente
+            nImg.src = b.sprite; el.classList.add('swap', 'reveal', 'calm'); finalText(); sfx('evolved');
+            later(() => { ready = true; el.classList.add('ready'); }, 250); return;
+        }
+        later(() => { el.classList.add('charge'); sfx('evolve'); }, 700);
+        later(() => el.classList.add('p2'), 1700);
+        later(() => el.classList.add('p3'), 2400);
+        later(() => { el.classList.add('flash'); }, 3000);
+        later(() => { nImg.src = b.sprite; el.classList.add('swap'); el.classList.remove('charge', 'p2', 'p3'); el.classList.add('burst'); sfx('evolved'); }, 3080);
+        later(() => el.classList.add('reveal'), 3300);
+        later(finalText, 3800);
+        later(() => { ready = true; el.classList.add('ready'); try { ok.focus({ preventScroll: true }); } catch (e) {} }, 4700);
+    };
+    const pre = new Image(); let go = false; const launch = () => { if (go) return; go = true; start(); };
+    pre.onload = pre.onerror = launch; pre.src = b.sprite; later(launch, 1500); // espera a que cargue el sprite nuevo (máx. 1,5 s)
+}
 // ===== DINERO =====
 // Liberar un Pokémon de la Caja lo convierte en dinero (₽). La oferta depende de los puntos de
 // estadísticas REALES del ejemplar (base + IVs + naturaleza, los mismos que usa en combate) y de si
@@ -25522,6 +25741,7 @@ function pcReleaseAsk() {
         + ap.forms.map(f => line(f.label, '×' + f.mult, 'rl-gold')).join('')
         + (ap.forms.length > 1 ? line('MULTIPLICADOR TOTAL', '×' + ap.mult, 'rl-gold') : '')
         + '</div>'
+        + ((b.candy | 0) > 0 ? '<div class="rl-say">Se te devolverán sus ' + (b.candy | 0) + ' caramelos raros.</div>' : '')
         + '<div class="rl-total"><i class="rl-coin">₽</i><span>OFERTA</span><b>+' + fmtMoney(ap.total) + '</b></div>'
         + '<div class="rl-bal">SALDO ' + fmtMoney(bal) + ' ▸ <b>' + fmtMoney(bal + ap.total) + '</b></div>'
         + '<div class="rl-actions"><button id="rl-keep" type="button" class="rl-btn rl-keep">CONSERVAR</button>'
@@ -25545,6 +25765,7 @@ function pcReleaseDo() {
             pcBox.splice(i, 1);
             capSave(CAP_BOX_KEY, pcBox);
             capMoneyAdd(ap.total); // solo se cobra si de verdad salió de la Caja (evita cobrar dos veces)
+            if ((b.candy | 0) > 0) bagAdd(CANDY_ID, b.candy | 0); // los caramelos raros que se le dieron vuelven a la bolsa
         }
         pcSel = -1; pcReleasing = false;
         img.classList.remove('pd-releasing');
@@ -25672,7 +25893,9 @@ const SHOP_ITEMS = [
     { id: 'timerball', cat: 'ball', name: 'Turno Ball', price: 1000, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeBAMAAADJHrORAAAAA3NCSVQFBQUYJt5DAAAAIVBMVEX///8xMTH/1jr/lDreWjqcSjp7e4SlpcXezvf///9KUlJQDnjeAAAAAXRSTlMAQObYZgAAAKBJREFUGNNjYKAJYBQUQOELGQcicwWVTcIEkVSnKJumZSF0iJUou6alOcKl1ZuVw9LSXAQQ/ClhaalwvrBlqWta5swQmAbhmTNDZ86c0YLEn4nMFwXzO1pgTpLKnLVqZkdH60IYf9Xy6Ss6slbB+IxRK2euWrVqKdx+z/Tpq1Yta4c7WGJaWkdHRyHCPxVAbjlSCAiWl5cLogSAoCADXQAABBIzOVVREGcAAAAASUVORK5CYII=',
       desc: 'Mejor cuanto más dura el combate.' },
     { id: 'raidticket', cat: 'key', name: 'Tiquet de Raid', price: 10000, img: 'data:image/png;base64,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',
-      desc: 'Permite iniciar una Raid.' }
+      desc: 'Permite iniciar una Raid.' },
+    { id: 'rarecandy', cat: 'boost', name: 'Caramelo Raro', price: 750, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAABe0lEQVR4nGNgGAWjgELQc/b//wGx9PW3//8HzHK6W4oPMJKqgU8jD6sPPt2YRJJZLOiG4jIAZqGYQwUus/4TcgCy+Uy4LMBlaUaqJIOWBQLD+DAHoccpjI8rpOAWvP72/z+yIj6NvP98Gnn/VTKe/X/97T8c+y2ApFa/BQjccxaiF6Yf2VJ0czF8DAOrTryGKxJzqGDQspCEyyWvwul2jKhANgcZYLX47rmJcN/CLLXTRbXUTpeB4dBlhB4YHxbsPWf//y8xZmRENg8ZsGCIYAEwQ2EW4bIUBjJSJRmaovPxxivOoEY2ZMbs5zgtwcaHqcfmU6IthoFrJ56TrEbZKJ88i+uWTiTat9dOPMcIHXx5GmccP2IVYSgxZmSEJTB0Q/HxXx3oIFiSYfXxwusMDLAUScgSbJYigzALUUZsQY5hMboimMvRDcQGYGrQffvpxiSslsMBn0YeRt2JXPrA5FUynsExjI9cYuEzH8YesNoJKxhtroyCUUAOAABYzxjzDcN9QAAAAABJRU5ErkJggg==',
+      desc: 'Dáselo a un Pokémon de la Caja (pestaña Evolución) para hacerlo evolucionar. Cuántos hacen falta depende de la especie y de la evolución.' }
 ];
 // Colores por bolsillo [principal, oscuro, claro]
 const SHOP_THEME = { med: ['#ee6a86', '#c93d62', '#ffd3dd'], ball: ['#ec5a45', '#bf3427', '#ffd4cc'], berry: ['#7dc84f', '#4a9a2c', '#dcf3c4'], boost: ['#f2b01e', '#dc7f22', '#ffe6a3'], key: ['#4fb0e6', '#2a82bd', '#cfeafa'] };
@@ -25814,9 +26037,9 @@ function closeShop() { ShopUI.close(); }
 function openBag() { BagUI.open(); }
 capEl('pc-back').addEventListener('click', pcBack);
 capEl('pd-back').addEventListener('click', pcBack);
-(capEl('pd-prev') || { addEventListener() {} }).addEventListener('click', () => { pcClosePop(); pcPage = pcPage === 1 ? 3 : pcPage - 1; renderPCDetail(); });
+(capEl('pd-prev') || { addEventListener() {} }).addEventListener('click', () => { pcClosePop(); pcPage = pcPage === 1 ? 4 : pcPage - 1; renderPCDetail(); });
 capEl('pc-detail').querySelectorAll('.pdl-tab').forEach(t => t.addEventListener('click', () => { pcClosePop(); pcPage = +t.dataset.pg; renderPCDetail(); try { GameAudio.sfx('tick'); } catch (e) {} }));
-(capEl('pd-next') || { addEventListener() {} }).addEventListener('click', () => { pcClosePop(); pcPage = pcPage === 3 ? 1 : pcPage + 1; renderPCDetail(); });
+(capEl('pd-next') || { addEventListener() {} }).addEventListener('click', () => { pcClosePop(); pcPage = pcPage === 4 ? 1 : pcPage + 1; renderPCDetail(); });
 
 // ---- Pokédex: pantalla completa, orden por número nacional y vista de entrada ----
 let dxList = [], dxSel = -1, dxRegion = 'TODAS', dxCells = [];

@@ -6172,6 +6172,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
       <div class="dv-body" id="dv-detail" hidden></div>
       <div class="dv-body" id="dv-gen" hidden>
         <div class="dv-seg" id="dv-gmode" style="margin-bottom:6px"><button type="button" class="on" data-m="mon">POKÉMON</button><button type="button" data-m="item">OBJETOS</button></div>
+        <div class="dv-h3">Destino del envío</div>
+        <div class="dv-card" id="dv-dest">
+          <label class="dv-lbl" style="margin-top:0">Cuenta que recibirá lo generado</label>
+          <select id="dv-to" class="dv-in"><option value="">Elige la cuenta…</option></select>
+          <input id="dv-to-id" class="dv-in" type="text" maxlength="8" placeholder="ID de cuenta (8 caracteres)" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:8px" hidden>
+          <input id="dv-to-msg" class="dv-in" type="text" maxlength="120" placeholder="Mensaje opcional para el jugador" autocomplete="off" style="margin-top:8px">
+          <div class="dv-msg" id="dv-smsg" role="status" aria-live="polite"></div>
+        </div>
         <div id="dv-gen-mon">
         <div class="dv-h3">1 · Pokémon</div>
         <div class="dv-card">
@@ -6201,6 +6209,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         <div class="dv-h3">4 · Añadir a la Caja</div>
         <div class="dv-card">
           <div class="dv-row2"><div class="dv-qty"><button type="button" class="dv-btn" id="dv-m">−</button><input id="dv-qty" class="dv-in" type="number" inputmode="numeric" min="1" max="40" value="1"><button type="button" class="dv-btn" id="dv-p">+</button></div><button type="button" class="dv-btn pri" id="dv-add" style="flex:1" disabled>AÑADIR A LA CAJA</button></div>
+          <div class="dv-row2" style="margin-top:8px"><button type="button" class="dv-btn" id="dv-send" style="flex:1" disabled>🎁 ENVIAR A OTRA CUENTA</button></div>
           <div class="dv-msg" id="dv-msg" role="status" aria-live="polite"></div>
         </div>
         </div>
@@ -6211,6 +6220,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
           <div class="dv-card">
             <div class="dv-prev"><div class="im"><img id="dv-iprev-img" alt=""></div><div class="tx"><b id="dv-iprev-name">Elige un objeto</b><span id="dv-iprev-sub"></span></div></div>
             <div class="dv-row2" style="margin-top:10px"><div class="dv-qty"><button type="button" class="dv-btn" id="dv-im">−</button><input id="dv-iqty" class="dv-in" type="number" inputmode="numeric" min="1" max="99" value="1"><button type="button" class="dv-btn" id="dv-ip">+</button></div><button type="button" class="dv-btn pri" id="dv-iadd" style="flex:1" disabled>AÑADIR A LA BOLSA</button></div>
+            <div class="dv-row2" style="margin-top:8px"><button type="button" class="dv-btn" id="dv-isend" style="flex:1" disabled>🎁 ENVIAR A OTRA CUENTA</button></div>
             <div class="dv-msg" id="dv-imsg" role="status" aria-live="polite"></div>
           </div>
         </div>
@@ -26569,6 +26579,7 @@ const DV = (() => {
         const kinds = {}; let nSh = 0, nG = 0; mons.forEach(m => { kinds[m[0]] = 1; if (m[2]) nSh++; if (m[3]) nG++; });
         let h = '<div class="dv-prev" style="margin-top:14px"><div class="im">' + (src ? '<img src="' + src + '" alt="">' : '') + '</div><div class="tx"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b>'
             + '<span>' + esc(g.id) + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + ' · ranura ' + esc(g.slot || '—') + '</span><span>Pokédex ' + (g.dex | 0) + lv + ' · creada ' + esc(fmtDate(g.created)) + (g.status === 'eliminada' && g.deleted ? ' · eliminada ' + esc(fmtDate(g.deleted)) : '') + '</span></div></div>';
+        if (g._acc) h += '<div class="dv-row2" style="margin-top:12px"><button type="button" class="dv-btn pri" data-gift="' + esc(g._acc) + '" style="flex:1">🎁 ENVIAR REGALO A ESTA CUENTA</button></div>';
         h += '<div class="dv-h3">Caja (PC)' + (g.status === 'eliminada' ? ' · último estado conocido' : '') + '</div>';
         if (!mons.length) {
             h += '<div class="dv-empty">' + ((g.box | 0) > 0 ? 'Aún no hay datos de la Caja de esta partida.<br>Se actualizan cuando esa cuenta vuelve a abrir el juego.' : 'La Caja de esta partida está vacía.') + '</div>';
@@ -26706,7 +26717,7 @@ const DV = (() => {
             const nat = $('dv-nat'); NATURE_NAMES.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; nat.appendChild(o); });
             renderItemGrid();
         }
-        renderGrid(); updatePreview();
+        renderGrid(); updatePreview(); fillDest();
     }
     function renderGrid() {
         const q = $('dv-q').value.trim().toLowerCase(), g = $('dv-grid'); g.innerHTML = '';
@@ -26729,7 +26740,7 @@ const DV = (() => {
         const add = $('dv-add'), gb = $('dv-var-g');
         const canG = !!gSel && gSel.name === 'Butterfree'; gb.hidden = !canG; if (!canG && gVar === 'g') gVar = 'n';
         [...$('dv-var').children].forEach(b => b.classList.toggle('on', b.dataset.v === gVar));
-        add.disabled = !gSel;
+        add.disabled = !gSel; $('dv-send').disabled = !gSel;
         const abi = $('dv-abi'); const keep = abi.value; abi.innerHTML = '<option value="">Automática</option>';
         if (gSel) {
             try { if (!pcInfoMap) pcInfoMap = pcBuildInfo(); } catch (e) {}
@@ -26771,7 +26782,7 @@ const DV = (() => {
     }
     function updateItemPrev() {
         const it = SHOP_ITEMS.find(x => x.id === iSel), img = $('dv-iprev-img');
-        $('dv-iadd').disabled = !it;
+        $('dv-iadd').disabled = !it; $('dv-isend').disabled = !it;
         if (!it) { $('dv-iprev-name').textContent = 'Elige un objeto'; $('dv-iprev-sub').textContent = ''; img.removeAttribute('src'); return; }
         $('dv-iprev-name').textContent = it.name; $('dv-iprev-sub').textContent = 'En la bolsa: ' + bagCount(it.id) + ' · máx. ' + BAG_MAX;
         if (it.img) img.src = it.img; else img.removeAttribute('src');
@@ -26812,6 +26823,76 @@ const DV = (() => {
         }
         msg.textContent = '✓ ' + qty + ' × ' + dispName(gSel.name) + (shiny ? ' ✦' : '') + (gmax ? ' G-MAX' : '') + ' añadido' + (qty > 1 ? 's' : '') + ' a la Caja · ' + (qty > 1 ? uids[0] + ' … ' + uids[qty - 1] : uids[0]) + ' (' + box.length + ' en total).';
         sfx('confirm');
+    }
+
+    // ---------- enviar a otras cuentas ----------
+    function accList() { // cuentas conocidas por el registro global de partidas (id de 8 caracteres + nombre del entrenador)
+        const m = {}; let log = []; try { log = PAGlobal.live() ? PAGlobal.dev.saves : []; } catch (e) {}
+        log.slice().sort((a, b) => (b.created || 0) - (a.created || 0)).forEach(g => { if (g._acc && !m[g._acc]) m[g._acc] = g.name || ''; else if (g._acc && !m[g._acc] && g.name) m[g._acc] = g.name; });
+        return Object.keys(m).map(k => ({ acc: k, name: m[k] }));
+    }
+    function fillDest(pick) {
+        const sel = $('dv-to'), keep = pick || sel.value; sel.innerHTML = '';
+        const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+        add('', 'Elige la cuenta…'); add('*', '★ Todas las cuentas');
+        accList().forEach(a => add(a.acc, (a.name ? a.name.toUpperCase() + ' · ' : '') + a.acc));
+        add('__id', 'Otra cuenta (escribir ID)…');
+        if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+        else if (keep && /^[a-f0-9]{8}$/.test(keep)) { add(keep, keep); sel.value = keep; }
+        $('dv-to-id').hidden = sel.value !== '__id';
+    }
+    function getDest() {
+        let v = $('dv-to').value; if (v === '__id') v = $('dv-to-id').value.trim().toLowerCase();
+        return v === '*' || /^[a-f0-9]{8}$/.test(v) ? v : '';
+    }
+    function sMsg(t, err) { const m = $('dv-smsg'); m.textContent = t; m.className = 'dv-msg' + (err ? ' err' : ''); }
+    function genEntries(qty) { // mismos rasgos que "Añadir a la Caja", sin ID (la cuenta que lo recibe le pone el suyo)
+        const shiny = gVar === 's', gmax = gVar === 'g';
+        let sprite = spriteOK || pickSprite(); if (gmax) sprite = unshinyUrl(gSel.sprite);
+        const ivMode = $('dv-iv').value, natSel = $('dv-nat').value, abi = $('dv-abi').value, gen = $('dv-gen-sel').value, mvSel = $('dv-mv').value, out = [];
+        for (let i = 0; i < qty; i++) {
+            const iv = {}; STAT_KEYS.forEach(k => { iv[k] = ivMode === 'p' ? IV_MAX : ivMode === 'z' ? 0 : Math.floor(Math.random() * (IV_MAX + 1)); });
+            const bt = rollBody(gSel.name);
+            const e = { name: gSel.name, sprite: sprite, shiny: shiny, iv: iv, nature: natSel || rollNature(), gender: gen || bt.gender, hf: bt.hf, wf: bt.wf };
+            if (abi && abilitiesData[abi]) e.ability = abi;
+            if (gmax) e.gmax = true;
+            if (mvSel && movesData[mvSel]) e.learnedMove = mvSel;
+            out.push(e);
+        }
+        return out;
+    }
+    async function postGift(payload, label) {
+        const to = getDest();
+        if (!to) { sMsg('Elige la cuenta de destino (o escribe su ID de 8 caracteres).', true); return; }
+        if (!SaveSys.canGlobal) { sMsg('No hay servidor configurado: solo se puede añadir a esta cuenta.', true); return; }
+        if (to === '*' && !window.confirm('¿Enviar ' + label + ' a TODAS las cuentas?')) return;
+        let key = ''; try { key = localStorage.getItem('pokearena.adminkey') || ''; } catch (e) {}
+        if (!key) { key = (window.prompt('Clave de desarrollador (DEV KEY del servidor):') || '').trim(); if (!key) return; }
+        sMsg('Enviando…');
+        try {
+            await SaveSys.call('POST', '/api/g/gift', Object.assign({ key: key, to: to, msg: $('dv-to-msg').value.trim() }, payload));
+            try { localStorage.setItem('pokearena.adminkey', key); } catch (e) {}
+            sMsg('✓ Enviado ' + label + ' a ' + (to === '*' ? 'todas las cuentas' : 'la cuenta ' + to) + '. Lo recibirán al abrir el juego (o en menos de 2 minutos).'); sfx('confirm');
+        } catch (e) {
+            if (e && e.status === 403) { try { localStorage.removeItem('pokearena.adminkey'); } catch (e2) {} sMsg('Clave incorrecta o ADMIN_KEY sin configurar en el servidor.', true); }
+            else if (e && e.status === 404) sMsg('Esa cuenta no existe.', true);
+            else if (e && e.status === 400) sMsg('El servidor rechazó el envío' + (e.message ? ': ' + e.message : '') + '.', true);
+            else sMsg('No se pudo enviar: sin conexión o worker.js sin actualizar.', true);
+        }
+    }
+    function sendMon() {
+        if (!gSel) { sMsg('Elige un Pokémon.', true); return; }
+        const qty = Math.max(1, Math.min(40, parseInt($('dv-qty').value, 10) || 1)); $('dv-qty').value = qty;
+        postGift({ mons: genEntries(qty), dex: $('dv-dex').checked }, qty + ' × ' + dispName(gSel.name) + (gVar === 's' ? ' ✦' : gVar === 'g' ? ' G-MAX' : ''));
+    }
+    function sendItem() {
+        const it = SHOP_ITEMS.find(x => x.id === iSel); if (!it) { sMsg('Elige un objeto.', true); return; }
+        const q = Math.max(1, Math.min(99, parseInt($('dv-iqty').value, 10) || 1)); $('dv-iqty').value = q;
+        postGift({ items: [{ id: it.id, n: q }] }, q + ' × ' + it.name);
+    }
+    function giftTo(acc) { // atajo desde el detalle de una cuenta (GUARDADOS)
+        setTab('gen'); fillDest(acc); sfx('pop');
+        const m = $('dv-gen'); if (m) m.scrollTop = 0;
     }
 
     // ---------- eventos ----------
@@ -26858,11 +26939,90 @@ const DV = (() => {
         $('dv-m').addEventListener('click', () => { $('dv-qty').value = Math.max(1, (parseInt($('dv-qty').value, 10) || 1) - 1); });
         $('dv-p').addEventListener('click', () => { $('dv-qty').value = Math.min(40, (parseInt($('dv-qty').value, 10) || 1) + 1); });
         $('dv-add').addEventListener('click', addToBox);
+        $('dv-send').addEventListener('click', sendMon);
+        $('dv-isend').addEventListener('click', sendItem);
+        $('dv-to').addEventListener('change', () => { $('dv-to-id').hidden = $('dv-to').value !== '__id'; if (!$('dv-to-id').hidden) $('dv-to-id').focus(); sMsg(''); });
+        $('dv-detail').addEventListener('click', e => { const g = e.target.closest('[data-gift]'); if (g) giftTo(g.dataset.gift); });
     }
     bind();
     return { open, close };
 })();
 function openDev() { DV.open(); }
+
+// ===== Regalos recibidos desde la consola de desarrollador (Pokémon / objetos) =====
+const PAGifts = (() => {
+    const SEEN = 'pokearena.giftseen'; let busy = false;
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const seenList = () => { try { const a = JSON.parse(localStorage.getItem(SEEN) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+    function markSeen(ids) { try { localStorage.setItem(SEEN, JSON.stringify(seenList().concat(ids).slice(-100))); } catch (e) {} }
+    const num = (v, a, b) => Math.max(a, Math.min(b, +v || 0));
+    function apply(b, got) {
+        if (!b || typeof b !== 'object') return;
+        const mons = (Array.isArray(b.mons) ? b.mons : []).slice(0, 40);
+        if (mons.length) {
+            const box = capLoad(CAP_BOX_KEY, []), dex = capLoad(CAP_DEX_KEY, {}), t0 = Date.now();
+            mons.forEach((m, i) => {
+                if (!m || typeof m.name !== 'string' || typeof m.sprite !== 'string' || !/^https?:\/\//.test(m.sprite)) return;
+                const iv = {}; STAT_KEYS.forEach(k => { iv[k] = Math.round(num(m.iv && m.iv[k], 0, IV_MAX)); });
+                const e = { uid: newUid(), name: m.name.slice(0, 40), sprite: m.sprite.slice(0, 400), shiny: !!m.shiny, how: 'dev', ts: t0 + i, iv: iv,
+                    nature: NATURE_NAMES.indexOf(m.nature) >= 0 ? m.nature : rollNature(), gender: m.gender === 'M' || m.gender === 'F' ? m.gender : (m.gender || undefined), hf: num(m.hf, 0, 1e4), wf: num(m.wf, 0, 1e4) };
+                if (typeof m.ability === 'string' && abilitiesData[m.ability]) e.ability = m.ability;
+                if (m.gmax) e.gmax = true;
+                if (typeof m.learnedMove === 'string' && movesData[m.learnedMove]) e.learnedMove = m.learnedMove;
+                box.push(e); got.mons.push(e);
+                if (b.dex) {
+                    let d = dex[e.name]; if (!d) d = dex[e.name] = { sprite: unshinyUrl(e.sprite), ts: Date.now() };
+                    if (e.shiny) { d.shiny = true; d.shinySprite = shinyUrl(unshinyUrl(e.sprite)); }
+                    if (e.gmax) { d.gmax = true; d.gmaxSprite = GMAX_SPRITE_URL; }
+                }
+            });
+            capSave(CAP_BOX_KEY, box); if (b.dex) capSave(CAP_DEX_KEY, dex);
+        }
+        (Array.isArray(b.items) ? b.items : []).slice(0, 30).forEach(x => {
+            const it = x && SHOP_ITEMS.find(s => s.id === x.id); if (!it) return;
+            const n = Math.round(num(x.n, 1, 99)), had = bagCount(it.id), now = bagAdd(it.id, n);
+            if (now > had) got.items.push({ it: it, n: now - had });
+        });
+        if (typeof b.msg === 'string' && b.msg.trim()) got.msgs.push(b.msg.trim().slice(0, 120));
+    }
+    function popup(got) {
+        const o = document.createElement('div');
+        o.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,4,10,.78);font-family:"PA Chakra S",system-ui,sans-serif';
+        let rows = '';
+        got.mons.slice(0, 12).forEach(e => { rows += '<div style="display:flex;flex-direction:column;align-items:center;width:78px"><img src="' + esc(e.sprite) + '" alt="" style="width:56px;height:56px;object-fit:contain;image-rendering:pixelated"><span style="font-size:11px;font-weight:700;text-align:center">' + (e.shiny ? '✦ ' : '') + esc(dispName(e.name)) + '</span></div>'; });
+        if (got.mons.length > 12) rows += '<div style="align-self:center;font-weight:700">+' + (got.mons.length - 12) + ' más</div>';
+        got.items.forEach(x => { rows += '<div style="display:flex;flex-direction:column;align-items:center;width:78px">' + (x.it.img ? '<img src="' + esc(x.it.img) + '" alt="" style="width:44px;height:44px;object-fit:contain;image-rendering:pixelated;margin:6px 0">' : '') + '<span style="font-size:11px;font-weight:700;text-align:center">' + esc(x.it.name) + ' ×' + x.n + '</span></div>'; });
+        o.innerHTML = '<div style="width:min(92vw,360px);max-height:86vh;overflow:auto;background:linear-gradient(#1a1d33,#0d0f1e);border:2px solid #fbbf24;border-radius:20px;padding:20px 16px 16px;text-align:center;color:#f8fafc;box-shadow:0 0 40px rgba(251,191,36,.35)">'
+            + '<div style="font-size:34px;line-height:1">🎁</div><div style="font-size:18px;font-weight:800;margin:6px 0 2px;color:#fde68a">¡Has recibido un regalo!</div>'
+            + (got.msgs.length ? '<div style="font-size:12px;color:#cbd5e1;margin:6px 0">“' + got.msgs.map(esc).join('” · “') + '”</div>' : '')
+            + '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:14px 0">' + rows + '</div>'
+            + '<div style="font-size:11px;color:#94a3b8;margin-bottom:12px">' + (got.mons.length ? 'Los Pokémon están en tu Caja. ' : '') + (got.items.length ? 'Los objetos están en tu Bolsa.' : '') + '</div>'
+            + '<button type="button" style="all:unset;cursor:pointer;display:block;width:100%;box-sizing:border-box;padding:12px;border-radius:12px;background:#fbbf24;color:#1c1400;font-weight:800;letter-spacing:.04em">GENIAL</button></div>';
+        o.querySelector('button').addEventListener('click', () => { o.remove(); try { GameAudio.sfx('confirm'); } catch (e) {} });
+        document.body.appendChild(o);
+        try { GameAudio.sfx('confirm'); } catch (e) {}
+    }
+    async function check() {
+        if (busy || !SaveSys.canGlobal || document.hidden) return;
+        try { if (gameRunning) return; } catch (e) {}
+        busy = true;
+        try {
+            await SaveSys.ready; if (!SaveSys.usable) return;
+            const tr = SaveSys.read('pokearena.trainer', null); if (!tr || !tr.name) return; // aún sin entrenador/partida: se recoge más tarde
+            const r = await SaveSys.call('GET', '/api/gifts'), list = (r && r.gifts) || []; if (!list.length) return;
+            const sn = seenList(), got = { mons: [], items: [], msgs: [] };
+            list.filter(g => sn.indexOf(g.id) < 0).forEach(g => { try { apply(g.body, got); } catch (e) { console.error(e); } });
+            markSeen(list.map(g => g.id));
+            try { await SaveSys.call('POST', '/api/gifts/ack', { ids: list.map(g => g.id) }); } catch (e) {}
+            if (got.mons.length || got.items.length) { try { updateMenuRes(); } catch (e) {} popup(got); }
+            if (list.length >= 10) setTimeout(check, 1500); // quedan más por recoger
+        } catch (e) {} finally { busy = false; }
+    }
+    SaveSys.ready.then(() => setTimeout(check, 4000));
+    setInterval(check, 90000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 800); });
+    return { check };
+})();
 </script>
 
 <script>

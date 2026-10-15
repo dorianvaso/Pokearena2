@@ -24,6 +24,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
         // última instantánea de la arena que publica el anfitrión (la simula él; el resto de jugadores la ve en directo)
         db.prepare('CREATE TABLE IF NOT EXISTS room_snap (code TEXT PRIMARY KEY, seq INTEGER NOT NULL, data TEXT NOT NULL)'),
+        // ---- regalos enviados desde la consola de desarrollador (Pokémon / objetos) a una cuenta ('acc' = 8 primeros caracteres) o a todas ('*') ----
+        db.prepare('CREATE TABLE IF NOT EXISTS gifts (id TEXT PRIMARY KEY, acc TEXT NOT NULL, ts INTEGER NOT NULL, body TEXT NOT NULL)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS gifts_acc ON gifts (acc, ts)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS gift_claims (gid TEXT NOT NULL, h TEXT NOT NULL, PRIMARY KEY (gid, h))'),
     ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
         .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
@@ -259,6 +263,38 @@ export default {
             if (route === '/api/g/arena' && req.method === 'GET') {
                 const row = await db.prepare('SELECT body FROM g_arenas WHERE k = ?1').bind(url.searchParams.get('k') || '').first();
                 return row ? reply(row.body) : reply({ error: 'no existe' }, 404);
+            }
+            // ---- regalos: la consola de desarrollador envía (exige ADMIN_KEY); cada cuenta recoge lo suyo ----
+            if (route === '/api/g/gift' && req.method === 'POST') {
+                const key = env.ADMIN_KEY;
+                if (!key) return reply({ error: 'falta configurar ADMIN_KEY en Cloudflare' }, 403);
+                const t = await req.text(); if (t.length > 400000) return reply({ error: 'demasiado grande' }, 413);
+                let b; try { b = JSON.parse(t); } catch (e) { return reply({ error: 'json no válido' }, 400); }
+                if (!isObj(b) || b.key !== key) return reply({ error: 'clave incorrecta' }, 403);
+                const to = b.to === '*' ? '*' : String(b.to || '').toLowerCase();
+                if (to !== '*' && !/^[a-f0-9]{8}$/.test(to)) return reply({ error: 'cuenta no válida' }, 400);
+                if (to !== '*' && !(await db.prepare('SELECT 1 FROM accounts WHERE substr(h, 1, 8) = ?1').bind(to).first())) return reply({ error: 'esa cuenta no existe' }, 404);
+                const mons = (Array.isArray(b.mons) ? b.mons : []).filter(isObj).slice(0, 40).filter(m => JSON.stringify(m).length < 4000);
+                const items = (Array.isArray(b.items) ? b.items : []).filter(i => isObj(i) && typeof i.id === 'string' && /^[a-z0-9_-]{1,40}$/i.test(i.id)).slice(0, 30).map(i => ({ id: i.id, n: Math.max(1, Math.min(99, i.n | 0)) }));
+                if (!mons.length && !items.length) return reply({ error: 'regalo vacío' }, 400);
+                const msg = typeof b.msg === 'string' ? b.msg.slice(0, 120) : '';
+                const id = Date.now().toString(36) + hex(crypto.getRandomValues(new Uint8Array(4))), now = Date.now();
+                const st = [db.prepare('INSERT INTO gifts (id, acc, ts, body) VALUES (?1, ?2, ?3, ?4)').bind(id, to, now, JSON.stringify({ mons, items, msg, dex: !!b.dex }))];
+                if (Math.random() < 0.05) st.push(db.prepare('DELETE FROM gifts WHERE ts < ?1').bind(now - 30 * 864e5), db.prepare('DELETE FROM gift_claims WHERE gid NOT IN (SELECT id FROM gifts)'));
+                await db.batch(st);
+                return reply({ ok: true, id });
+            }
+            if (route === '/api/gifts' && req.method === 'GET') { // regalos pendientes de ESTA cuenta (los generales solo los ven las cuentas creadas antes de enviarse)
+                const me = await db.prepare('SELECT created FROM accounts WHERE h = ?1').bind(h).first();
+                const { results } = await db.prepare("SELECT id, ts, body FROM gifts WHERE (acc = ?1 OR (acc = '*' AND ts >= ?3)) AND ts > ?4 AND NOT EXISTS (SELECT 1 FROM gift_claims c WHERE c.gid = gifts.id AND c.h = ?2) ORDER BY ts LIMIT 10")
+                    .bind(h.slice(0, 8), h, (me && me.created) || 0, Date.now() - 30 * 864e5).all();
+                return reply('{"gifts":[' + results.map(r => '{"id":"' + r.id + '","ts":' + r.ts + ',"body":' + r.body + '}').join(',') + ']}');
+            }
+            if (route === '/api/gifts/ack' && req.method === 'POST') {
+                const b = await req.json().catch(() => ({}));
+                const ids = (Array.isArray(b.ids) ? b.ids : []).filter(x => typeof x === 'string' && /^[a-z0-9]{1,20}$/.test(x)).slice(0, 20);
+                if (ids.length) await db.batch(ids.map(id => db.prepare('INSERT OR IGNORE INTO gift_claims (gid, h) VALUES (?1, ?2)').bind(id, h)));
+                return reply({ ok: true });
             }
             if (route === '/api/g/clear' && req.method === 'POST') {
                 const key = env.ADMIN_KEY;

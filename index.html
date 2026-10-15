@@ -20,6 +20,16 @@ html.ios-lite .pbx-ring,html.ios-lite .pbx-sp,html.ios-lite .pbx-btn{box-shadow:
 html.ios-lite .pokeball-spawn-fx .pbx-sp:not(:nth-of-type(3n)){display:none}
 html.ios-lite .pokemon-wrapper.camera-focus .pokemon img,html.ios-lite .pokemon-wrapper.duel-aura .pokemon,html.ios-lite .pokemon-wrapper.is-phantom .pokemon{filter:none}
 html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+
+/* ===== Calidad adaptativa (PerfKit): solo se activa si los fps bajan de verdad ===== */
+html.pq1 #lt-sun{mix-blend-mode:normal}
+html.pq1 #camera-layer.sh-blur .pokemon-wrapper::before{filter:none}
+html.pq1 .pokemon-wrapper.ability-aura .pokemon img{animation:none;filter:drop-shadow(0 0 7px #ef4444) drop-shadow(0 0 12px #b91c1c)}
+html.pq1 .pokemon-wrapper.lens-aura .pokemon img{animation:none;filter:brightness(1.2) drop-shadow(0 0 7px #4ade80)}
+html.pq1 .pokemon-wrapper.focus-charging .pokemon img{animation:focusShake .08s steps(2) infinite;filter:drop-shadow(0 0 6px #ec4899)}
+html.pq1 *{-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+html.pq2 #lt-sun{display:none}
+html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 </style>
 <style>
         html, body {
@@ -7246,7 +7256,7 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
 
         const sprCache = {}; // url -> { st: 'loading'|'ok'|'bad', img, cbs: [] }
         // v0.50: precarga frontal + trasero de todas las especies al abrir la página (evita el parpadeo en el primer giro).
-        try { Object.keys(baseAppearance).forEach(id => { const u = baseAppearance[id].sprite; if (u) { sprEnsure(u); sprEnsure(sprSet(u, true, isShinySpr(u))); } }); } catch (e) {}
+        try { window.__paBaseSprites = Object.keys(baseAppearance).map(id => baseAppearance[id].sprite).filter(Boolean); } catch (e) {} // la precarga la gestiona PerfKit (cola con poca concurrencia, fuera del combate)
 
         // Progreso de evolución PERSISTENTE por especie/casilla (no por individuo):
         // si un Pokémon evolucionado se debilita y esa especie vuelve a incorporarse
@@ -19261,6 +19271,7 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
         // como una carrera y no como un simple deslizamiento por el campo.
         function spawnDashTrail(c, soft) { // soft = estela del duelo: más tenue y de vida más corta
             if (!c.pokemonEl) return;
+            if (window.PA_PQ >= 2 && (c._trN = (c._trN || 0) + 1) % 2) return; // calidad adaptativa nivel 2: una estela de cada dos
             const imgEl = c.pokemonEl.querySelector('img');
             if (!imgEl) return;
 
@@ -21382,7 +21393,7 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
         function updateDayCycle(dtMs) {
             if (!gameOver) dayMs += dtMs;
             const now = performance.now();
-            if (now - ltLastDraw < 33) return;
+            if (now - ltLastDraw < (window.PA_LT_MS || 33)) return;
             ltLastDraw = now;
             const r = dayParamsAt(dayMs); renderLighting(r.P, r.ph, r.local);
         }
@@ -26852,6 +26863,91 @@ const DV = (() => {
     return { open, close };
 })();
 function openDev() { DV.open(); }
+</script>
+
+<script>
+/* ===== PerfKit: precarga de sprites fuera del combate + calidad adaptativa ===== */
+(function(){
+  'use strict';
+  var IOS = !!window.PA_IOS;
+  var CONC = IOS ? 2 : 4;            // peticiones simultáneas de precarga
+  var q = [], active = 0, seen = Object.create(null), started = false, timer = 0;
+  function inCombat(){ try { return !!gameRunning; } catch(e){ return false; } }
+  function idle(fn){ if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 1500 }); else setTimeout(fn, 60); }
+  function push(u, keep){ if (!u || seen[u]) return; seen[u] = 1; q.push({ u: u, keep: keep }); }
+  function pump(){
+    if (inCombat() || document.hidden) return;           // jamás compite con una partida en curso
+    while (active < CONC && q.length) {
+      var it = q.shift(); active++;
+      (function(it){
+        var fin = function(){ active--; setTimeout(function(){ idle(pump); }, IOS ? 40 : 15); };
+        try {
+          // los sprites base se retienen en la caché del juego (como antes); el resto solo calienta la caché HTTP
+          // y deja precalculado su encuadre, sin ocupar memoria de decodificación (iOS la limita mucho)
+          if (it.keep && typeof sprEnsure === 'function') sprEnsure(it.u, function(){ fin(); });
+          else if (typeof getSpriteBounds === 'function') getSpriteBounds(it.u, function(){ fin(); });
+          else fin();
+        } catch(e){ fin(); }
+      })(it);
+    }
+  }
+  function walk(o, out, d){
+    if (!o || d > 6) return;
+    if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) walk(o[i], out, d + 1); return; }
+    if (typeof o !== 'object' || Object.getPrototypeOf(o) !== Object.prototype) return;
+    if (typeof o.sprite === 'string') out.push(o.sprite);
+    for (var k in o) { var v = o[k]; if (v && typeof v === 'object' && k !== 'stats' && k !== 'sound') walk(v, out, d + 1); }
+  }
+  function both(u){ try { var b = sprSet(u, true, isShinySpr(u)); return b && b !== u ? [u, b] : [u]; } catch(e){ return [u]; } }
+  function build(){
+    var base = window.__paBaseSprites || [];
+    base.forEach(function(u){ both(u).forEach(function(x){ push(x, true); }); });
+    var ev = []; try { walk(evolutionData, ev, 0); } catch(e){}
+    ev.forEach(function(u){ both(u).forEach(function(x){ push(x, false); }); });
+  }
+  function start(){
+    if (started) return; started = true;
+    build();
+    clearInterval(timer); timer = setInterval(function(){ if (!q.length && !active) { clearInterval(timer); return; } idle(pump); }, 1200);
+    idle(pump);
+  }
+  // fuera de combate: en cuanto la página está cargada y el navegador ocioso (menú, tienda, PC...)
+  function boot(){ setTimeout(function(){ idle(start); }, IOS ? 2500 : 1200); }
+  if (document.readyState === 'complete') boot(); else window.addEventListener('load', boot);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) idle(pump); });
+  // al terminar una partida se reanuda la cola (por si quedó algo pendiente)
+  window.PerfKit = { resume: function(){ start(); idle(pump); }, pending: function(){ return q.length + active; } };
+
+  /* ---------- Calidad adaptativa ---------- */
+  var KEY = 'pa.pq', html = document.documentElement, tier = 0;
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && Date.now() - sv.t < 6 * 3600e3) tier = sv.v | 0; } catch(e){}
+  function apply(){
+    html.classList.toggle('pq1', tier >= 1); html.classList.toggle('pq2', tier >= 2);
+    window.PA_PQ = tier; window.PA_LT_MS = tier >= 2 ? 66 : 33;
+  }
+  apply();
+  var last = 0, buf = [], runSince = 0, was = false;
+  function frame(t){
+    requestAnimationFrame(frame);
+    var run = inCombat() && !document.hidden && !(typeof isPaused !== 'undefined' && isPaused);
+    if (!run) { was = false; last = 0; buf.length = 0; return; }
+    if (!was) { was = true; runSince = t; last = t; buf.length = 0; return; }
+    var dt = t - last; last = t;
+    if (t - runSince < 3000 || dt > 250) return;           // calentamiento y tirones puntuales (cambio de pestaña, evolución…)
+    buf.push(dt);
+    if (buf.length < 150) return;
+    var sum = 0, i; for (i = 0; i < buf.length; i++) sum += buf[i];
+    var avg = sum / buf.length, sd = 0; for (i = 0; i < buf.length; i++) sd += (buf[i] - avg) * (buf[i] - avg);
+    sd = Math.sqrt(sd / buf.length); buf.length = 0;
+    var capped30 = avg > 30 && avg < 37 && sd < 3.5;       // modo bajo consumo de iOS: 30 fps estables, no es un problema de rendimiento
+    var limit = capped30 ? 40 : 26;
+    if (avg > limit && tier < 2) {
+      tier++; apply();
+      try { localStorage.setItem(KEY, JSON.stringify({ v: tier, t: Date.now() })); } catch(e){}
+    }
+  }
+  requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>

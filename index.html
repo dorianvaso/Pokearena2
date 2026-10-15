@@ -5624,6 +5624,36 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     .dv-gt { font-size:1.25rem; font-weight:700; line-height:1.15; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .dv-gs { margin-top:8px; font-size:.78rem; color:var(--dv-mut); line-height:1.35; }
     .dv-gs2 { margin-top:2px; font-size:.78rem; color:#6f7079; }
+
+    /* ===== Consola dev v2: datos por símbolo + valor, y avatar/nombre de la cuenta en cada arena ===== */
+    .dv-sts { display:flex; flex-wrap:wrap; gap:5px 14px; margin-top:7px; }
+    .dv-sts + .dv-sts { margin-top:5px; }
+    .dv-st { display:inline-flex; align-items:center; gap:5px; min-width:0; font-size:.76rem; color:#c9cad3; line-height:1.2; white-space:nowrap; }
+    .dv-st svg { flex:none; width:14px; height:14px; fill:none; stroke:#7d7f8c; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    .dv-st b { font-weight:600; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; }
+    .dv-st.mut { color:#8b8c97; } .dv-st.mut b { font-weight:500; }
+    .dv-st.acc svg { stroke:var(--dv-acc); } .dv-st.gold svg { stroke:#fbbf24; } .dv-st.gold { color:#fde68a; }
+    .dv-st.bad { color:#ffb4b8; } .dv-st.bad svg { stroke:#ff8a92; }
+    .dv-st.mono b { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace !important; letter-spacing:.02em; font-size:.72rem; }
+    .dv-game .dv-who { flex:none; width:62px; display:flex; flex-direction:column; align-items:center; gap:5px; }
+    .dv-game .dv-who .dv-sav, .dv-sv .dv-sav { flex:none; position:relative; overflow:hidden; width:48px; height:48px; border-radius:50%; background:linear-gradient(160deg,#2a2c36,#14151b); border:2px solid #3b3d4a; display:grid; place-items:center; font-style:normal; font-weight:700; color:#cfd0d8; }
+    .dv-game .dv-who .dv-sav img { position:absolute; left:50%; bottom:0; height:112%; width:auto; transform:translateX(-50%); }
+    .dv-game .dv-who .wn { max-width:62px; font-size:.6rem; font-weight:700; letter-spacing:.05em; color:#e4e5ec; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dv-game.win .dv-sav { border-color:#fbbf24; }
+    .dv-game .dv-gt { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .dv-game .dv-gmid { flex:1; min-width:0; }
+    .dv-nr { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .dv-nr b { min-width:0; flex:1; }
+    .dv-nr .dv-chip { margin:0 !important; font-size:.66rem; padding:.35em .7em; }
+    .dv-game .dv-chip { font-size:.7rem; padding:.4em .75em; }
+    .dv-sv.del .dv-st b { text-decoration:none !important; }
+    .dv-st.mono b { font-size:.68rem; }
+    .dv-sv .nm .dv-st.mono { font-size:.68rem; }
+    .dv-sv .nm .dv-sts { gap:5px 12px; }
+    .dv-sv .nm .dv-st b { display:inline; font-size:inherit; letter-spacing:0; font-weight:600; }
+    .dv-sv .nm .dv-st.mut b { font-weight:500; }
+    .dv-sv .nm .dv-st { display:inline-flex; margin-top:0; font-size:.76rem; color:#c9cad3; }
+    .dv-sv .nm .dv-st.mut { color:#8b8c97; } .dv-sv .nm .dv-st.gold { color:#fde68a; } .dv-sv .nm .dv-st.bad { color:#ffb4b8; }
     .dv-chip { flex:none; padding:.5em .85em; border-radius:999px; background:#26262c; color:#e8e8ee; font-size:.76rem; font-weight:600; white-space:nowrap; }
     .dv-chip.bad { background:#3a1c20; color:#ffb4b8; } .dv-chip.warn { background:#3a301a; color:#ffd98a; }
     .dv-empty { margin:40px 10px; text-align:center; color:var(--dv-mut); font-size:.9rem; line-height:1.6; }
@@ -26553,15 +26583,46 @@ const DV = (() => {
     }
 
     // ---------- consola de eventos ----------
+    // ---------- datos por símbolo + valor ----------
+    const IC = {
+        dex: '<circle cx="12" cy="12" r="9"/><path d="M3 12h5.5M15.5 12H21"/><circle cx="12" cy="12" r="2.6"/>',
+        box: '<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+        lvl: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+        id: '<path d="M5 9h14M5 15h14M10 4L8 20M16 4l-2 16"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+        slot: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+        cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        users: '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5 7-5s7 1.5 7 5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 15c2.5.5 4 2 4 5"/>',
+        tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
+        trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+    };
+    const ST = (ic, text, cls, title) => '<span class="dv-st' + (cls ? ' ' + cls : '') + '"' + (title ? ' title="' + esc(title) + '"' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true">' + IC[ic] + '</svg><b>' + esc(text) + '</b></span>';
+    const fmtShort = ts => { try { return fmtDate(ts).replace(/\s20\d\d/, ''); } catch (e) { return ''; } };
+    // cuentas conocidas (id de 8 caracteres → nombre y avatar del entrenador), a partir del registro global de partidas
+    function accMap() {
+        const m = {}; let log = []; try { log = PAGlobal.live() ? PAGlobal.dev.saves : []; } catch (e) {}
+        log.slice().sort((a, b) => (b.created || 0) - (a.created || 0)).forEach(g => { if (g._acc && !m[g._acc]) m[g._acc] = { name: g.name || '', avatar: g.avatar || '' }; });
+        return m;
+    }
+    function whoHtml(acc, map, win) {
+        let a = acc ? map[acc] : null;
+        if (!acc) { try { const t = SaveSys.read('pokearena.trainer', null); if (t) a = { name: t.name || '', avatar: t.avatar || '' }; } catch (e) {} }
+        let src = ''; try { src = a && a.avatar ? PAOak.avatarSrc(a.avatar) : ''; } catch (e) {}
+        const nm = a && a.name ? a.name.toUpperCase() : (acc ? acc.slice(0, 6) : 'LOCAL');
+        return '<span class="dv-who"><span class="dv-sav">' + (src ? '<img src="' + src + '" alt="">' : '<i>?</i>') + '</span><span class="wn" title="' + esc(acc || '') + '">' + esc(nm) + '</span></span>';
+    }
     function renderEvents() {
         const el = $('dv-events'), log = ArenaLog.list();
         let h = gBanner() + '<div class="dv-h2">Partidas recientes</div>';
         if (!log.length) h += '<div class="dv-empty">Aún no hay arenas registradas.<br>Juega una arena o una raid y aparecerá aquí.</div>';
+        const amap = accMap();
         log.forEach((g, i) => {
             const rs = RES[g.result] || RES.abandonada;
-            h += '<button type="button" class="dv-game" data-i="' + i + '"><span class="dv-radio"><i></i></span><span class="dv-gmid"><div class="dv-gt">' + esc(MODE[g.mode] || 'Arena') + '</div>'
-                + '<div class="dv-gs">' + esc(g.id) + ' · ' + fmtDur(g.durMs) + ' · ' + (g.players ? g.players.length : 0) + ' participantes · ' + esc(g.version || '—') + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + '</div>'
-                + '<div class="dv-gs2">' + esc(fmtDate(g.ts)) + '</div></span><span class="dv-chip ' + rs[1] + '">' + rs[0] + '</span></button>';
+            h += '<button type="button" class="dv-game" data-i="' + i + '">' + whoHtml(g._acc, amap) + '<span class="dv-gmid"><div class="dv-gt"><span>' + esc(MODE[g.mode] || 'Arena') + '</span><span class="dv-chip ' + rs[1] + '">' + rs[0] + '</span></div>'
+                + '<div class="dv-sts">' + ST('id', g.id, 'mono acc', 'Registro') + ST('clock', fmtDur(g.durMs), '', 'Duración') + ST('users', String(g.players ? g.players.length : 0), '', 'Participantes') + '</div>'
+                + '<div class="dv-sts">' + ST('cal', fmtShort(g.ts), 'mut', 'Fecha') + ST('tag', g.version || '—', 'mut', 'Versión') + '</div>'
+                + '</span></button>';
         });
         if (log.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-clear">VACIAR CONSOLA</button></div>';
         el.innerHTML = h; el.scrollTop = 0;
@@ -26576,13 +26637,13 @@ const DV = (() => {
         log.forEach((g, gi) => {
             let src = ''; try { src = g.avatar ? PAOak.avatarSrc(g.avatar) : ''; } catch (e) {}
             const st = g.status === 'eliminada' ? ['ELIMINADA', 'bad'] : g.status === 'activa' ? ['ACTIVA', ''] : ['GUARDADA', 'warn'];
-            let lv = ''; try { lv = ' · LVL ' + lvlInfo(g.pts || 0).level; } catch (e) {}
+            let lvn = ''; try { lvn = 'LVL ' + lvlInfo(g.pts || 0).level; } catch (e) {}
             h += '<div class="dv-sv' + (g.status === 'eliminada' ? ' del' : '') + '" data-i="' + gi + '" role="button" tabindex="0"><span class="dv-sav">' + (src ? '<img src="' + src + '" alt="">' : '<i>' + esc(g.slot || '?') + '</i>') + '</span>'
-                + '<div class="nm"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b>'
-                + '<span>Pokédex ' + (g.dex | 0) + ' · Caja ' + (g.box | 0) + lv + '</span>'
-                + '<span>' + esc(g.id) + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + ' · ranura ' + esc(g.slot || '—') + ' · creada ' + esc(fmtDate(g.created)) + '</span>'
-                + (g.status === 'eliminada' && g.deleted ? '<span class="dl">Eliminada ' + esc(fmtDate(g.deleted)) + '</span>' : '') + '</div>'
-                + '<span class="dv-chip ' + st[1] + '">' + st[0] + '</span><button type="button" class="dv-svx" data-del="' + gi + '" aria-label="Eliminar del registro" title="Eliminar del registro">🗑</button></div>';
+                + '<div class="nm"><div class="dv-nr"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b><div class="dv-chip ' + st[1] + '">' + st[0] + '</div></div>'
+                + '<div class="dv-sts">' + ST('dex', String(g.dex | 0), 'acc', 'Pokédex') + ST('box', String(g.box | 0), 'acc', 'Pokémon en la Caja') + (lvn ? ST('lvl', lvn, 'gold', 'Nivel de entrenador') : '') + '</div>'
+                + '<div class="dv-sts">' + (g._acc ? ST('user', g._acc, 'mut mono', 'ID de cuenta') : '') + ST('slot', 'Ranura ' + (g.slot || '—'), 'mut', 'Ranura') + '</div>'
+                + '<div class="dv-sts">' + ST('id', g.id, 'mut mono', 'ID de partida') + ST('cal', fmtShort(g.created), 'mut', 'Creada') + (g.status === 'eliminada' && g.deleted ? ST('trash', fmtShort(g.deleted), 'bad', 'Eliminada') : '') + '</div></div>'
+                + '<button type="button" class="dv-svx" data-del="' + gi + '" aria-label="Eliminar del registro" title="Eliminar del registro">🗑</button></div>';
         });
         if (log.length) h += '<div class="dv-sv-sum" style="margin-top:10px;text-align:center">Toca una partida para ver su Caja · 🗑 la quita del registro</div><div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">BORRAR REGISTRO DE PARTIDAS</button></div>';
         el.innerHTML = h; el.scrollTop = 0;

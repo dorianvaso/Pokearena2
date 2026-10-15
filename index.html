@@ -2793,7 +2793,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #winner-overlay .wo-sub { font-size:.4rem; color:#94a3b8; line-height:1.6; text-align:center; }
         #winner-overlay .wo-lives { font-family:'Segoe UI',sans-serif; font-size:1.05rem; letter-spacing:4px; line-height:1; }
         #winner-overlay .wo-lives .lf-on { color:#ef4444; text-shadow:0 0 8px rgba(239,68,68,.6); } #winner-overlay .wo-lives .lf-off { color:rgba(148,163,184,.3); }
-        #winner-overlay .wo-stats { width:100%; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+        #winner-overlay .wo-stats { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
         #winner-overlay .wo-stat { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 2px; border-radius:10px; background:rgba(2,6,23,.55); border:1px solid rgba(125,211,252,.22); box-shadow:inset 0 0 10px rgba(0,0,0,.5); }
         #winner-overlay .wo-stat b { font-weight:400; font-size:.78rem; color:#f8fafc; }
         #winner-overlay .wo-stat span { font-size:.34rem; color:#94a3b8; text-align:center; line-height:1.5; }
@@ -2881,7 +2881,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #countdown-overlay .cd-draw-title { text-align:center; color:#fde047; font-size:.55rem; letter-spacing:2px; line-height:1.5; text-shadow:0 0 10px rgba(253,224,71,.5), 0 2px 0 rgba(0,0,0,.7); }
         #countdown-overlay .cd-draw-count { text-align:center; color:#94a3b8; font-size:.42rem; letter-spacing:2px; margin:6px 0 10px; }
         #countdown-overlay .cd-draw-count b { color:#fde047; font-weight:normal; }
-        #countdown-overlay .cd-grid { display:grid; grid-template-columns:repeat(6, 1fr); gap:5px; }
+        #countdown-overlay .cd-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; }
         #countdown-overlay .cd-slot { position:relative; aspect-ratio:1/1; border-radius:8px; display:grid; place-items:center; overflow:hidden;
             background:radial-gradient(circle at 50% 40%, #16264a 0%, #0a1226 85%); border:1px solid rgba(125,211,252,.28); }
         #countdown-overlay .cd-fight { all: unset; box-sizing: border-box; display: block; margin: 12px auto 0; min-width: 150px; padding: 10px 22px; cursor: pointer; pointer-events: auto;
@@ -3437,7 +3437,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         .mp-state.play::before { background: #facc15; animation: mpPulse 1s ease-in-out infinite; }
         .mp-state.off::before { background: #f87171; }
         @keyframes mpPulse { 50% { opacity: .25; } }
-        .mp-slots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+        .mp-slots { display: grid; grid-template-columns: repeat(10,minmax(0,1fr)); gap: 5px; }
         .mp-slot { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); overflow: hidden; }
         .mp-slot.on { background: color-mix(in srgb, var(--oc) 20%, transparent); border-color: color-mix(in srgb, var(--oc) 70%, transparent); }
         .mp-slot img { max-width: 94%; max-height: 94%; object-fit: contain; image-rendering: pixelated; pointer-events: none; }
@@ -3849,7 +3849,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     .bx-head button:active { transform:translateY(2px); box-shadow:none; }
     .bx-head .bx-nav { width:2.4em; height:2.4em; border-radius:50%; display:flex !important; align-items:center; justify-content:center; }
     .bx-head .bx-add { padding:.6em .8em; border-radius:999px; white-space:nowrap; }
-    .bx-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:0; border:3px solid rgba(255,255,255,.95); border-radius:10px; overflow:hidden; background:#eff9fe; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+    .bx-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:0; border:3px solid rgba(255,255,255,.95); border-radius:10px; overflow:hidden; background:#eff9fe; touch-action:pan-y; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
     .bx-slot { position:relative; aspect-ratio:1; background:rgba(255,255,255,.11); }
     .bx-slot img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; padding:12%; image-rendering:pixelated; pointer-events:none; -webkit-user-drag:none; }
     .bx-slot u { position:absolute; left:2px; top:0; text-decoration:none; color:#ffe066; font-size:.5rem; text-shadow:0 0 3px #000; pointer-events:none; }
@@ -4465,7 +4465,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #main-menu .mm-art { animation: mmFadeIn .6s ease-out both, mmArtFloat 6s ease-in-out .6s infinite; }
         @keyframes mmArtFloat { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
 
-        #main-menu .mm-tabs { position: absolute; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 1fr .62fr;
+        #main-menu .mm-tabs { position: absolute; display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); grid-template-rows: 1fr 1fr .62fr;
             gap: 10px 12px; left: 8px; right: 8px; width: auto; top: calc(min(66%, 124vw) + 10px); bottom: calc(42px + env(safe-area-inset-bottom, 0px)); padding: 4px 14px 0 20px; box-sizing: border-box; }
         #main-menu .mm-tab { --r: 16px; --fx: 0; --fy: 110%; --bg: linear-gradient(180deg,#ffb347,#ff8a00);
             all: unset; box-sizing: border-box; position: relative; display: flex; flex: none; max-height: none; margin: 0; padding: 3px; min-width: 0; min-height: 0;
@@ -4550,7 +4550,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #main-menu .mm-scan { background: repeating-linear-gradient(180deg, rgba(0,0,0,.06) 0 1px, transparent 1px 3px); box-shadow: inset 0 0 50px rgba(0,0,0,.22); }
         #main-menu .mm-foot { color: rgba(255,255,255,.9) !important; text-shadow: 1px 1px 0 #111 !important; }
 
-        #main-menu .mm-tabs { grid-template-columns: repeat(12, 1fr); grid-template-rows: 1fr 1fr .7fr; }
+        #main-menu .mm-tabs { grid-template-columns: repeat(12,minmax(0,1fr)); grid-template-rows: 1fr 1fr .7fr; }
         #main-menu .mm-tab { box-shadow: 0 5px 0 rgba(50,35,55,.4); }
         #main-menu .mm-tab[data-id="arena"]   { grid-column: 1 / 7;  --bg: linear-gradient(180deg,#bf6b7b 0 57%,#ecd8dc 57% 100%); }
         #main-menu .mm-tab[data-id="raids"] { grid-column: 7 / 13; --bg: linear-gradient(180deg,#a595b6,#74658a); }
@@ -4581,7 +4581,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         .bx-lvwrap { position: relative; flex: none; }
         .bx-levels { overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scrollbar-width: none; }
         .bx-levels::-webkit-scrollbar { display: none; }
-        #pc-list .bx-grid { grid-template-columns: repeat(var(--bxc, 8), 1fr); }
+        #pc-list .bx-grid { grid-template-columns: repeat(var(--bxc, 8),minmax(0,1fr)); }
         .bx-lv { width: var(--bxw, 100%); margin: 0 auto; scroll-snap-align: start; scroll-snap-stop: always; box-sizing: border-box; padding-bottom: 2px; }
         #pc-list .bx-sub { min-height: 30px; box-sizing: border-box; }
         .bx-lvdots { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
@@ -4625,7 +4625,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     #raid-boss-bar .rb-hp { text-align: left; }
     #raid-boss-bar .rb-mid { flex: 1 1 0; min-height: 0; justify-content: flex-start; }
     #raid-boss-bar .rb-sprite { max-width: 80%; }
-    #raid-boss-bar .rb-top { flex: 1 1 50%; min-width: 0; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); gap: 5px; align-content: stretch; }
+    #raid-boss-bar .rb-top { flex: 1 1 50%; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: repeat(3,minmax(0,1fr)); gap: 5px; align-content: stretch; }
     #raid-boss-bar .rb-top-i { max-width: none; min-width: 0; flex: none; justify-content: flex-start; }
 
     /* ===== Rediseño: barra de opciones plegable (misma línea que el indicador de hora y el clima) ===== */
@@ -5555,7 +5555,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     #dx-detail .dxn-mv-h { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
     #dx-detail .dxn-mv-h b { font-size:19px; font-weight:800; }
     #dx-detail .dxn-mv-h em { font-style:normal; padding:4px 12px; border-radius:999px; font-size:13px; font-weight:700; color:#fff; background:var(--c); }
-    #dx-detail .dxn-mv-g { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    #dx-detail .dxn-mv-g { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
     #dx-detail .dxn-mv-g div { display:flex; flex-direction:column; gap:2px; } #dx-detail .dxn-mv-g b { font-size:16px; font-weight:700; } #dx-detail .dxn-mv-g span { font-size:12px; color:rgba(255,255,255,.5); }
     #dx-detail .dxn-mv p { margin:12px 0 0; font-size:14px; line-height:1.5; color:rgba(255,255,255,.72); }
     #dx-detail .dxn-evo { display:flex; flex-direction:column; align-items:stretch; gap:8px; }
@@ -5634,7 +5634,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     .dv-btn.dng { color:#ffb4b8; }
     .dv-btn[disabled] { opacity:.4; pointer-events:none; }
     /* detalle de una partida */
-    .dv-meta { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin:6px 0 4px; }
+    .dv-meta { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:6px 0 4px; }
     .dv-meta div { background:var(--dv-surf); border:1px solid var(--dv-line); border-radius:14px; padding:10px 12px; min-width:0; }
     .dv-meta small { display:block; font-size:.62rem; color:var(--dv-mut); text-transform:uppercase; margin-bottom:3px; }
     .dv-meta b { display:block; font-size:.92rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -22386,7 +22386,7 @@ const SaveSys = (() => {
 .sh-back { background:rgba(255,255,255,.1); box-shadow:none; border:1px solid rgba(255,255,255,.22); }
 .sh-money { color:#fff; } .sh-money span { opacity:.65; }
 .sh-wrap { gap:6px; }
-.sh-grid { flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(5, 1fr); grid-auto-rows:min-content; gap:10px; padding:18px 18px 12px 24px; align-content:start; }
+.sh-grid { flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); grid-auto-rows:min-content; gap:10px; padding:18px 18px 12px 24px; align-content:start; }
 .sh-slot { all:unset; box-sizing:border-box; position:relative; aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; background:radial-gradient(circle at 50% 35%, rgba(60,64,72,.85), rgba(14,16,20,.9)); border:2px solid rgba(255,255,255,.16); box-shadow:0 2px 6px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent; transition:transform .12s, box-shadow .12s, border-color .12s; }
 .sh-slot img { width:62%; height:62%; object-fit:contain; image-rendering:pixelated; pointer-events:none; -webkit-user-drag:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
 .sh-slot .sh-n { position:absolute; right:7%; bottom:3%; font:700 .5rem/1 'PA Chakra S', system-ui, sans-serif; font-variant-numeric:tabular-nums; color:#fff; text-shadow:0 1px 2px #000, 0 0 3px #000; }
@@ -25418,7 +25418,7 @@ function renderBox() {
 function bxFit() {
     const lv = document.getElementById('bx-levels'), list = document.getElementById('pc-list'); if (!lv || !list) return;
     const f = lv.querySelector('.bx-lv'), head = list.querySelector('.bx-head'); if (!f || !head) return;
-    lv.style.height = ''; lv.style.setProperty('--bxw', '100%');
+    lv.style.height = ''; lv.style.setProperty('--bxw', '100%'); lv.style.removeProperty('--bxpx');
     const cs = getComputedStyle(list);
     const avail = list.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - head.offsetHeight - (parseFloat(cs.rowGap) || 0) - 6;
     const W = lv.clientWidth; if (!W || avail <= 0) return;
@@ -25431,6 +25431,13 @@ function bxFit() {
     });
     const best = m[5].size > m[8].size ? 5 : 8;
     lv.style.setProperty('--bxc', best); lv.style.setProperty('--bxw', (m[best].sc * 100) + '%');
+    // Columnas en píxeles exactos: en iOS (WebKit) las columnas "1fr" con casillas cuadradas (aspect-ratio) se ensanchaban y la cuadrícula se salía del marco.
+    try {
+        const g = f.querySelector('.bx-grid'), gs = getComputedStyle(g);
+        const padX = parseFloat(gs.paddingLeft) + parseFloat(gs.paddingRight) + parseFloat(gs.borderLeftWidth) + parseFloat(gs.borderRightWidth), gap = parseFloat(gs.columnGap) || 0;
+        const px = Math.floor((W * m[best].sc - padX - gap * (best - 1)) / best);
+        if (px > 8) lv.style.setProperty('--bxpx', px + 'px');
+    } catch (e) {}
     lv.style.height = Math.ceil(f.getBoundingClientRect().height) + 'px';
 }
 window.addEventListener('resize', () => { try { bxFit(); } catch (e) {} });
@@ -26584,7 +26591,7 @@ const DV = (() => {
         if (!mons.length) {
             h += '<div class="dv-empty">' + ((g.box | 0) > 0 ? 'Aún no hay datos de la Caja de esta partida.<br>Se actualizan cuando esa cuenta vuelve a abrir el juego.' : 'La Caja de esta partida está vacía.') + '</div>';
         } else {
-            h += '<div class="dv-meta" style="grid-template-columns:repeat(3,1fr)"><div><small>Pokémon</small><b>' + mons.length + '</b></div><div><small>Especies</small><b>' + Object.keys(kinds).length + '</b></div><div><small>Shiny / G-Max</small><b>' + nSh + ' / ' + nG + '</b></div></div><div class="dv-pcg" style="margin-top:12px">';
+            h += '<div class="dv-meta" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><small>Pokémon</small><b>' + mons.length + '</b></div><div><small>Especies</small><b>' + Object.keys(kinds).length + '</b></div><div><small>Shiny / G-Max</small><b>' + nSh + ' / ' + nG + '</b></div></div><div class="dv-pcg" style="margin-top:12px">';
             mons.forEach(m => {
                 const iv = m[5] ? Math.round(m[5] / (IV_MAX * 6) * 100) + '% IV' : '';
                 h += '<div class="dv-pcc' + (m[2] ? ' sh' : '') + '" title="' + esc(m[4] || '') + '"><div class="im">' + spriteImg(sps[m[1]] || '') + '</div><b>' + (m[2] ? '✦ ' : '') + esc(m[0]) + '</b><span>' + (m[7] === 'M' ? '♂ ' : m[7] === 'F' ? '♀ ' : '') + (m[3] ? 'G-MAX ' : '') + iv + '</span></div>';
@@ -26676,7 +26683,7 @@ const DV = (() => {
         const rows = spRows(), el = $('dv-species'), fn = SORTS[spSort][1];
         rows.sort((a, b) => fn(b) - fn(a) || a.name.localeCompare(b.name));
         const tot = rows.reduce((a, e) => { a.g += appsOf(e); a.k += e.kos | 0; a.f += e.faints | 0; return a; }, { g: 0, k: 0, f: 0 });
-        let h = gBanner() + '<div class="dv-h2">Registro por especie</div><div class="dv-meta" style="grid-template-columns:repeat(3,1fr)"><div><small>Especies</small><b>' + rows.length + '</b></div><div><small>Apariciones</small><b>' + tot.g + '</b></div><div><small>KOs / Debil.</small><b>' + tot.k + ' / ' + tot.f + '</b></div></div>';
+        let h = gBanner() + '<div class="dv-h2">Registro por especie</div><div class="dv-meta" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><small>Especies</small><b>' + rows.length + '</b></div><div><small>Apariciones</small><b>' + tot.g + '</b></div><div><small>KOs / Debil.</small><b>' + tot.k + ' / ' + tot.f + '</b></div></div>';
         h += '<div class="dv-seg" id="dv-sort" style="margin:12px 0">' + Object.keys(SORTS).map(k => '<button type="button" data-s="' + k + '"' + (k === spSort ? ' class="on"' : '') + '>' + SORTS[k][0].toUpperCase() + '</button>').join('') + '</div>';
         if (!rows.length) h += '<div class="dv-empty">Aún no hay datos.<br>Se llenará con cada arena y cada Pokémon que generes.</div>';
         rows.forEach(e => {
@@ -27109,6 +27116,14 @@ const PAGifts = (() => {
   requestAnimationFrame(frame);
 })();
 </script>
+<style id="pa-ios-fit">
+/* Ajuste en iOS (WebKit): las columnas "1fr" crecían hasta el tamaño del contenido y la cuadrícula se salía del marco */
+#pc-list{min-width:0}
+#pc-list .bx-levels,#pc-list .bx-lv,#pc-list .bx-grid{min-width:0;max-width:100%;box-sizing:border-box}
+#pc-list .bx-grid{grid-template-columns:repeat(var(--bxc,8),var(--bxpx,minmax(0,1fr)));justify-content:center}
+#pc-list .bx-slot{min-width:0;min-height:0;width:100%;box-sizing:border-box;overflow:hidden}
+#pc-list .bx-slot img{max-width:100%;max-height:100%}
+</style>
 </body>
 </html>
 

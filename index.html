@@ -4880,33 +4880,40 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
     .mm-xp { font-size:.58rem; font-weight:800; letter-spacing:.08em; color:#e0f2fe; padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums; background:rgba(8,14,40,.6); border:1px solid rgba(125,211,252,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
     .mm-xp[hidden] { display:none; }
     /* v0.82 · caramelos raros: pestaña Evolución y animación */
-    #pc-detail .pce { display:flex; flex-direction:column; gap:11px; padding:4px 2px; color:#fff; }
-    #pc-detail .pce-head { display:flex; align-items:center; gap:8px; }
-    #pc-detail .pce-head img { width:30px; height:30px; image-rendering:pixelated; flex:none; }
-    #pc-detail .pce-head span { font-weight:900; font-size:.82rem; letter-spacing:.1em; }
+    #pc-detail .pce { display:flex; flex-direction:column; gap:12px; padding:2px; color:#fff; }
+    #pc-detail .pce-head { display:flex; align-items:center; gap:9px; }
+    #pc-detail .pce-head img { width:28px; height:28px; image-rendering:pixelated; flex:none; }
+    #pc-detail .pce-head span { font-weight:900; font-size:.8rem; letter-spacing:.1em; }
     #pc-detail .pce-head em { margin-left:auto; font-style:normal; font-size:.6rem; font-weight:800; letter-spacing:.08em; color:#cfe8ff; white-space:nowrap; }
     #pc-detail .pce-head em b { color:#fde68a; font-size:.85rem; }
-    #pc-detail .pce-nxs { display:flex; flex-wrap:wrap; gap:8px; }
-    #pc-detail .pce-nx { display:flex; align-items:center; gap:6px; padding:4px 11px 4px 5px; border-radius:12px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22); }
-    #pc-detail .pce-nx img, #pc-detail .pce-opt img { width:40px; height:40px; object-fit:contain; image-rendering:pixelated; flex:none; }
-    #pc-detail .pce-nx b, #pc-detail .pce-opt b { font-size:.8rem; font-weight:800; }
+    #pc-detail .pce-card { display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:16px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2); }
+    #pc-detail .pce-tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(86px,112px)); justify-content:center; gap:10px; }
+    #pc-detail .pce-tiles.many { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+    #pc-detail .pce-tiles.many .pce-tile { width:calc((100% - 16px) / 3); padding:6px 4px; }
+    #pc-detail .pce-tiles.many .pce-im { width:50px; height:50px; }
+    #pc-detail .pce-tile { appearance:none; box-sizing:border-box; margin:0; font:inherit; color:#fff; display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 6px 7px; border-radius:12px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); min-width:0; }
+    #pc-detail .pce-im { width:60px; height:60px; display:grid; place-items:center; }
+    #pc-detail .pce-im img { max-width:100%; max-height:100%; object-fit:contain; image-rendering:pixelated; }
+    #pc-detail .pce-tile b { max-width:100%; font-size:.74rem; font-weight:800; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #pc-detail .pce-tile.unk .pce-im img { filter:brightness(0) opacity(.55); }
+    #pc-detail .pce-tile.unk b { color:rgba(255,255,255,.5); letter-spacing:.12em; }
+    #pc-detail .pce-tile.pick { cursor:pointer; border-color:rgba(125,211,252,.8); box-shadow:0 0 12px rgba(56,189,248,.45); -webkit-tap-highlight-color:transparent; }
+    #pc-detail .pce-tile.pick:active { translate:0 2px; } #pc-detail .pce-tile.pick:focus-visible { outline:2px solid #fff; outline-offset:2px; }
     #pc-detail .pce-bar { position:relative; height:24px; border-radius:999px; overflow:hidden; background:rgba(2,8,30,.7); border:1.5px solid rgba(125,211,252,.6); box-shadow:inset 0 2px 5px rgba(0,0,0,.55); }
     #pc-detail .pce-bar i { position:absolute; left:0; top:0; bottom:0; width:0; border-radius:999px; overflow:hidden; background:linear-gradient(90deg,#0284c7,#38bdf8 62%,#7dd3fc); box-shadow:0 0 12px rgba(56,189,248,.85); transition:width .7s cubic-bezier(.2,.8,.3,1); }
     #pc-detail .pce-bar i::after { content:''; position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%); translate:-100% 0; animation:pceShine 2.4s ease-in-out infinite; }
     #pc-detail .pce-bar span { position:absolute; inset:0; display:grid; place-items:center; font-size:.72rem; font-weight:900; letter-spacing:.06em; text-shadow:0 1px 3px rgba(0,0,0,.9); }
     #pc-detail .pce-bar.bump { animation:pceBump .5s cubic-bezier(.2,1.5,.4,1); }
-    #pc-detail .pce-cnt { font-size:.78rem; color:#d6e8ff; } #pc-detail .pce-cnt b { color:#fff; font-size:.9rem; }
-    #pc-detail .pce-acts, #pc-detail .pce-pick { display:flex; flex-wrap:wrap; gap:8px; }
-    #pc-detail .pce-pt { font-size:.62rem; font-weight:900; letter-spacing:.14em; color:#fde68a; }
-    #pc-detail .pce-btn { all:unset; box-sizing:border-box; cursor:pointer; padding:10px 18px; border-radius:999px; font-size:.76rem; font-weight:900; letter-spacing:.1em; color:#fff; text-align:center; text-shadow:0 1px 0 rgba(0,0,0,.4);
+    #pc-detail .pce-meta { display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:.74rem; color:#b9d6f5; }
+    #pc-detail .pce-meta b { color:#fff; font-size:.82rem; } #pc-detail .pce-meta span { font-weight:800; letter-spacing:.06em; }
+    #pc-detail .pce-acts { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:10px; }
+    #pc-detail .pce-btn { all:unset; box-sizing:border-box; display:block; cursor:pointer; padding:12px 10px; border-radius:999px; font-size:.78rem; font-weight:900; letter-spacing:.1em; color:#fff; text-align:center; text-shadow:0 1px 0 rgba(0,0,0,.4);
         background:linear-gradient(135deg,#38bdf8,#2563eb); box-shadow:0 3px 0 rgba(0,0,0,.4), 0 6px 14px rgba(37,99,235,.45); -webkit-tap-highlight-color:transparent; }
     #pc-detail .pce-btn:active { translate:0 2px; box-shadow:0 1px 0 rgba(0,0,0,.4); }
     #pc-detail .pce-btn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
     #pc-detail .pce-btn:disabled { opacity:.4; cursor:default; box-shadow:none; }
     #pc-detail .pce-btn.go { background:linear-gradient(135deg,#fde68a,#f59e0b); color:#5a3300; text-shadow:none; animation:pceGo 1.3s ease-in-out infinite; }
-    #pc-detail .pce-opt { display:flex; align-items:center; gap:6px; padding:5px 14px 5px 6px; border-radius:14px; }
-    #pc-detail .pce-final { font-weight:900; letter-spacing:.14em; color:#fde68a; }
-    #pc-detail .pce-hint { margin:0; font-size:.7rem; line-height:1.4; color:#a9c9ee; }
+    #pc-detail .pce-final { text-align:center; padding:18px 0; font-weight:900; letter-spacing:.14em; color:#fde68a; border-radius:16px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2); }
     @keyframes pceShine { 0%,35% { translate:-100% 0; } 100% { translate:100% 0; } }
     @keyframes pceBump { 0% { scale:1; } 40% { scale:1.04; filter:brightness(1.4); } 100% { scale:1; } }
     @keyframes pceGo { 50% { box-shadow:0 3px 0 rgba(0,0,0,.4), 0 0 22px rgba(251,191,36,.95); } }
@@ -25499,7 +25506,7 @@ function renderPCDetail() {
     capEl('pd-img').src = b.sprite; pcCryInfo = info;
     capEl('pc-detail').classList.toggle('is-shiny', !!b.shiny);
     capEl('pd-plate').innerHTML = '<span class="pl-ball"></span><span class="pl-name">' + pcEsc(dispName(b.name)).toUpperCase() + pcGenderChip(b.gender) + pcTagChips(b.hf, b.wf) + (b.shiny ? '<span class="pl-star">✦</span>' : '') + (b.gmax ? '<b class="pd-chip" style="background:#a21caf">G-MAX</b>' : '') + '</span><span class="pl-types">' + (info.types.map(pcTypeChip).join('')) + '</span>';
-    const rows = capEl('pd-rows'), memo = capEl('pd-memo');
+    const rows = capEl('pd-rows'), memo = capEl('pd-memo'); memo.hidden = false;
     if (pcPage === 1) {
         const how = b.how === 'alfa' ? 'CAPTURA DE RAID (ALFA)' : b.how === 'ganador' ? 'CAPTURA PREMIUM (GANADOR)' : b.how === 'shiny' ? 'CAPTURA PREMIUM (SHINY)' : b.how === 'basica' ? 'CAPTURA BÁSICA' : b.how === 'dev' ? 'GENERADO (DESARROLLADOR)' : 'CAPTURA SUPER';
         const nat = NATURES[b.nature], ivSum = validIVs(b.iv) ? pcIvSum(b.iv) : 0;
@@ -25573,29 +25580,28 @@ function pcEvoInfo(b) { // null = forma desconocida; { final } = sin más evoluc
 }
 let pcEvoBusy = false, pcEvoFrom = null;
 function pcRenderEvo(b, rows, memo) {
+    memo.hidden = true; // esta pestaña no lleva texto explicativo
     const ev = pcEvoInfo(b), have = bagCount(CANDY_ID), cd = SHOP_ITEMS.find(i => i.id === CANDY_ID);
     const head = '<div class="pce-head">' + (cd && cd.img ? '<img src="' + cd.img + '" alt="" draggable="false">' : '') + '<span>CARAMELOS RAROS</span><em>EN LA BOLSA <b>×' + have + '</b></em></div>';
-    memo.textContent = 'Cada Caramelo Raro cuesta ' + fmtMoney(750) + ' en la Tienda. Al llenar la barra evoluciona y conserva sus IVs, naturaleza y brillo.';
     if (!ev || !ev.need) {
-        const fin = !!(ev && ev.final);
-        rows.innerHTML = '<div class="pce">' + head + '<div class="pce-final">' + (fin ? 'FORMA FINAL' : 'NO EVOLUCIONA') + '</div><p class="pce-hint">' + (fin ? 'Este Pokémon ya está en su última evolución.' : 'Esta especie no tiene evoluciones.') + '</p></div>';
+        rows.innerHTML = '<div class="pce">' + head + '<div class="pce-final">' + (ev && ev.final ? 'FORMA FINAL' : 'NO EVOLUCIONA') + '</div></div>';
         return;
     }
-    const got = Math.min(b.candy | 0, ev.need), pct = Math.round(got / ev.need * 100), left = ev.need - got, full = left <= 0;
-    const spr = o => '<img src="' + o.sprite + '" alt="" draggable="false">';
-    let h = '<div class="pce">' + head
-        + '<div class="pce-nxs">' + ev.opts.map(o => '<span class="pce-nx">' + spr(o) + '<b>' + pcEsc(dispName(o.name)) + '</b></span>').join('') + '</div>'
+    const dex = capLoad(CAP_DEX_KEY, {}), known = o => !!dex[capClean(o.name)]; // evolución no registrada en la Pokédex: sombra y ???
+    const got = Math.min(b.candy | 0, ev.need), pct = Math.round(got / ev.need * 100), left = ev.need - got, full = left <= 0, pick = full && ev.branched;
+    const tile = (o, k) => {
+        const kn = known(o), tag = pick ? 'button' : 'div';
+        return '<' + tag + (pick ? ' type="button" data-a="evo" data-k="' + k + '"' : '') + ' class="pce-tile' + (kn ? '' : ' unk') + (pick ? ' pick' : '') + '"><span class="pce-im"><img src="' + o.sprite + '" alt="" draggable="false"></span><b>' + (kn ? pcEsc(dispName(o.name)) : '???') + '</b></' + tag + '>';
+    };
+    let h = '<div class="pce">' + head + '<div class="pce-card">'
+        + '<div class="pce-tiles' + (ev.opts.length > 2 ? ' many' : '') + '">' + ev.opts.map(tile).join('') + '</div>'
         + '<div class="pce-bar" role="progressbar" aria-label="Progreso de evolución" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i><span>' + pct + '%</span></div>'
-        + '<div class="pce-cnt"><b>' + got + ' / ' + ev.need + '</b> caramelos · ' + (full ? '¡listo para evolucionar!' : 'faltan ' + left) + '</div>';
-    if (full && ev.branched) {
-        h += '<div class="pce-pt">ELIGE SU EVOLUCIÓN</div><div class="pce-pick">' + ev.opts.map((o, k) => '<button type="button" class="pce-btn pce-opt" data-a="evo" data-k="' + k + '">' + spr(o) + '<b>' + pcEsc(dispName(o.name)) + '</b></button>').join('') + '</div>';
-    } else if (full) {
-        h += '<div class="pce-acts"><button type="button" class="pce-btn go" data-a="evo" data-k="0">¡EVOLUCIONAR!</button></div>';
-    } else {
+        + '<div class="pce-meta"><b>' + got + ' / ' + ev.need + ' caramelos</b><span>' + (pick ? 'ELIGE SU EVOLUCIÓN' : full ? '¡LISTO!' : 'faltan ' + left) + '</span></div></div>';
+    if (full && !ev.branched) h += '<div class="pce-acts"><button type="button" class="pce-btn go" data-a="evo" data-k="0">¡EVOLUCIONAR!</button></div>';
+    else if (!full) {
         const n = Math.min(have, left);
         h += '<div class="pce-acts"><button type="button" class="pce-btn" data-a="give" data-n="1"' + (have < 1 ? ' disabled' : '') + '>DAR 1</button>'
-            + (n > 1 ? '<button type="button" class="pce-btn" data-a="give" data-n="max">DAR ' + n + '</button>' : '') + '</div>'
-            + (have < 1 ? '<p class="pce-hint">No tienes caramelos raros. Cómpralos en la Tienda del menú.</p>' : '');
+            + (n > 1 ? '<button type="button" class="pce-btn" data-a="give" data-n="max">DAR ' + n + '</button>' : '') + '</div>';
     }
     rows.innerHTML = h + '</div>';
     const fill = rows.querySelector('.pce-bar i');
@@ -25640,7 +25646,7 @@ function pcEvolveStart(k) {
     pcEvoAnim(before, b, res, () => { pcEvoBusy = false; try { renderBox(); } catch (e) {} try { renderPCDetail(); } catch (e) {} });
 }
 capEl('pd-rows').addEventListener('click', e => {
-    const bt = e.target.closest('.pce-btn'); if (!bt || bt.disabled) return;
+    const bt = e.target.closest('.pce-btn, .pce-tile.pick'); if (!bt || bt.disabled) return;
     if (bt.dataset.a === 'give') pcCandyGive(bt.dataset.n === 'max' ? 999 : (+bt.dataset.n || 1));
     else if (bt.dataset.a === 'evo') pcEvolveStart(+bt.dataset.k || 0);
 });
@@ -25894,7 +25900,7 @@ const SHOP_ITEMS = [
       desc: 'Mejor cuanto más dura el combate.' },
     { id: 'raidticket', cat: 'key', name: 'Tiquet de Raid', price: 10000, img: 'data:image/png;base64,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',
       desc: 'Permite iniciar una Raid.' },
-    { id: 'rarecandy', cat: 'boost', name: 'Caramelo Raro', price: 750, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAABe0lEQVR4nGNgGAWjgELQc/b//wGx9PW3//8HzHK6W4oPMJKqgU8jD6sPPt2YRJJZLOiG4jIAZqGYQwUus/4TcgCy+Uy4LMBlaUaqJIOWBQLD+DAHoccpjI8rpOAWvP72/z+yIj6NvP98Gnn/VTKe/X/97T8c+y2ApFa/BQjccxaiF6Yf2VJ0czF8DAOrTryGKxJzqGDQspCEyyWvwul2jKhANgcZYLX47rmJcN/CLLXTRbXUTpeB4dBlhB4YHxbsPWf//y8xZmRENg8ZsGCIYAEwQ2EW4bIUBjJSJRmaovPxxivOoEY2ZMbs5zgtwcaHqcfmU6IthoFrJ56TrEbZKJ88i+uWTiTat9dOPMcIHXx5GmccP2IVYSgxZmSEJTB0Q/HxXx3oIFiSYfXxwusMDLAUScgSbJYigzALUUZsQY5hMboimMvRDcQGYGrQffvpxiSslsMBn0YeRt2JXPrA5FUynsExjI9cYuEzH8YesNoJKxhtroyCUUAOAABYzxjzDcN9QAAAAABJRU5ErkJggg==',
+    { id: 'rarecandy', cat: 'boost', name: 'Caramelo Raro', price: 750, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAACpklEQVR42rWVPWhTURTHfzdEkkHwE40iNiq0UUTfVTTJpuKggtgOYlz8qGDFqdHBNU4WRK1OjQjWpQqCaBG/Jh2kiSJJHcyNiGkXP7F9BZFU9B2HxGhM0sRYD7zhvvfu/3/+5/zPvUpE+J/h4j/HPxI4rFmnRev1tcsgIk0/lrVG4vcmZV80LZZlSbV/mlagtRa/dYGNWvD5l0xfiQQHgKX6DDsiIVwCK9pmkvd2obUWrbXwW8Hcf5NxgcDFpPcwgUCg9O11doxorBPoZOheBmvdekmnnqmGCLS1QazNl9ix/wGOcnDh4BSFn41dZtfeDrKplyxvC5Mzn/D5fWX73fXAtx66TWvrbAC+q4JzknezOAraIx3cuDpINHaQUfMRF/B25C2O+oWhphq0zu5hCW8PELQK63M9GXz+RSwLzCFnJqDYDwCTNgCMpLtJpVKqroKV4bi0R9pL63M9hsX+hbQE5gCwLDCLnBkH4NbVm3gm+6ri1CTw5C8iaieCIpkuqNwTmU8iXalYlJRl3ZBNFQ5KZjBqPnE21o/P7/sNXErZm7TBm483Nwfvc2+qTkLO2AC8G3lX196lJu/e/0hePe8GYNJzhFA4iG3bmEyWYDhUYb/3uQ+MT4xhjCEz1KVqEbh/DtEX71GO9yQB4fF9w8KWBYQCq8icfIFt2zBSvtGesFGOG2++D+iaWoHWWvLeI6WX0dhBADZq4fqAzZ0r2/BbvWUbjTF48301m1tRog1rtaze0g9AcugJA4P7uD7wGUd95ea1wWKmv6IecIVNnw6nlNZarE39iHI4f6owOMdOrObWNWkYsK6LbLvgkEQiQXB7K6K+4ZnChg27qPyc7y3VWSF48vGmFVQ9i6ziFdiiTzN31jzSDw9ML8Gfd0Cz4HUJpiN+AHdAZhyou2jvAAAAAElFTkSuQmCC',
       desc: 'Dáselo a un Pokémon de la Caja (pestaña Evolución) para hacerlo evolucionar. Cuántos hacen falta depende de la especie y de la evolución.' }
 ];
 // Colores por bolsillo [principal, oscuro, claro]

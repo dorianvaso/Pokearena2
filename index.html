@@ -4879,6 +4879,70 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
     @keyframes mmLvUp { 0% { opacity:0; transform:translate(-50%,-8px) scale(.6); } 12% { opacity:1; transform:translate(-50%,0) scale(1.1); } 20% { transform:translate(-50%,0) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translate(-50%,6px); } }
     .mm-xp { font-size:.58rem; font-weight:800; letter-spacing:.08em; color:#e0f2fe; padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums; background:rgba(8,14,40,.6); border:1px solid rgba(125,211,252,.4); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
     .mm-xp[hidden] { display:none; }
+    /* v0.81 · subida de nivel con premios */
+    #lvl-cel { position:absolute; inset:0; z-index:300; display:grid; place-items:center; padding:12px; overflow-y:auto; color:#fff; font-family:var(--mm-font); -webkit-tap-highlight-color:transparent;
+        background:radial-gradient(ellipse at 50% 38%, rgba(37,99,235,.6), rgba(5,9,26,.94) 68%); animation:lcFade .35s ease-out both; --lc-a:#7dd3fc; --lc-b:#2563eb; --lc-glow:56,189,248; }
+    #lvl-cel.gold { --lc-a:#fde68a; --lc-b:#f59e0b; --lc-glow:251,191,36; background:radial-gradient(ellipse at 50% 38%, rgba(180,83,9,.55), rgba(20,10,4,.95) 68%); }
+    #lvl-cel.out { animation:lcOut .28s ease-in forwards; }
+    .lc-card { width:min(380px,100%); display:flex; flex-direction:column; align-items:center; gap:10px; margin:auto; }
+    .lc-hero { position:relative; width:clamp(150px,min(52vw,34vh),220px); aspect-ratio:1; display:grid; place-items:center; }
+    .lc-rays { position:absolute; left:50%; top:50%; width:230%; aspect-ratio:1; translate:-50% -50%; border-radius:50%; pointer-events:none;
+        background:repeating-conic-gradient(rgba(var(--lc-glow),.3) 0 6deg, transparent 6deg 18deg); -webkit-mask-image:radial-gradient(circle, #000 8%, transparent 62%); mask-image:radial-gradient(circle, #000 8%, transparent 62%);
+        opacity:0; animation:lcSpin 26s linear infinite; transition:opacity .8s ease-out; }
+    #lvl-cel.hit .lc-rays { opacity:1; }
+    .lc-wave { position:absolute; inset:14%; border-radius:50%; border:3px solid var(--lc-a); opacity:0; pointer-events:none; }
+    #lvl-cel.hit .lc-wave { animation:lcWave 1.1s ease-out forwards; }
+    #lvl-cel.hit .lc-wave.w2 { animation-delay:.18s; }
+    .lc-badge { position:relative; width:64%; aspect-ratio:1; border-radius:50%; overflow:hidden; display:grid; place-items:center; z-index:1;
+        background:linear-gradient(160deg,rgba(255,255,255,.34),rgba(255,255,255,.06)), rgba(20,24,56,.8); border:3px solid #fff; box-shadow:0 0 0 4px rgba(6,12,34,.8), 0 0 0 7px var(--lc-a), 0 0 34px rgba(var(--lc-glow),.75), 0 10px 26px rgba(0,0,0,.55);
+        animation:lcBadgeIn .75s cubic-bezier(.2,1.5,.35,1) both; }
+    #lvl-cel.hit .lc-badge { animation:lcBadgeHit .6s cubic-bezier(.2,1.6,.4,1); }
+    .lc-badge img { position:absolute; left:50%; bottom:0; height:112%; width:auto; transform:translateX(-50%); object-fit:contain; pointer-events:none; }
+    .lc-badge b { font-size:2.4rem; font-weight:900; color:#cfe8ff; }
+    .lc-lvl { position:absolute; left:50%; bottom:1%; translate:-50% 0; z-index:2; display:flex; align-items:baseline; gap:6px; padding:5px 16px 4px; border-radius:999px; line-height:1; white-space:nowrap;
+        background:rgba(6,12,34,.96); border:2px solid var(--lc-a); box-shadow:0 4px 12px rgba(0,0,0,.55), 0 0 18px rgba(var(--lc-glow),.5); animation:lcFade .5s .35s ease-out both; }
+    .lc-lvl small { font-size:.55rem; font-weight:800; letter-spacing:.16em; color:var(--lc-a); }
+    .lc-lvl b { font-size:1.7rem; font-weight:900; font-variant-numeric:tabular-nums; min-width:1.1ch; text-align:center; display:inline-block; }
+    .lc-lvl b.roll { animation:lcRoll .23s cubic-bezier(.2,1.3,.4,1); }
+    #lvl-cel.hit .lc-lvl b { color:#fff; text-shadow:0 0 14px rgba(var(--lc-glow),.95); animation:lcRoll .5s cubic-bezier(.2,1.6,.4,1); }
+    .lc-hero s { position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4px 0 0 -4px; background:var(--lc-a); border-radius:2px; rotate:45deg; opacity:0; z-index:3; pointer-events:none; box-shadow:0 0 8px rgba(var(--lc-glow),.9); }
+    .lc-hero s:nth-of-type(3n) { background:#fff; } .lc-hero s:nth-of-type(5n) { background:var(--lc-b); }
+    #lvl-cel.hit .lc-hero s { animation:lcSpark 1.15s var(--t) cubic-bezier(.1,.7,.3,1) forwards; }
+    .lc-title { font-size:clamp(1.25rem,6vw,1.7rem); font-weight:900; letter-spacing:.1em; text-align:center; text-shadow:0 3px 0 rgba(0,0,0,.45), 0 0 22px rgba(var(--lc-glow),.7); opacity:0; translate:0 10px; transition:opacity .35s, translate .35s cubic-bezier(.2,1.4,.4,1); }
+    #lvl-cel.show-title .lc-title, #lvl-cel.show-title .lc-sub { opacity:1; translate:0 0; }
+    .lc-sub { margin-top:-6px; font-size:.7rem; font-weight:800; letter-spacing:.16em; color:var(--lc-a); opacity:0; translate:0 6px; transition:opacity .35s .1s, translate .35s .1s; }
+    .lc-rew { width:100%; display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px 10px 14px; border-radius:16px; background:rgba(8,14,40,.66); border:1.5px solid rgba(var(--lc-glow),.5); box-shadow:0 8px 24px rgba(0,0,0,.4);
+        opacity:0; scale:.92; transition:opacity .35s, scale .35s cubic-bezier(.2,1.4,.4,1); }
+    #lvl-cel.show-rew .lc-rew { opacity:1; scale:1; }
+    .lc-money { display:flex; align-items:center; gap:9px; }
+    .lc-money i { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-weight:900; font-size:.9rem; color:#7a4a00; background:radial-gradient(circle at 35% 30%, #fff3b0, #fbbf24 55%, #d97706); box-shadow:0 2px 0 #92400e, 0 0 12px rgba(251,191,36,.7); }
+    .lc-money b { font-size:1.45rem; font-weight:900; color:#fde68a; font-variant-numeric:tabular-nums; text-shadow:0 2px 0 rgba(0,0,0,.45); }
+    .lc-items { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+    .lc-it { position:relative; width:76px; padding:8px 4px 6px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); opacity:0; scale:.5; }
+    #lvl-cel.show-rew .lc-it { animation:lcItem .45s calc(.35s + var(--k) * .15s) cubic-bezier(.2,1.6,.4,1) forwards; }
+    .lc-it img { width:34px; height:34px; image-rendering:pixelated; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+    .lc-it b { font-size:.9rem; font-weight:900; color:#fff; line-height:1; }
+    .lc-it span { font-size:.5rem; font-weight:700; letter-spacing:.04em; color:#bcd7ee; text-align:center; line-height:1.1; }
+    .lc-ok { min-width:170px; padding:11px 22px; border:0; border-radius:999px; font:inherit; font-size:.85rem; font-weight:900; letter-spacing:.14em; color:#fff; cursor:pointer; opacity:0; pointer-events:none; translate:0 8px;
+        background:linear-gradient(135deg,var(--lc-a),var(--lc-b)); box-shadow:0 5px 0 rgba(0,0,0,.35), 0 8px 20px rgba(var(--lc-glow),.5); text-shadow:0 2px 0 rgba(0,0,0,.35); transition:opacity .3s, translate .3s; }
+    #lvl-cel.ready .lc-ok { opacity:1; pointer-events:auto; translate:0 0; }
+    .lc-ok:active { translate:0 3px; box-shadow:0 2px 0 rgba(0,0,0,.35); } .lc-ok:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+    .mm-avw.lvup::after { content:''; position:absolute; inset:2%; border-radius:50%; border:3px solid #7dd3fc; pointer-events:none; animation:lcWave 1.1s ease-out 2 forwards; }
+    .mm-avw.lvup .mm-lvl { animation:lcRoll .6s cubic-bezier(.2,1.6,.4,1) 2; }
+    @media (max-height:520px) { #lvl-cel { padding:6px; } .lc-card { gap:5px; } .lc-hero { width:clamp(96px,30vh,120px); } .lc-badge b { font-size:1.6rem; } .lc-lvl { padding:3px 11px 2px; } .lc-lvl b { font-size:1.15rem; } .lc-title { font-size:1.05rem; } .lc-sub { margin-top:-3px; font-size:.6rem; }
+        .lc-rew { padding:7px 8px 8px; gap:6px; border-radius:12px; } .lc-money b { font-size:1.1rem; } .lc-money i { width:20px; height:20px; font-size:.7rem; } .lc-items { gap:5px; } .lc-it { width:60px; padding:4px 2px 3px; } .lc-it img { width:24px; height:24px; } .lc-it b { font-size:.75rem; } .lc-ok { min-width:140px; padding:7px 18px; font-size:.75rem; } }
+    @keyframes lcFade { from { opacity:0; } to { opacity:1; } }
+    @keyframes lcOut { to { opacity:0; scale:1.04; } }
+    @keyframes lcSpin { to { rotate:360deg; } }
+    @keyframes lcBadgeIn { from { scale:.2; opacity:0; rotate:-20deg; } to { scale:1; opacity:1; rotate:0deg; } }
+    @keyframes lcBadgeHit { 0% { scale:1; filter:brightness(1); } 35% { scale:1.2; filter:brightness(1.7); } 100% { scale:1; filter:brightness(1); } }
+    @keyframes lcRoll { 0% { transform:translateY(-55%) scale(.6); opacity:0; } 60% { transform:translateY(6%) scale(1.25); opacity:1; } 100% { transform:none; } }
+    @keyframes lcWave { 0% { scale:.55; opacity:.9; } 100% { scale:1.9; opacity:0; } }
+    @keyframes lcSpark { 0% { transform:translate(0,0) scale(0); opacity:1; } 25% { opacity:1; } 100% { transform:translate(var(--dx),var(--dy)) scale(var(--s)) rotate(200deg); opacity:0; } }
+    @keyframes lcItem { from { opacity:0; scale:.5; } to { opacity:1; scale:1; } }
+    #lvl-cel.calm *, #lvl-cel.calm { animation-duration:.01s !important; animation-delay:0s !important; transition-duration:.01s !important; transition-delay:0s !important; }
+    #lvl-cel.calm .lc-rays, #lvl-cel.calm .lc-hero s, #lvl-cel.calm .lc-wave { display:none; }
+    @media (prefers-reduced-motion: reduce) { .mm-avw.lvup::after { animation:none; opacity:0; } }
     .mm-av { position:relative; width:80%; aspect-ratio:1; border-radius:50%; overflow:hidden; display:grid; place-items:center;
         background:linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,.06)), rgba(20,24,56,.55); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
         border:2px solid rgba(255,255,255,.7); box-shadow:0 6px 16px rgba(0,0,0,.45), 0 0 0 2px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6); }
@@ -23345,6 +23409,12 @@ const GameAudio = (() => {
         else if (name === 'close') tone('square', 587, t, 0.05, 0.09, d, 440);
         else if (name === 'count') { tone('square', 440, t, 0.16, 0.11, d, 420); tone('triangle', 220, t, 0.16, 0.10, d); }
         else if (name === 'go') { [659.25, 880, 1174.66].forEach((f, i) => tone('square', f, t + i * 0.06, 0.14, 0.11, d)); noise(t, 0.35, 0.06, 1800, d); }
+        else if (name === 'levelup') { // fanfarria de subida de nivel
+            [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone('square', f, t + i * 0.085, 0.12, 0.10, d));
+            [523.25, 659.25, 783.99, 1046.5].forEach(f => tone('triangle', f, t + 0.5, 0.7, 0.07, d));
+            tone('square', 1568, t + 0.5, 0.5, 0.05, d); noise(t + 0.5, 0.5, 0.05, 2500, d);
+        }
+        else if (name === 'coin') { tone('square', 988, t, 0.07, 0.09, d); tone('square', 1319, t + 0.07, 0.2, 0.09, d); }
     }
     document.addEventListener('visibilitychange', () => {
         if (!ctx) return;
@@ -23539,7 +23609,10 @@ function mmBump() {
 // Cada ejemplar suma una sola vez (por su uid) y el registro es global: liberar un Pokémon NO resta sus puntos.
 const XP_KEY = 'pokearena.xp';
 // Puntos totales acumulados necesarios para alcanzar cada nivel (índice 0 = nivel 1). Un Pokémon aporta ~320-550 puntos.
-const LVL_TABLE = [0, 350, 850, 1500, 2450, 3650, 5100, 6900, 9100, 11800, 14900, 18500, 22700, 27500, 32900, 38900, 45700, 53100, 61200, 70000];
+// v2: la curva crece como L^2.1 (antes era casi lineal): el nivel 10 pide ~50.000 pts (antes 11.800) y el 40 (máximo) ~1.1M.
+const LVL_VER = 2;   // versión del sistema de niveles; las cuentas con otra versión se reajustan solas (ver lvlSync)
+const LVL_MAX = 40;
+const LVL_TABLE = Array.from({ length: LVL_MAX }, (_, i) => i === 0 ? 0 : Math.round(500 * Math.pow(i, 2.1) / 50) * 50);
 function lvlInfo(total) {
     let L = 1; while (L < LVL_TABLE.length && total >= LVL_TABLE[L]) L++;
     const max = L >= LVL_TABLE.length, cur = LVL_TABLE[L - 1], nxt = max ? cur : LVL_TABLE[L];
@@ -23547,7 +23620,7 @@ function lvlInfo(total) {
 }
 function lvlSync() {
     let x; try { x = SaveSys.read(XP_KEY, null); } catch (e) {}
-    if (!x || typeof x !== 'object' || !x.reg) x = { reg: {}, total: 0, seen: 1 };
+    if (!x || typeof x !== 'object' || !x.reg) x = { reg: {}, total: 0, seen: 1, claimed: 1, ver: LVL_VER };
     let dirty = false;
     try {
         (capLoad(CAP_BOX_KEY, []) || []).forEach(b => {
@@ -23556,8 +23629,94 @@ function lvlSync() {
             if (pts > 0) { x.reg[b.uid] = pts; dirty = true; }
         });
     } catch (e) {}
-    if (dirty) { x.total = Object.values(x.reg).reduce((a, v) => a + v, 0); try { SaveSys.write(XP_KEY, x); } catch (e) {} }
+    if (dirty) x.total = Object.values(x.reg).reduce((a, v) => a + v, 0);
+    if (x.ver !== LVL_VER) { // cuenta creada con la tabla antigua: pasa al nivel que le corresponde con sus puntos y la nueva tabla (sin fiesta ni premios retroactivos)
+        const lv = lvlInfo(x.total || 0).level;
+        x.seen = lv; x.claimed = lv; x.ver = LVL_VER; dirty = true;
+    }
+    if (dirty) { try { SaveSys.write(XP_KEY, x); } catch (e) {} }
     return x;
+}
+// ----- Recompensas al subir de nivel -----
+// Cada nivel da dinero y Poké Balls; cada 5 niveles un Tiquet de Raid; cada 10, premio gordo. Se cobran una sola vez (x.claimed).
+function lvlReward(L) {
+    const items = {}, add = (id, n) => { items[id] = (items[id] || 0) + n; };
+    let money = 800 + 250 * L;
+    if (L < 10) add('pokeball', 5); else if (L < 20) add('superball', 4); else if (L < 30) add('ultraball', 4); else add('ultraball', 6);
+    if (L % 2 === 0) add(L < 20 ? 'quickball' : 'timerball', 2);
+    if (L % 5 === 0) { add('raidticket', 1); money += 2000; }
+    if (L % 10 === 0) { add('raidticket', 1); add('ultraball', 3); money += 5000; }
+    return { money, items };
+}
+function lvlRewardRange(a, b) { // suma de los premios de los niveles a..b (por si se suben varios de golpe)
+    const tot = { money: 0, items: {}, gold: false };
+    for (let L = a; L <= b; L++) {
+        const r = lvlReward(L); tot.money += r.money;
+        Object.keys(r.items).forEach(id => { tot.items[id] = (tot.items[id] || 0) + r.items[id]; });
+        if (L % 10 === 0) tot.gold = true;
+    }
+    return tot;
+}
+function lvlCanCelebrate() {
+    if (mainMenuEl.hidden || mainMenuEl.classList.contains('leaving') || document.getElementById('lvl-cel')) return false;
+    if (window.PA_TUT && window.PA_TUT.on) return false;
+    const ts = document.getElementById('title-screen'); if (ts && !ts.hidden) return false;
+    const oi = document.getElementById('oak-intro'); if (oi && !oi.hidden) return false;
+    for (const id of ['pc-screen', 'dex-screen', 'dev-screen', 'col-panel', 'cfg-pop', 'mm-mode', 'mm-team', 'mm-multi', 'mm-need', 'mm-popup', 'pd-pop']) {
+        const e = document.getElementById(id); if (e && !e.hidden) return false; // se espera a estar en el menú limpio
+    }
+    return true;
+}
+function lvlCelebrate(from, to, rw) {
+    const sfx = (n, d) => { try { GameAudio.sfx(n, d); } catch (e) {} };
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const fmt = n => Math.floor(n).toLocaleString('es-ES');
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let avatar = ''; try { const t = SaveSys.read('pokearena.trainer', null); avatar = (t && t.avatar && window.PAOak && PAOak.avatarSrc) ? PAOak.avatarSrc(t.avatar) : ''; } catch (e) {}
+    const ids = Object.keys(rw.items).sort((a, b) => (SHOP_ITEMS.findIndex(i => i.id === a)) - (SHOP_ITEMS.findIndex(i => i.id === b)));
+    const items = ids.map((id, k) => { const it = SHOP_ITEMS.find(i => i.id === id) || { name: id }; return '<div class="lc-it" style="--k:' + k + '">' + (it.img ? '<img src="' + it.img + '" alt="" draggable="false">' : '<i></i>') + '<b>×' + rw.items[id] + '</b><span>' + esc(it.name) + '</span></div>'; }).join('');
+    let sparks = ''; for (let i = 0; i < 30; i++) { const a = (i / 30) * 6.2832 + Math.random() * 0.4, d = 70 + Math.random() * 90; sparks += '<s style="--dx:' + (Math.cos(a) * d).toFixed(0) + 'px;--dy:' + (Math.sin(a) * d).toFixed(0) + 'px;--s:' + (0.5 + Math.random() * 0.9).toFixed(2) + ';--t:' + (Math.random() * 0.18).toFixed(2) + 's"></s>'; }
+    const el = document.createElement('div');
+    el.id = 'lvl-cel'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Subida de nivel');
+    if (rw.gold) el.classList.add('gold'); if (reduce) el.classList.add('calm');
+    el.innerHTML = '<div class="lc-card"><div class="lc-hero"><i class="lc-rays"></i><i class="lc-wave"></i><i class="lc-wave w2"></i>'
+        + '<div class="lc-badge">' + (avatar ? '<img src="' + avatar + '" alt="" draggable="false">' : '<b>?</b>') + '</div>'
+        + '<div class="lc-lvl"><small>NIVEL</small><b id="lc-n">' + from + '</b></div>' + sparks + '</div>'
+        + '<div class="lc-title">¡SUBES DE NIVEL!</div>' + (to - from > 1 ? '<div class="lc-sub">NIVELES ' + (from + 1) + ' A ' + to + '</div>' : '')
+        + '<div class="lc-rew"><div class="lc-money"><i>₽</i><b id="lc-m">+0</b></div><div class="lc-items">' + items + '</div></div>'
+        + '<button class="lc-ok" type="button">¡GENIAL!</button></div>';
+    mainMenuEl.appendChild(el);
+    const T = []; const later = (fn, ms) => { T.push(setTimeout(fn, ms)); };
+    const nEl = el.querySelector('#lc-n'), mEl = el.querySelector('#lc-m'), ok = el.querySelector('.lc-ok');
+    let closed = false, ready = false;
+    const close = () => {
+        if (closed || !ready) return; closed = true; T.forEach(clearTimeout); sfx('close');
+        document.removeEventListener('keydown', onKey, true);
+        el.classList.add('out');
+        setTimeout(() => {
+            el.remove();
+            try { updateMenuRes(); } catch (e) {}
+            const w = document.getElementById('mm-avw'), u = document.getElementById('mm-lvup');
+            if (w && u) { w.classList.remove('lvup'); u.classList.remove('show'); void w.offsetWidth; w.classList.add('lvup'); u.textContent = '¡NIVEL ' + to + '!'; u.classList.add('show'); setTimeout(() => w.classList.remove('lvup'), 2600); }
+        }, reduce ? 0 : 280);
+    };
+    const onKey = e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } };
+    document.addEventListener('keydown', onKey, true);
+    ok.addEventListener('click', e => { e.stopPropagation(); close(); });
+    el.addEventListener('click', close);
+    // guion: aparece la insignia -> el número del nivel "rueda" hasta el nuevo -> destello + chispas -> título -> dinero y objetos uno a uno
+    const steps = Math.min(to - from, 6), step = reduce ? 0 : 230, t0 = reduce ? 0 : 650, tHit = t0 + steps * step + (reduce ? 0 : 120);
+    later(() => sfx('levelup'), reduce ? 0 : 250);
+    for (let i = 1; i <= steps; i++) later(() => { nEl.textContent = (steps === to - from) ? from + i : Math.round(from + (to - from) * i / steps); nEl.classList.remove('roll'); void nEl.offsetWidth; nEl.classList.add('roll'); sfx('tick'); }, t0 + (i - 1) * step);
+    later(() => { nEl.textContent = to; el.classList.add('hit'); }, tHit);
+    later(() => el.classList.add('show-title'), tHit + (reduce ? 0 : 200));
+    later(() => { el.classList.add('show-rew'); sfx('coin');
+        const dur = reduce ? 0 : 900, st = performance.now();
+        const tick = now => { const p = dur ? Math.min(1, (now - st) / dur) : 1; mEl.textContent = '+' + fmt(rw.money * (1 - Math.pow(1 - p, 3))) + ' ₽'; if (p < 1 && !closed) requestAnimationFrame(tick); };
+        requestAnimationFrame(tick);
+    }, tHit + (reduce ? 0 : 520));
+    ids.forEach((id, k) => { if (k < 4) later(() => sfx('coin'), tHit + (reduce ? 0 : 900 + k * 150)); });
+    later(() => { ready = true; el.classList.add('ready'); try { ok.focus({ preventScroll: true }); } catch (e) {} }, tHit + (reduce ? 0 : 900 + ids.length * 150 + 350));
 }
 function updateTrainerChip() { try {
     const x = lvlSync(), inf = lvlInfo(x.total || 0);
@@ -23565,13 +23724,14 @@ function updateTrainerChip() { try {
     if (bar) { bar.style.strokeDashoffset = (100 - inf.frac * 100).toFixed(2); }
     if (ln) { ln.textContent = inf.level; lv.classList.toggle('max', inf.max); }
     if (xp) xp.textContent = inf.max ? 'NIVEL MÁXIMO · ' + inf.total.toLocaleString('es-ES') + ' PTS' : inf.total.toLocaleString('es-ES') + ' / ' + inf.nxt.toLocaleString('es-ES') + ' PTS';
-    const seen = x.seen || 1;
-    if (inf.level > seen && !mainMenuEl.hidden) { // subida de nivel: se celebra al ver el menú
-        x.seen = inf.level; try { SaveSys.write(XP_KEY, x); } catch (e) {}
-        const w = document.getElementById('mm-avw'), u = document.getElementById('mm-lvup');
-        if (w && u) { w.classList.remove('lvup'); u.classList.remove('show'); void w.offsetWidth; w.classList.add('lvup'); u.textContent = '¡NIVEL ' + inf.level + '!'; u.classList.add('show'); setTimeout(() => w.classList.remove('lvup'), 2600); }
-        try { GameAudio.sfx('confirm'); } catch (e) {}
-    } else if (inf.level < seen) { x.seen = inf.level; try { SaveSys.write(XP_KEY, x); } catch (e) {} }
+    const claimed = x.claimed == null ? (x.seen || 1) : x.claimed;
+    if (inf.level > claimed && lvlCanCelebrate()) { // subida de nivel: se cobra el premio UNA vez y se celebra al ver el menú limpio
+        const rw = lvlRewardRange(claimed + 1, inf.level);
+        x.claimed = x.seen = inf.level; try { SaveSys.write(XP_KEY, x); } catch (e) {} // primero se anota como cobrado (nunca se duplica)
+        try { if (rw.money) capMoneyAdd(rw.money); Object.keys(rw.items).forEach(id => bagAdd(id, rw.items[id])); } catch (e) {}
+        try { const m = document.getElementById('mm-res-money'); if (m) m.textContent = Math.floor(capMoney()).toLocaleString('es-ES'); } catch (e) {}
+        try { lvlCelebrate(claimed, inf.level, rw); } catch (e) {}
+    } else if (inf.level < claimed) { x.seen = x.claimed = inf.level; try { SaveSys.write(XP_KEY, x); } catch (e) {} }
 
     const img = document.getElementById('mm-av-img'), q = document.getElementById('mm-av-q'); if (!img) return;
     const t = SaveSys.read('pokearena.trainer', null), src = (t && t.avatar && window.PAOak && PAOak.avatarSrc) ? PAOak.avatarSrc(t.avatar) : '';

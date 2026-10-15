@@ -14,8 +14,9 @@ function init(db) {
         // ---- datos globales de la consola de desarrollador (de todas las cuentas) ----
         db.prepare('CREATE TABLE IF NOT EXISTS g_arenas (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, acc TEXT NOT NULL, sum TEXT NOT NULL, body TEXT NOT NULL)'),
         db.prepare('CREATE INDEX IF NOT EXISTS g_arenas_ts ON g_arenas (ts DESC)'),
-        db.prepare('CREATE TABLE IF NOT EXISTS g_species (line TEXT PRIMARY KEY, sprite TEXT, gen INTEGER DEFAULT 0, genManual INTEGER DEFAULT 0, arenas INTEGER DEFAULT 0, wins INTEGER DEFAULT 0, kos INTEGER DEFAULT 0, faints INTEGER DEFAULT 0, elims INTEGER DEFAULT 0, caps INTEGER DEFAULT 0, ms INTEGER DEFAULT 0, dealt INTEGER DEFAULT 0, taken INTEGER DEFAULT 0, bestKos INTEGER DEFAULT 0, raids INTEGER DEFAULT 0, raidWins INTEGER DEFAULT 0, bosses INTEGER DEFAULT 0, last INTEGER DEFAULT 0)'),
-        db.prepare('CREATE TABLE IF NOT EXISTS g_saves (id TEXT PRIMARY KEY, acc TEXT NOT NULL, updated INTEGER NOT NULL, body TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS g_species (line TEXT PRIMARY KEY, sprite TEXT, gen INTEGER DEFAULT 0, genManual INTEGER DEFAULT 0, apps INTEGER DEFAULT 0, arenas INTEGER DEFAULT 0, wins INTEGER DEFAULT 0, kos INTEGER DEFAULT 0, faints INTEGER DEFAULT 0, elims INTEGER DEFAULT 0, caps INTEGER DEFAULT 0, ms INTEGER DEFAULT 0, dealt INTEGER DEFAULT 0, taken INTEGER DEFAULT 0, bestKos INTEGER DEFAULT 0, raids INTEGER DEFAULT 0, raidWins INTEGER DEFAULT 0, bosses INTEGER DEFAULT 0, last INTEGER DEFAULT 0)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS g_saves (id TEXT PRIMARY KEY, acc TEXT NOT NULL, updated INTEGER NOT NULL, body TEXT NOT NULL, pc TEXT)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS g_saves_del (id TEXT PRIMARY KEY)'), // filas del registro de partidas eliminadas a mano: no se vuelven a crear
         db.prepare('CREATE TABLE IF NOT EXISTS g_seen (rid TEXT PRIMARY KEY, ts INTEGER NOT NULL)'),
         // ---- arena multijugador: salas, miembros y pokémon aportados ----
         db.prepare('CREATE TABLE IF NOT EXISTS rooms (code TEXT PRIMARY KEY, host TEXT NOT NULL, status TEXT NOT NULL, ts INTEGER NOT NULL, result TEXT)'),
@@ -23,7 +24,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
         // última instantánea de la arena que publica el anfitrión (la simula él; el resto de jugadores la ve en directo)
         db.prepare('CREATE TABLE IF NOT EXISTS room_snap (code TEXT PRIMARY KEY, seq INTEGER NOT NULL, data TEXT NOT NULL)'),
-    ]).then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
+    ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
+        .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
+      .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
+      .then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
       .catch(e => { ready = null; throw e; }));
 }
 async function readKey(db, h, k) {
@@ -162,7 +166,7 @@ async function roomApi(db, h, route, req, url) {
     return reply({ error: 'no existe' }, 404);
 }
 
-const NUM = ['gen', 'genManual', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
+const NUM = ['gen', 'genManual', 'apps', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
 const num = v => (Number.isFinite(v) ? Math.max(0, Math.min(1e12, Math.round(v))) : 0);
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
@@ -190,7 +194,12 @@ async function ingest(db, h, b) {
         }
     }
     if (Array.isArray(b.saves)) {
-        for (const e of b.saves.slice(0, 10)) if (isObj(e) && typeof e.id === 'string') st.push(db.prepare('INSERT OR REPLACE INTO g_saves (id, acc, updated, body) VALUES (?1, ?2, ?3, ?4)').bind(acc + ':' + e.id.slice(0, 24), acc, now, JSON.stringify(e)));
+        for (const e of b.saves.slice(0, 10)) if (isObj(e) && typeof e.id === 'string') {
+            const { pc, ...rest } = e, pcs = isObj(pc) ? JSON.stringify(pc) : null, id = acc + ':' + e.id.slice(0, 24);
+            if (pcs && pcs.length > 400000) continue;
+            // la Caja va aparte (la lista de partidas no la trae); si no se eliminó a mano, se guarda o actualiza
+            st.push(db.prepare('INSERT OR REPLACE INTO g_saves (id, acc, updated, body, pc) SELECT ?1, ?2, ?3, ?4, COALESCE(?5, (SELECT pc FROM g_saves WHERE id = ?1)) WHERE NOT EXISTS (SELECT 1 FROM g_saves_del WHERE id = ?1)').bind(id, acc, now, JSON.stringify(rest), pcs));
+        }
     }
     st.push(db.prepare('INSERT OR IGNORE INTO g_seen (rid, ts) VALUES (?1, ?2)').bind(b.rid, now));
     if (Math.random() < 0.02) st.push(db.prepare('DELETE FROM g_seen WHERE ts < ?1').bind(now - 7 * 864e5));
@@ -243,6 +252,10 @@ export default {
                 const saves = sv.results.map(r => '{"_acc":"' + r.acc + '",' + r.body.slice(1)).join(',');
                 return reply('{"totals":' + JSON.stringify(ct.results[0]) + ',"species":' + JSON.stringify(species) + ',"arenas":[' + arenas + '],"saves":[' + saves + ']}');
             }
+            if (route === '/api/g/save' && req.method === 'GET') { // la Caja de una partida del registro
+                const row = await db.prepare('SELECT pc FROM g_saves WHERE id = ?1').bind(url.searchParams.get('k') || '').first();
+                return reply('{"pc":' + ((row && row.pc) || 'null') + '}');
+            }
             if (route === '/api/g/arena' && req.method === 'GET') {
                 const row = await db.prepare('SELECT body FROM g_arenas WHERE k = ?1').bind(url.searchParams.get('k') || '').first();
                 return row ? reply(row.body) : reply({ error: 'no existe' }, 404);
@@ -254,6 +267,12 @@ export default {
                 if (b.key !== key) return reply({ error: 'clave incorrecta' }, 403);
                 if (b.what === 'arenas') await db.prepare('DELETE FROM g_arenas').run();
                 else if (b.what === 'species') await db.prepare('DELETE FROM g_species').run();
+                else if (b.what === 'saves') await db.prepare('DELETE FROM g_saves').run();
+                else if (b.what === 'save') { // elimina UNA fila del registro de partidas y deja constancia para que no se vuelva a crear
+                    const id = String(b.acc || '').slice(0, 8) + ':' + String(b.id || '').slice(0, 24);
+                    if (id.length < 3) return reply({ error: 'falta la partida' }, 400);
+                    await db.batch([db.prepare('DELETE FROM g_saves WHERE id = ?1').bind(id), db.prepare('INSERT OR IGNORE INTO g_saves_del (id) VALUES (?1)').bind(id)]);
+                }
                 else return reply({ error: 'qué borrar' }, 400);
                 return reply({ ok: true });
             }

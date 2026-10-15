@@ -5504,6 +5504,16 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
     .dv-sv .nm b { display:block; font-size:.95rem; font-weight:700; letter-spacing:.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .dv-sv .nm span { display:block; margin-top:2px; font-size:.72rem; color:var(--dv-mut); }
     .dv-sv .nm span.dl { color:#ffb4b8; }
+    .dv-sv[data-i] { cursor:pointer; } .dv-sv[data-i]:active { background:#16171d; }
+    .dv-svx { flex:none; width:34px; height:34px; border-radius:50%; border:1px solid #4a2428; background:#1a0d0f; color:#ff9aa0; font-size:1.05rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+    .dv-svx:active { background:#3a1418; }
+    .dv-pcg { display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; }
+    .dv-pcc { background:var(--dv-surf); border:1px solid var(--dv-line); border-radius:14px; padding:6px 4px 8px; text-align:center; min-width:0; }
+    .dv-pcc .im { height:56px; display:flex; align-items:center; justify-content:center; background:#08090c; border-radius:10px; }
+    .dv-pcc .im img { max-width:52px; max-height:52px; object-fit:contain; image-rendering:pixelated; }
+    .dv-pcc b { display:block; margin-top:5px; font-size:.7rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
+    .dv-pcc span { display:block; font-size:.62rem; color:var(--dv-mut); }
+    .dv-pcc.sh { border-color:#8a6d1c; }
     .dv-sv.del { border-color:#4a2428; background:linear-gradient(180deg,#1a0d0f,#0d0e12); }
     .dv-sv.del .dv-sav { filter:grayscale(1); opacity:.6; } .dv-sv.del .nm b { text-decoration:line-through; color:#c9a3a6; }
     /* generador */
@@ -21961,10 +21971,24 @@ const SaveSys = (() => {
     // Registro global de partidas (vive en 'settings', fuera de las ranuras: sobrevive a borrar partidas).
     // Cada partida lleva un id propio (pokearena.saveid) y una entrada con nombre, avatar, estadísticas y estado.
     const newSid = () => 'G' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+    // Caja compacta: { s: [sprites distintos], l: [[nombre, índiceSprite, brillante, gmax, uid, sumaIV, naturaleza, género], …] }
+    function pcSnap(box) {
+        try {
+            if (!Array.isArray(box) || !box.length) return null;
+            const sp = [], ix = {}, l = [];
+            for (const b of box.slice(0, 1500)) {
+                if (!b || !b.name) continue;
+                const u = String(b.sprite || ''); let k = ix[u]; if (k === undefined) { k = ix[u] = sp.length; sp.push(u); }
+                let sum = 0; if (b.iv && typeof b.iv === 'object') for (const x in b.iv) sum += (b.iv[x] | 0);
+                l.push([String(b.name).slice(0, 40), k, b.shiny ? 1 : 0, b.gmax ? 1 : 0, b.uid || '', sum, b.nature || '', b.gender || '']);
+            }
+            return { s: sp, l };
+        } catch (e) { return null; }
+    }
     function logSync() {
         try {
             if (!Array.isArray(settings.saveLog)) settings.saveLog = [];
-            const log = settings.saveLog, before = JSON.stringify(log), live = {}, now = Date.now();
+            const log = settings.saveLog, before = JSON.stringify(log), live = {}, now = Date.now(), hid = Array.isArray(settings.saveLogHidden) ? settings.saveLogHidden : [];
             for (const n of SLOTS) {
                 if (!slots[n] && settings.active !== n) continue;
                 const act = settings.active === n, d = act ? data : (slots[n] && slots[n].data);
@@ -21973,12 +21997,14 @@ const SaveSys = (() => {
                 if (!tr && !dex && !box) continue; // ranura vacía: aún no es una partida
                 let sid = d['pokearena.saveid'];
                 if (!sid) { sid = d['pokearena.saveid'] = newSid(); if (!act && slots[n]) put('slot:' + n, slots[n]); }
+                if (hid.indexOf(sid) >= 0) continue; // fila eliminada a mano del registro: no vuelve a aparecer
                 live[sid] = 1;
                 let e = log.find(x => x.id === sid);
                 if (!e) { e = { id: sid, created: now }; log.push(e); }
                 e.slot = n; e.status = act ? 'activa' : 'guardada'; delete e.deleted;
                 e.name = (tr && tr.name) || ''; e.avatar = (tr && tr.avatar) || '';
                 e.dex = dex; e.box = box; e.pts = (d['pokearena.xp'] && d['pokearena.xp'].total) || 0;
+                e.pc = pcSnap(d['pokearena.box']); // contenido de la Caja (compacto) para verlo desde la consola de desarrollador
             }
             log.forEach(e => { if (!live[e.id] && e.status !== 'eliminada') { e.status = 'eliminada'; e.deleted = now; } });
             if (JSON.stringify(log) !== before) { put('settings', settings); try { window.PAGlobal && PAGlobal.saves(log); } catch (e) {} }
@@ -22024,6 +22050,10 @@ const SaveSys = (() => {
         setSetting(k, v) { settings[k] = v; return put('settings', settings); },
         info,
         getLog() { return clone(settings.saveLog || []); },
+        async hideLog(id) { // quita la fila del registro de partidas (la partida guardada no se toca) y evita que se vuelva a crear
+            const log = Array.isArray(settings.saveLog) ? settings.saveLog : [];
+            if (log.some(e => e.id === id)) { settings.saveLog = log.filter(e => e.id !== id); settings.saveLogHidden = (Array.isArray(settings.saveLogHidden) ? settings.saveLogHidden : []).concat(id).slice(-300); await put('settings', settings); }
+        },
         async activate(n) {
             if (timer || !slots[settings.active]) await flushNow();
             settings.active = n;
@@ -25804,7 +25834,7 @@ function newUid() { const n = (SaveSys.read('pokearena.uidn', 0) | 0) + 1; SaveS
 
 // ---- DATOS GLOBALES (consola de desarrollador): todas las arenas, especies y partidas de TODAS las cuentas del servidor ----
 const PAGlobal = (() => {
-    const QK = 'pokearena.gq', FIELDS = ['gen', 'genManual', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
+    const QK = 'pokearena.gq', FIELDS = ['gen', 'genManual', 'apps', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
     let q = [], running = null, timer = 0, retry = 0, savesT = 0, lastSaves = '';
     const dev = { arenas: null, species: null, saves: null, totals: null, err: false, errMsg: '', loading: false };
     try { q = JSON.parse(localStorage.getItem(QK) || '[]'); if (!Array.isArray(q)) q = []; } catch (e) { q = []; }
@@ -25840,15 +25870,21 @@ const PAGlobal = (() => {
         } catch (e) { dev.err = true; dev.errMsg = e && e.status ? 'ERROR ' + e.status : (e && e.message) || 'ERROR'; dev.arenas = dev.species = dev.saves = null; }
         dev.loading = false;
     }
+    async function savePc(g) { // la Caja de una partida del registro (la lista no la trae: se pide al tocar la fila)
+        let own = null; try { own = (SaveSys.getLog().find(e => e.id === g.id) || {}).pc || null; } catch (e) {}
+        if (!dev.arenas || !g._acc) return own || g.pc || null;
+        try { const r = await SaveSys.call('GET', '/api/g/save?k=' + encodeURIComponent(g._acc + ':' + String(g.id).slice(0, 24))); if (r && r.pc) return r.pc; } catch (e) {}
+        return own;
+    }
     async function full(i) { // la lista trae resúmenes; la ficha completa de una arena se pide al tocarla
         const g = dev.arenas && dev.arenas[i]; if (!g || g._full || !g._k) return;
         try { const f = await SaveSys.call('GET', '/api/g/arena?k=' + encodeURIComponent(g._k)); Object.assign(g, f, { _full: true }); } catch (e) {}
     }
-    async function clear(what) { // borra el registro GLOBAL (pide la clave de administrador del servidor)
+    async function clear(what, extra) { // borra el registro GLOBAL (pide la clave de administrador del servidor); 'extra' = parámetros del borrado puntual
         if (!dev.arenas) return true;
         let key = ''; try { key = localStorage.getItem('pokearena.adminkey') || ''; } catch (e) {}
         if (!key) { key = window.prompt('Clave de administrador (ADMIN_KEY del servidor):') || ''; if (!key) return false; }
-        try { await SaveSys.call('POST', '/api/g/clear', { what, key }); try { localStorage.setItem('pokearena.adminkey', key); } catch (e) {} return true; }
+        try { await SaveSys.call('POST', '/api/g/clear', Object.assign({ what, key }, extra || {})); try { localStorage.setItem('pokearena.adminkey', key); } catch (e) {} return true; }
         catch (e) { try { localStorage.removeItem('pokearena.adminkey'); } catch (e2) {} window.alert(e.status === 403 ? 'No se pudo borrar: la clave es incorrecta o el servidor no tiene ADMIN_KEY configurada.' : 'No se pudo borrar: sin conexión.'); return false; }
     }
     function migrate() { // una vez por partida: sube lo que ya había guardado localmente (especies, últimas arenas, registro de partidas)
@@ -25869,7 +25905,7 @@ const PAGlobal = (() => {
         const sum = JSON.stringify(lite), body = JSON.stringify(r);
         post({ a: { id: String(r.id || ''), ts: r.ts || Date.now(), sum, body: body.length > 1400000 ? sum : body } });
     }
-    return { dev, post, ops(o) { post({ ops: o }); }, arena, saves, refresh, full, clear, migrate, status, live: () => !!dev.arenas, flush };
+    return { dev, post, ops(o) { post({ ops: o }); }, arena, saves, refresh, full, savePc, clear, migrate, status, live: () => !!dev.arenas, flush };
 })();
 window.PAGlobal = PAGlobal;
 SaveSys.ready.then(() => setTimeout(() => { try { PAGlobal.migrate(); } catch (e) {} }, 2500));
@@ -25893,12 +25929,13 @@ const SpeciesLog = (() => {
     }
     function lineOfForm(name) { if (!formMap) buildMap(); return formMap[name] || formMap[dispName(name)] || { line: dispName(name), sprite: '' }; }
     const load = () => { const v = SaveSys.read(KEY, {}); return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; };
-    const blank = () => ({ gen: 0, genManual: 0, arenas: 0, wins: 0, kos: 0, faints: 0, elims: 0, caps: 0, ms: 0, dealt: 0, taken: 0, bestKos: 0, raids: 0, raidWins: 0, bosses: 0 });
+    const blank = () => ({ gen: 0, genManual: 0, apps: 0, arenas: 0, wins: 0, kos: 0, faints: 0, elims: 0, caps: 0, ms: 0, dealt: 0, taken: 0, bestKos: 0, raids: 0, raidWins: 0, bosses: 0 });
     // Aplica varias sumas a la vez: ops = { 'Charmander': { sprite, add: {gen:1}, max: {bestKos: 3} } }
     function apply(ops) {
         const all = load();
         Object.keys(ops).forEach(line => {
             const o = ops[line], e = all[line] || (all[line] = blank());
+            if (typeof e.apps !== 'number') e.apps = (e.arenas | 0) + (e.raids | 0); // datos anteriores: cada arena/raid jugada cuenta como una aparición
             Object.keys(blank()).forEach(k => { if (typeof e[k] !== 'number') e[k] = 0; });
             if (o.sprite && !e.sprite) e.sprite = o.sprite;
             Object.keys(o.add || {}).forEach(k => { e[k] = (e[k] || 0) + o.add[k]; });
@@ -26002,7 +26039,7 @@ const ArenaLog = (() => {
             const winName = (r.winner && r.winner.id === p.id) ? (names.indexOf(r.winner.name) >= 0 ? r.winner.name : last) : null;
             names.forEach(nm => {
                 const f = fo[nm] || { ms: 0, kos: 0, faints: 0, dealt: 0, taken: 0, sprite: '' };
-                const add = { kos: f.kos | 0, faints: f.faints | 0, ms: Math.round(f.ms), dealt: Math.round(f.dealt), taken: Math.round(f.taken) };
+                const add = { apps: 1, kos: f.kos | 0, faints: f.faints | 0, ms: Math.round(f.ms), dealt: Math.round(f.dealt), taken: Math.round(f.taken) }; // apps: apareció en esta arena
                 if (done) { if (r.mode === 'raid') { add.raids = 1; if (result === 'victoria') add.raidWins = 1; } else { add.arenas = 1; if (winName === nm) add.wins = 1; } }
                 if (o && evName === nm) { if (o.cause === 'captura') add.caps = 1; else if (o.cause === 'jefe') add.bosses = 1; if (o.cause !== 'captura') add.elims = 1; }
                 const prev = ops[nm];
@@ -26032,7 +26069,7 @@ const DV = (() => {
     const STAT_LBL = { hp: 'PS', attack: 'ATAQUE', defense: 'DEFENSA', spAttack: 'AT. ESP.', spDefense: 'DEF. ESP.', speed: 'VELOCIDAD' };
     const CAT = { physical: 'Físico', special: 'Especial', status: 'Estado' };
     const TYPE_ES = { normal: 'Normal', fire: 'Fuego', water: 'Agua', electric: 'Eléctrico', grass: 'Planta', ice: 'Hielo', fighting: 'Lucha', poison: 'Veneno', ground: 'Tierra', flying: 'Volador', psychic: 'Psíquico', bug: 'Bicho', rock: 'Roca', ghost: 'Fantasma', dragon: 'Dragón', dark: 'Siniestro', steel: 'Acero', fairy: 'Hada' };
-    let tab = 'events', view = 'list', gIdx = -1, spSort = 'gen', backFn = null, curSp = '';
+    let svList = [], tab = 'events', view = 'list', gIdx = -1, spSort = 'apps', backFn = null, curSp = '';
 
     // ---------- navegación ----------
     // Entrar a la consola exige la clave de desarrollador del servidor (se pide al abrir; se recuerda mientras la página siga abierta).
@@ -26106,23 +26143,53 @@ const DV = (() => {
     // ---------- registro de partidas ----------
     function renderSaves() {
         const el = $('dv-saves'); let log = []; try { log = PAGlobal.live() ? PAGlobal.dev.saves.slice() : SaveSys.getLog(); } catch (e) {}
-        log.sort((a, b) => b.created - a.created);
+        log.sort((a, b) => b.created - a.created); svList = log;
         const nAct = log.filter(g => g.status === 'activa').length, nDel = log.filter(g => g.status === 'eliminada').length;
         let h = gBanner() + '<div class="dv-h2">Registro de partidas</div><div class="dv-sv-sum">' + log.length + ' registradas · ' + (log.length - nDel) + ' existentes · ' + nDel + ' eliminadas</div>';
         if (!log.length) h += '<div class="dv-empty">Aún no hay partidas registradas.<br>Se registran al crear una partida nueva.</div>';
-        log.forEach(g => {
+        log.forEach((g, gi) => {
             let src = ''; try { src = g.avatar ? PAOak.avatarSrc(g.avatar) : ''; } catch (e) {}
             const st = g.status === 'eliminada' ? ['ELIMINADA', 'bad'] : g.status === 'activa' ? ['ACTIVA', ''] : ['GUARDADA', 'warn'];
             let lv = ''; try { lv = ' · LVL ' + lvlInfo(g.pts || 0).level; } catch (e) {}
-            h += '<div class="dv-sv' + (g.status === 'eliminada' ? ' del' : '') + '"><span class="dv-sav">' + (src ? '<img src="' + src + '" alt="">' : '<i>' + esc(g.slot || '?') + '</i>') + '</span>'
+            h += '<div class="dv-sv' + (g.status === 'eliminada' ? ' del' : '') + '" data-i="' + gi + '" role="button" tabindex="0"><span class="dv-sav">' + (src ? '<img src="' + src + '" alt="">' : '<i>' + esc(g.slot || '?') + '</i>') + '</span>'
                 + '<div class="nm"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b>'
                 + '<span>Pokédex ' + (g.dex | 0) + ' · Caja ' + (g.box | 0) + lv + '</span>'
                 + '<span>' + esc(g.id) + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + ' · ranura ' + esc(g.slot || '—') + ' · creada ' + esc(fmtDate(g.created)) + '</span>'
                 + (g.status === 'eliminada' && g.deleted ? '<span class="dl">Eliminada ' + esc(fmtDate(g.deleted)) + '</span>' : '') + '</div>'
-                + '<span class="dv-chip ' + st[1] + '">' + st[0] + '</span></div>';
+                + '<span class="dv-chip ' + st[1] + '">' + st[0] + '</span><button type="button" class="dv-svx" data-del="' + gi + '" aria-label="Eliminar del registro" title="Eliminar del registro">🗑</button></div>';
         });
-        if (log.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">BORRAR REGISTRO DE PARTIDAS</button></div>';
+        if (log.length) h += '<div class="dv-sv-sum" style="margin-top:10px;text-align:center">Toca una partida para ver su Caja · 🗑 la quita del registro</div><div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">BORRAR REGISTRO DE PARTIDAS</button></div>';
         el.innerHTML = h; el.scrollTop = 0;
+    }
+    async function renderSaveDetail(g) {
+        const pc = await PAGlobal.savePc(g);
+        let src = ''; try { src = g.avatar ? PAOak.avatarSrc(g.avatar) : ''; } catch (e) {}
+        let lv = ''; try { lv = ' · LVL ' + lvlInfo(g.pts || 0).level; } catch (e) {}
+        const mons = pc && Array.isArray(pc.l) ? pc.l : [], sps = (pc && pc.s) || [];
+        const kinds = {}; let nSh = 0, nG = 0; mons.forEach(m => { kinds[m[0]] = 1; if (m[2]) nSh++; if (m[3]) nG++; });
+        let h = '<div class="dv-prev" style="margin-top:14px"><div class="im">' + (src ? '<img src="' + src + '" alt="">' : '') + '</div><div class="tx"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b>'
+            + '<span>' + esc(g.id) + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + ' · ranura ' + esc(g.slot || '—') + '</span><span>Pokédex ' + (g.dex | 0) + lv + ' · creada ' + esc(fmtDate(g.created)) + (g.status === 'eliminada' && g.deleted ? ' · eliminada ' + esc(fmtDate(g.deleted)) : '') + '</span></div></div>';
+        h += '<div class="dv-h3">Caja (PC)' + (g.status === 'eliminada' ? ' · último estado conocido' : '') + '</div>';
+        if (!mons.length) {
+            h += '<div class="dv-empty">' + ((g.box | 0) > 0 ? 'Aún no hay datos de la Caja de esta partida.<br>Se actualizan cuando esa cuenta vuelve a abrir el juego.' : 'La Caja de esta partida está vacía.') + '</div>';
+        } else {
+            h += '<div class="dv-meta" style="grid-template-columns:repeat(3,1fr)"><div><small>Pokémon</small><b>' + mons.length + '</b></div><div><small>Especies</small><b>' + Object.keys(kinds).length + '</b></div><div><small>Shiny / G-Max</small><b>' + nSh + ' / ' + nG + '</b></div></div><div class="dv-pcg" style="margin-top:12px">';
+            mons.forEach(m => {
+                const iv = m[5] ? Math.round(m[5] / (IV_MAX * 6) * 100) + '% IV' : '';
+                h += '<div class="dv-pcc' + (m[2] ? ' sh' : '') + '" title="' + esc(m[4] || '') + '"><div class="im">' + spriteImg(sps[m[1]] || '') + '</div><b>' + (m[2] ? '✦ ' : '') + esc(m[0]) + '</b><span>' + (m[7] === 'M' ? '♂ ' : m[7] === 'F' ? '♀ ' : '') + (m[3] ? 'G-MAX ' : '') + iv + '</span></div>';
+            });
+            h += '</div>';
+        }
+        sub(h, g.name ? String(g.name).toUpperCase() : 'Partida', () => { show('list'); renderSaves(); });
+    }
+    async function deleteSave(g) {
+        if (!g) return;
+        if (!window.confirm('¿Eliminar la partida "' + (g.name || 'Sin nombre') + '" (' + g.id + ') del registro?\nLa partida guardada en sí no se toca; solo desaparece su fila de este registro.')) return;
+        if (!(await PAGlobal.clear('save', { id: g.id, acc: g._acc || '' }))) return;
+        try { await SaveSys.hideLog(g.id); } catch (e) {}
+        try { if (PAGlobal.live()) PAGlobal.dev.saves = PAGlobal.dev.saves.filter(x => !(x.id === g.id && x._acc === g._acc)); } catch (e) {}
+        sfx('close'); renderSaves();
+        try { await PAGlobal.refresh(); if (view === 'list' && tab === 'saves') renderSaves(); } catch (e) {}
     }
     function spriteImg(u) { return u ? '<img src="' + esc(u) + '" alt="" loading="lazy" onerror="var n=sprNext(this.src);if(n)this.src=n;else this.style.visibility=\'hidden\'">' : ''; }
     // fila de un pokémon en el detalle de una arena (tocable: abre su ficha)
@@ -26192,16 +26259,17 @@ const DV = (() => {
         const all = SpeciesLog.view() || {};
         return Object.keys(all).map(n => Object.assign({ name: n }, all[n]));
     }
-    const SORTS = { gen: ['Generados', e => e.gen | 0], kos: ['KOs', e => e.kos | 0], faints: ['Debilitado', e => e.faints | 0], wr: ['Winrate', e => (e.arenas ? e.wins / e.arenas : -1)], wins: ['Victorias', e => e.wins | 0] };
+    const appsOf = e => (typeof e.apps === 'number' ? e.apps : (e.arenas | 0) + (e.raids | 0));
+    const SORTS = { apps: ['Apariciones', e => appsOf(e)], kos: ['KOs', e => e.kos | 0], faints: ['Debilitado', e => e.faints | 0], wr: ['Winrate', e => (e.arenas ? e.wins / e.arenas : -1)], wins: ['Victorias', e => e.wins | 0] };
     function renderSpecies() {
         const rows = spRows(), el = $('dv-species'), fn = SORTS[spSort][1];
         rows.sort((a, b) => fn(b) - fn(a) || a.name.localeCompare(b.name));
-        const tot = rows.reduce((a, e) => { a.g += e.gen | 0; a.k += e.kos | 0; a.f += e.faints | 0; return a; }, { g: 0, k: 0, f: 0 });
-        let h = gBanner() + '<div class="dv-h2">Registro por especie</div><div class="dv-meta" style="grid-template-columns:repeat(3,1fr)"><div><small>Especies</small><b>' + rows.length + '</b></div><div><small>Generados</small><b>' + tot.g + '</b></div><div><small>KOs / Debil.</small><b>' + tot.k + ' / ' + tot.f + '</b></div></div>';
+        const tot = rows.reduce((a, e) => { a.g += appsOf(e); a.k += e.kos | 0; a.f += e.faints | 0; return a; }, { g: 0, k: 0, f: 0 });
+        let h = gBanner() + '<div class="dv-h2">Registro por especie</div><div class="dv-meta" style="grid-template-columns:repeat(3,1fr)"><div><small>Especies</small><b>' + rows.length + '</b></div><div><small>Apariciones</small><b>' + tot.g + '</b></div><div><small>KOs / Debil.</small><b>' + tot.k + ' / ' + tot.f + '</b></div></div>';
         h += '<div class="dv-seg" id="dv-sort" style="margin:12px 0">' + Object.keys(SORTS).map(k => '<button type="button" data-s="' + k + '"' + (k === spSort ? ' class="on"' : '') + '>' + SORTS[k][0].toUpperCase() + '</button>').join('') + '</div>';
         if (!rows.length) h += '<div class="dv-empty">Aún no hay datos.<br>Se llenará con cada arena y cada Pokémon que generes.</div>';
         rows.forEach(e => {
-            h += '<button type="button" class="dv-ord" data-sp="' + esc(e.name) + '"><span class="sp">' + spriteImg(e.sprite) + '</span><span class="nm"><b>' + esc(e.name) + '</b><span>Gen ' + (e.gen | 0) + ' · KOs ' + (e.kos | 0) + ' · Debil. ' + (e.faints | 0) + ' · WR ' + pct(e.wins | 0, e.arenas | 0) + '</span></span><span class="cv">›</span></button>';
+            h += '<button type="button" class="dv-ord" data-sp="' + esc(e.name) + '"><span class="sp">' + spriteImg(e.sprite) + '</span><span class="nm"><b>' + esc(e.name) + '</b><span>Apar. ' + appsOf(e) + ' · KOs ' + (e.kos | 0) + ' · Debil. ' + (e.faints | 0) + ' · WR ' + pct(e.wins | 0, e.arenas | 0) + '</span></span><span class="cv">›</span></button>';
         });
         if (rows.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-spclear">BORRAR REGISTRO DE ESPECIES</button></div>';
         el.innerHTML = h;
@@ -26212,7 +26280,7 @@ const DV = (() => {
         const A = e.arenas | 0, n = x => (x | 0);
         const kd = n(e.faints) ? (n(e.kos) / n(e.faints)).toFixed(2) : (n(e.kos) ? '∞' : '—');
         let h = '<div class="dv-prev" style="margin-top:14px"><div class="im">' + spriteImg(e.sprite) + '</div><div class="tx"><b>' + esc(name) + '</b><span>Datos de esta forma · línea de ' + esc(SpeciesLog.lineOfForm(name).line) + ' · última vez: ' + (e.last ? esc(fmtDate(e.last)) : '—') + '</span></div></div>';
-        h += '<div class="dv-h3">Generación</div><div class="dv-meta"><div><small>Generados (total)</small><b>' + n(e.gen) + '</b></div><div><small>Por arenas</small><b>' + (n(e.gen) - n(e.genManual)) + '</b></div><div><small>Manuales (generador)</small><b>' + n(e.genManual) + '</b></div><div><small>Capturas</small><b>' + n(e.caps) + '</b></div></div>';
+        h += '<div class="dv-h3">Apariciones</div><div class="dv-meta"><div><small>Veces que apareció en arena</small><b>' + appsOf(e) + '</b></div><div><small>Capturas</small><b>' + n(e.caps) + '</b></div></div>';
         h += '<div class="dv-h3">Combate global</div><div class="dv-meta"><div><small>KOs</small><b>' + n(e.kos) + '</b></div><div><small>Veces debilitado</small><b>' + n(e.faints) + '</b></div><div><small>Ratio KOs / debil.</small><b>' + kd + '</b></div><div><small>Mejor arena (KOs)</small><b>' + n(e.bestKos) + '</b></div>'
             + '<div><small>Daño hecho</small><b>' + n(e.dealt) + '</b></div><div><small>Daño resistido</small><b>' + n(e.taken) + '</b></div><div><small>Tiempo total en arena</small><b>' + fmtHrs(e.ms) + '</b></div><div><small>Tiempo medio por arena</small><b>' + (A ? fmtDur(e.ms / A) : '—') + '</b></div></div>';
         h += '<div class="dv-h3">Resultados</div><div class="dv-meta"><div><small>Arenas jugadas</small><b>' + A + '</b></div><div><small>Victorias</small><b>' + n(e.wins) + '</b></div><div><small>Winrate</small><b>' + pct(n(e.wins), A) + '</b></div><div><small>Eliminado en arenas</small><b>' + n(e.elims) + '</b></div>'
@@ -26362,6 +26430,8 @@ const DV = (() => {
             const x = e.target.closest('#dv-spclear'); if (x) armBtn(x, 'BORRAR REGISTRO DE ESPECIES', async () => { if (!(await PAGlobal.clear('species'))) return; SpeciesLog.clear(); await PAGlobal.refresh(); renderSpecies(); });
         });
         $('dv-saves').addEventListener('click', e => {
+            const d = e.target.closest('[data-del]'); if (d) { e.stopPropagation(); deleteSave(svList[+d.dataset.del]); return; }
+            const r = e.target.closest('.dv-sv[data-i]'); if (r) { sfx('pop'); renderSaveDetail(svList[+r.dataset.i]); return; }
             const x = e.target.closest('#dv-delsaves'); if (!x) return;
             armBtn(x, 'BORRAR REGISTRO DE PARTIDAS', async () => { // igual que arenas y especies: vacía el registro (las partidas guardadas no se tocan)
                 if (!(await PAGlobal.clear('saves'))) return;

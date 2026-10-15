@@ -16618,10 +16618,19 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             el.animate = function (k, o) { const a = nat.call(this, k, o); this._an.push(a); return a; };
             return el;
         }
-        function makeFxPool(max) {
-            const free = [];
+        function makeFxPool(max, budgeted) {
+            const free = []; let live = 0, rec = 0;
+            const SINK = /^(dash-fx|spark-particle|trail-dot|phys-fx)/;
             return {
                 get(cls) {
+                    // Presupuesto de efectos vivos (PA_FXMAX: lo fija PerfKit según el dispositivo y los fps). Pasado el tope, el efecto
+                    // se crea oculto (display:none): el código que lo anima sigue igual, pero no cuesta una capa de composición.
+                    if (budgeted && window.PA_FXMAX && SINK.test(cls)) {
+                        const now = performance.now();
+                        if (now - rec > 350) { rec = now; try { live = container.querySelectorAll('.spark-particle,.dash-fx,.phys-fx,.trail-dot').length; } catch (e) {} }
+                        if (live >= window.PA_FXMAX) { const sk = free.pop() || fxMakeEl(); sk._pf = false; sk.className = cls + ' fx-sink'; return sk; }
+                        live++;
+                    }
                     const el = free.pop() || fxMakeEl();
                     el._pf = false; el.className = cls; return el;
                 },
@@ -16636,7 +16645,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 }
             };
         }
-        const fxPool = makeFxPool(600);
+        const fxPool = makeFxPool(600, true);
         const fxTrailPool = makeFxPool(40);   // estelas de dash (div con <img> hijo reutilizable)
 
         function fxAt(cls, x, y, ms, extraStyle) {
@@ -21301,7 +21310,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const W = ltBoxW(), H = ltBoxH(); if (!W || !H) return;
             // Fase estable sin luces puntuales (el día): la imagen del mapa de luz no cambia, no se repinta.
             const ltKey = ph.id + '|' + W + 'x' + H;
-            const skipPaint = (P === ph && P.pl <= 0.02 && ltLastKey === ltKey);
+            const skipPaint = window.PA_PQ >= 2 || (P === ph && P.pl <= 0.02 && ltLastKey === ltKey);
             ltLastKey = (P === ph && P.pl <= 0.02) ? ltKey : '';
             if (!skipPaint) {
             const K = 0.34, cw = Math.ceil(W * K), ch = Math.ceil(H * K);
@@ -27087,29 +27096,29 @@ const PAGifts = (() => {
 
   /* ---------- Calidad adaptativa ---------- */
   var KEY = 'pa.pq', html = document.documentElement, tier = 0;
-  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && Date.now() - sv.t < 6 * 3600e3) tier = sv.v | 0; } catch(e){}
+  var FLOOR = IOS ? 1 : 0, FXB = IOS ? [70, 48, 30, 16] : [0, 0, 160, 70];
+  tier = FLOOR;
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && Date.now() - sv.t < 30 * 864e5) tier = Math.max(FLOOR, Math.min(3, sv.v | 0)); } catch(e){}
   function apply(){
-    html.classList.toggle('pq1', tier >= 1); html.classList.toggle('pq2', tier >= 2);
-    window.PA_PQ = tier; window.PA_LT_MS = tier >= 2 ? 66 : 33;
+    html.classList.toggle('pq1', tier >= 1); html.classList.toggle('pq2', tier >= 2); html.classList.toggle('pq3', tier >= 3);
+    window.PA_PQ = tier; window.PA_LT_MS = tier >= 2 ? 66 : 33; window.PA_FXMAX = FXB[tier] || 0;
   }
   apply();
-  var last = 0, buf = [], runSince = 0, was = false;
+  var last = 0, runSince = 0, was = false, wStart = 0, wN = 0, wMax = 0, quiet = 0;
   function frame(t){
     requestAnimationFrame(frame);
     var run = inCombat() && !document.hidden && !(typeof isPaused !== 'undefined' && isPaused);
-    if (!run) { was = false; last = 0; buf.length = 0; return; }
-    if (!was) { was = true; runSince = t; last = t; buf.length = 0; return; }
+    if (!run) { was = false; last = 0; wN = 0; return; }
+    if (!was) { was = true; runSince = t; last = t; wStart = t; wN = 0; wMax = 0; quiet = t + 1500; return; }
     var dt = t - last; last = t;
-    if (t - runSince < 3000 || dt > 250) return;           // calentamiento y tirones puntuales (cambio de pestaña, evolución…)
-    buf.push(dt);
-    if (buf.length < 150) return;
-    var sum = 0, i; for (i = 0; i < buf.length; i++) sum += buf[i];
-    var avg = sum / buf.length, sd = 0; for (i = 0; i < buf.length; i++) sd += (buf[i] - avg) * (buf[i] - avg);
-    sd = Math.sqrt(sd / buf.length); buf.length = 0;
-    var capped30 = avg > 30 && avg < 37 && sd < 3.5;       // modo bajo consumo de iOS: 30 fps estables, no es un problema de rendimiento
-    var limit = capped30 ? 40 : 26;
-    if (avg > limit && tier < 2) {
-      tier++; apply();
+    if (t < quiet || dt > 400) { wStart = t; wN = 0; wMax = 0; return; }   // calentamiento, y tirones puntuales (cambio de pestaña, evolución…)
+    wN++; if (dt > wMax) wMax = dt;
+    var el = t - wStart;
+    if (el < 1200 || wN < 4) return;                           // ventana de ~1,2 s: reacciona en pocos segundos incluso a 5 fps
+    var avg = el / wN; wStart = t; wN = 0; wMax = 0;
+    var capped30 = avg > 30 && avg < 37;                        // modo bajo consumo de iOS: 30 fps estables, no es un problema de rendimiento
+    if (avg > (capped30 ? 40 : 27) && tier < 3) {
+      tier++; apply(); quiet = t + 1500;
       try { localStorage.setItem(KEY, JSON.stringify({ v: tier, t: Date.now() })); } catch(e){}
     }
   }
@@ -27123,6 +27132,21 @@ const PAGifts = (() => {
 #pc-list .bx-grid{grid-template-columns:repeat(var(--bxc,8),var(--bxpx,minmax(0,1fr)));justify-content:center}
 #pc-list .bx-slot{min-width:0;min-height:0;width:100%;box-sizing:border-box;overflow:hidden}
 #pc-list .bx-slot img{max-width:100%;max-height:100%}
+</style>
+<style id="pa-ios-perf">
+/* ===== iOS: cuenta regresiva nítida y ligera (sin desenfoque animado ni capas enormes) + niveles extra de calidad ===== */
+.fx-sink{display:none !important}
+@keyframes cdPopLite{0%{transform:scale(1.3);opacity:0}40%{transform:scale(.94);opacity:1}70%{transform:scale(1.04)}100%{transform:scale(1)}}
+html.ios-lite #countdown-overlay .cd-num{filter:none}
+html.ios-lite #countdown-overlay .cd-num.pop{animation-name:cdPopLite}
+html.ios-lite #countdown-overlay .cd-num.go.pop{animation-name:cdGoSlam}
+html.ios-lite #countdown-overlay .cd-rays,html.ios-lite #countdown-overlay .cd-flash{display:none}
+html.ios-lite #countdown-overlay .cd-ring-fg{filter:none}
+html.pq2 #light-map{display:none}
+html.pq3 #arena-bg-out{display:none}
+html.pq3 #camera-layer{background:#10281a}
+html.pq3 .wx-cv,html.pq3 #weather-sun .ws-rays,html.pq3 #weather-sun .ws-glow{display:none}
+html.pq3 .pokemon-wrapper::before{filter:none !important}
 </style>
 </body>
 </html>

@@ -4901,6 +4901,9 @@
     .mm-lbl::first-letter { font-size:1.32em; color:var(--mm-or); }
     .mm-star { position:absolute; left:0; top:50%; width:.9em; height:.9em; margin-top:-.45em; fill:var(--mm-yel); filter:drop-shadow(0 0 6px rgba(255,210,63,.9)); opacity:0; transform:scale(.3) rotate(-45deg); transition:opacity .2s, transform .25s; }
     .mm-row::after { content:""; position:absolute; left:.2em; bottom:6%; height:.12em; width:0; background:linear-gradient(90deg,var(--mm-yel),var(--mm-or) 60%,transparent); transform:skewX(-30deg); transform-origin:left; box-shadow:0 0 10px rgba(255,159,28,.7); transition:width .3s cubic-bezier(.2,.9,.3,1); }
+    #main-menu .mm-row.mm-locked, #main-menu .mm-row.mm-locked.is-selected { filter:grayscale(1) brightness(.62) !important; cursor:not-allowed; }
+    #mm-mode .mmm-card.mmm-locked, #mm-mode .mmm-card.mmm-locked:hover, #mm-mode .mmm-card.mmm-locked:focus-visible, #mm-mode .mmm-card.mmm-locked:active { filter:grayscale(1) brightness(.6) !important; cursor:not-allowed; }
+    #mm-mode .mmm-card.mmm-locked .mmm-bg, #mm-mode .mmm-card.mmm-locked .mmm-icon, #mm-mode .mmm-card.mmm-locked .mmm-tag, #mm-mode .mmm-card.mmm-locked .mmm-in::before { animation:none !important; }
     .mm-row.is-selected { opacity:1; color:#fff; transform:translateX(.35em) scale(1.08); transform-origin:left center; text-shadow:-2px -2px 0 #1a0f00,2px -2px 0 #1a0f00,-2px 2px 0 #1a0f00,2px 2px 0 #1a0f00,0 0 14px rgba(255,159,28,.8); animation:none; }
     .mm-row.is-selected .mm-star { opacity:1; transform:none; }
     .mm-row.is-selected::after { width:min(92%,15em); }
@@ -9519,8 +9522,65 @@
                 speciesEvoStage[en.id] = t.stage || 0;
             });
         }
+        // Probabilidad de aparición según la fuerza de la especie (suma de estadísticas base): cuantos más puntos,
+        // más raro. Decae de forma exponencial: ~300 pts = 1, 400 = 0,40, 500 = 0,16, 600 = 0,07, 700+ = 0,03 (suelo: difícil, no imposible).
+        function statsWeight(st) { // st = objeto de estadísticas base { hp, attack, ... }
+            try {
+                if (!st) return 1;
+                const bst = (st.hp | 0) + (st.attack | 0) + (st.defense | 0) + (st.spAttack | 0) + (st.spDefense | 0) + (st.speed | 0);
+                if (!bst) return 1;
+                return Math.min(1.5, Math.max(0.03, Math.exp(-(bst - 300) / 110)));
+            } catch (e) { return 1; }
+        }
+        function spawnWeight(m) { return statsWeight(m && (pokemonStats[m.id] || m.stats)); }
+        function weightedPickIndex(list, pw) { // índice al azar con probabilidad proporcional al peso (pw = exponente de suavizado)
+            const w = list.map(m => Math.pow(spawnWeight(m), pw == null ? 1 : pw)); let t = 0; w.forEach(x => t += x);
+            let r = Math.random() * t;
+            for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; }
+            return list.length - 1;
+        }
+        // ===== Fase evolutiva con la que entra cada especie del reparto (se decide UNA vez, al inicio de la arena) =====
+        // Cualquier fase de la línea puede tocar (Larvitar, Pupitar o Tyranitar). Probabilidad: por estadísticas de esa fase
+        // (como el reparto) y además un 0,7 por cada fase evolutiva. La especie conserva esa fase toda la arena: nunca vuelve atrás.
+        let arenaStageRoll = {}; // id -> { stage, picks:[rama elegida por etapa bifurcada] }
+        const STAGE_EXTRA_PENALTY = 0.7;
+        function stageDataOf(id, stage, picks) { // datos de la fase N (0 = base) con la rama elegida en las etapas bifurcadas
+            const chain = evolutionData[id]; if (!chain || stage <= 0) return null;
+            let st = chain[stage - 1]; if (st && st.branches) st = st.branches[(picks && picks[stage - 1]) | 0] || st.branches[0];
+            return st || null;
+        }
+        function rollArenaStages() {
+            arenaStageRoll = {};
+            (arenaPool || []).forEach(m => {
+                try {
+                    if (!m || m.alpha || (classicPick && classicPick.id === m.id)) return; // el pokémon elegido de la Caja ya trae su fase
+                    const chain = evolutionData[m.id]; if (!chain || !chain.length) return;
+                    const picks = chain.map(st => (st && st.branches) ? Math.floor(Math.random() * st.branches.length) : 0);
+                    const w = [statsWeight(pokemonStats[m.id])];
+                    for (let k = 1; k <= chain.length; k++) { const d = stageDataOf(m.id, k, picks); w.push(statsWeight(d && d.stats) * Math.pow(STAGE_EXTRA_PENALTY, k)); }
+                    let r = Math.random() * w.reduce((a, b) => a + b, 0), stage = 0;
+                    for (let k = 0; k < w.length; k++) { r -= w[k]; if (r <= 0) { stage = k; break; } stage = k; }
+                    if (stage > 0) arenaStageRoll[m.id] = { stage, picks };
+                } catch (e) {}
+            });
+        }
+        function applyArenaStages() { // tras resetAllEvolutions: la especie entra (y reaparece) en su fase sorteada
+            Object.keys(arenaStageRoll).forEach(id => {
+                const t = arenaStageRoll[id], chain = evolutionData[id]; if (!chain) return;
+                for (let i = 0; i < t.stage; i++) { const st = chain[i]; if (st && st.branches) chain[i] = st.branches[t.picks[i] | 0] || st.branches[0]; }
+                speciesEvoStage[id] = t.stage;
+            });
+        }
+        function stageSpriteOf(id) { // sprite de la fase sorteada (para el sorteo animado)
+            const t = arenaStageRoll[id], d = t && stageDataOf(id, t.stage, t.picks);
+            return (d && d.sprite) ? d.sprite : baseSpriteOf(id);
+        }
+        window.paSpawnOdds = function () { // consola del navegador: % de entrar al reparto y fase sorteada de cada especie
+            const l = (arenaPool || []).slice(), w = l.map(spawnWeight), t = w.reduce((a, b) => a + b, 0) || 1;
+            return l.map((m, i) => { const r = arenaStageRoll[m.id], d = r && stageDataOf(m.id, r.stage, r.picks); return { especie: m.name || m.id, fase: r ? r.stage : 0, aparece_como: d ? d.name : (m.name || m.id), porcentaje: +(100 * w[i] / t).toFixed(1) + '%' }; });
+        };
         function pickArenaPool() {
-            arenaRoster = {};
+            arenaRoster = {}; arenaStageRoll = {};
             if (window.PA_TUT && window.PA_TUT.on) { // tutorial de Oak: solo el inicial del jugador y un Caterpie
                 arenaPool = [speciesMeta[window.PA_TUT.mine], speciesMeta[window.PA_TUT.foe]].filter(Boolean);
                 arenaPool.forEach(m => { arenaRoster[m.id] = rollArenaIndividual(m); });
@@ -9530,11 +9590,11 @@
             }
             if (multiPlan) return multiBuildPool(); // arena multijugador: los pokémon de la sala + salvajes hasta los 30 campos
             if (isRaid() && raidTeam) { arenaPool = Object.keys(raidTeam).map(id => speciesMeta[id]).filter(Boolean); return arenaPool; } // Raid: el equipo elegido de la Caja
-            const bag = joinPool.slice();
-            for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+            const bag = joinPool.map(m => ({ m, k: Math.pow(Math.random(), 1 / spawnWeight(m)) })).sort((x, y) => y.k - x.k).map(o => o.m); // barajado ponderado: las especies fuertes entran menos al reparto
             arenaPool = bag.slice(0, Math.min(isRaid() ? RAID_SPECIES_COUNT : ARENA_SPECIES_COUNT, bag.length)); // Raid: máx. 12 líneas
             if (!isRaid()) arenaPool.forEach(m => { arenaRoster[m.id] = rollArenaIndividual(m); }); // el individuo de cada especie se sortea AHORA
             classicApplyPick(); // si el jugador ya eligió un pokémon de la Caja (p. ej. al repetir partida), entra en la arena
+            if (!isRaid()) rollArenaStages(); // fase evolutiva con la que entra cada especie (se decide ahora, al inicio)
             return arenaPool;
         }
 
@@ -18903,7 +18963,7 @@
         // ahora mismo (siempre de especies distintas entre sí). Así, si Pikachu se debilitó antes, puede volver a
         // incorporarse más adelante exactamente igual que cualquier salvaje.
         function spawnOneFromPool(available) {
-            const idx = Math.floor(Math.random() * available.length);
+            const idx = Math.floor(Math.random() * available.length); // incorporaciones: al azar entre los seleccionados
             const chosen = available.splice(idx, 1)[0]; // se saca de la lista para no repetir especie en una doble incorporación
             let x = Math.random() * (bounds.width - bounds.size);
             let y = Math.random() * (bounds.height - bounds.size);
@@ -21406,7 +21466,7 @@
                 countdownTimers.push(setTimeout(() => {
                     const o = slots[i];
                     o.locked = true; o.img.alt = meta.name;
-                    const ind = !isRaid() && arenaRoster[meta.id], bs = baseSpriteOf(meta.id);
+                    const ind = !isRaid() && arenaRoster[meta.id], bs = isRaid() ? baseSpriteOf(meta.id) : stageSpriteOf(meta.id);
                     if (!isRaid() && classicPick && meta.id === classicPick.id && classicPick.sprite) { o.img.onerror = () => { o.img.onerror = null; o.img.src = bs; }; o.img.src = classicPick.sprite; } // el pokémon del jugador se ve con su forma real de la Caja (no la base)
                     else if (ind && ind.shiny) { o.img.onerror = () => { o.img.onerror = null; o.img.src = bs; }; o.img.src = shinyUrl(bs); } // shiny: se ve variocolor desde el sorteo
                     else o.img.src = bs;
@@ -21524,7 +21584,7 @@
             // El centro y el radio son proporcionales al tamaño real del campo; la primera posición
             // queda arriba y el resto sigue el sentido de las agujas del reloj.
             if (isRaid()) { if (raidTeam) raidApplyTeam(); else raidMaxEvolutions(); } // Raid: el equipo de la Caja entra en su forma guardada (si no, todos en su máxima evolución)
-            if (multiPlan) multiApplyStages();
+            if (multiPlan) multiApplyStages(); else if (!isRaid()) applyArenaStages();
             const startPool = arenaPool.slice();
             let myMeta = null; // arena clásica: el Pokémon de la Caja del jugador entra desde el principio, en su forma guardada
             if (!isRaid() && classicPick) {
@@ -22236,7 +22296,8 @@ function buildModeFx() {
         }
     });
 }
-function openArenaModes() { buildModeFx(); document.getElementById('mmm-cards').classList.remove('picked'); document.querySelectorAll('#mm-mode .mmm-card').forEach(c => c.classList.remove('chosen')); mmModeEl.hidden = false; try { document.getElementById('mmm-classic').focus({ preventScroll: true }); } catch (e) {} }
+function mmLockMulti() { const c = document.getElementById('mmm-raids'); if (!c) return; const lock = !devUnlocked(); c.classList.toggle('mmm-locked', lock); if (lock) c.setAttribute('aria-disabled', 'true'); else c.removeAttribute('aria-disabled'); }
+function openArenaModes() { mmLockMulti(); buildModeFx(); document.getElementById('mmm-cards').classList.remove('picked'); document.querySelectorAll('#mm-mode .mmm-card').forEach(c => c.classList.remove('chosen')); mmModeEl.hidden = false; try { document.getElementById('mmm-classic').focus({ preventScroll: true }); } catch (e) {} }
 function closeArenaModes() { mmModeEl.hidden = true; GameAudio.sfx('close'); }
 document.getElementById('mmm-back').addEventListener('click', closeArenaModes);
 // Elegir un modo: la tarjeta hace zoom, se cierra el menú, se configura la arena del modo (escala, marco y mapa) y arranca la partida.
@@ -22500,7 +22561,7 @@ function startRaidWithTeam() {
 document.getElementById('mmt-back').addEventListener('click', closeRaidTeam);
 mmtGo.addEventListener('click', () => { if (teamMode === 'classic') startClassicWithPick(); else startRaidWithTeam(); });
 document.getElementById('mmm-classic').addEventListener('click', () => pickArenaMode('classic', 'mmm-classic'));
-document.getElementById('mmm-raids').addEventListener('click', () => { GameAudio.sfx('tick'); openMulti(); });
+document.getElementById('mmm-raids').addEventListener('click', () => { if (!devUnlocked()) return; /* multijugador: solo con modo desarrollador */ GameAudio.sfx('tick'); openMulti(); });
 
 // ===== ARENA MULTIJUGADOR =====
 // Se abre una SALA (código de 5 letras) para un máximo de 3 JUGADORES. Cada jugador que entra añade pokémon de su PC hasta llenar los 30 campos (mín. 1 por jugador).
@@ -23350,6 +23411,7 @@ function buildMainMenu() {
         b.setAttribute('role', 'menuitem');
         b.style.setProperty('--i', i);
         b.dataset.id = it.id;
+        if (it.id === 'raids' && !devUnlocked()) { b.classList.add('mm-locked'); b.setAttribute('aria-disabled', 'true'); }
         b.innerHTML = '<span class="mc-frame"></span><span class="mc-in"><span class="mc-art"><i class="mc-pic"></i></span><span class="mc-shade"></span><span class="mc-num"></span><span class="mc-ico">' + (MM_ICONS[it.id] || '') + '</span><span class="mc-txt"><b class="mc-name"></b><em class="mc-desc"></em><u class="mc-cta"></u></span></span>';
         const pic = b.querySelector('.mc-pic');
         if (it.id === 'arena' && classicArt) { pic.style.backgroundImage = classicArt; pic.style.backgroundPosition = '38% 50%'; }
@@ -23367,6 +23429,7 @@ function buildMainMenu() {
         b.querySelector('.mc-name').textContent = it.label;
         b.querySelector('.mc-cta').textContent = 'ENTRAR';
         b.addEventListener('click', () => {
+            if (it.id === 'raids' && !devUnlocked()) return; // Raids: solo con el modo desarrollador activo
             if (mainMenuEl.classList.contains('leaving') || performance.now() - (window.__mmTitleGo || -1e9) < 700) return;
             if (mainMenuIndex !== i) { selectMainMenuItem(i); GameAudio.sfx('tick'); return; }
             GameAudio.sfx(it.id === 'arena' ? 'confirm' : 'tick');
@@ -26019,6 +26082,8 @@ const DV = (() => {
                 + (g.status === 'eliminada' && g.deleted ? '<span class="dl">Eliminada ' + esc(fmtDate(g.deleted)) + '</span>' : '') + '</div>'
                 + '<span class="dv-chip ' + st[1] + '">' + st[0] + '</span></div>';
         });
+        let hasSlots = false; try { hasSlots = [1, 2, 3].some(n => { const i = SaveSys.info(n); return i.exists && !i.empty; }); } catch (e) {}
+        if (hasSlots || log.length) h += '<div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">ELIMINAR PARTIDAS Y VACIAR REGISTRO</button></div>';
         el.innerHTML = h; el.scrollTop = 0;
     }
     function spriteImg(u) { return u ? '<img src="' + esc(u) + '" alt="" loading="lazy" onerror="var n=sprNext(this.src);if(n)this.src=n;else this.style.visibility=\'hidden\'">' : ''; }
@@ -26256,6 +26321,20 @@ const DV = (() => {
             const s = e.target.closest('#dv-sort button'); if (s) { spSort = s.dataset.s; renderSpecies(); sfx('tick'); return; }
             const r = e.target.closest('[data-sp]'); if (r) { renderSpDetail(r.dataset.sp); sfx('pop'); return; }
             const x = e.target.closest('#dv-spclear'); if (x) armBtn(x, 'BORRAR REGISTRO DE ESPECIES', async () => { if (!(await PAGlobal.clear('species'))) return; SpeciesLog.clear(); await PAGlobal.refresh(); renderSpecies(); });
+        });
+        $('dv-saves').addEventListener('click', e => {
+            const x = e.target.closest('#dv-delsaves'); if (!x) return;
+            armBtn(x, 'ELIMINAR PARTIDAS Y VACIAR REGISTRO', async () => {
+                x.disabled = true;
+                try {
+                    for (const n of [1, 2, 3]) { if (SaveSys.info(n).exists) await SaveSys.remove(n); }
+                    const old = SaveSys.getLog().map(y => y.id);
+                    await SaveSys.setSetting('saveLog', []); // el registro también se vacía
+                    try { if (PAGlobal.live()) PAGlobal.dev.saves = PAGlobal.dev.saves.filter(g => old.indexOf(g.id) < 0); } catch (e2) {}
+                    try { PAGlobal.saves([]); } catch (e2) {}
+                } catch (err) { window.alert('No se pudieron eliminar todas las partidas.'); }
+                renderSaves();
+            });
         });
         $('dv-detail').addEventListener('click', async e => {
             const r = e.target.closest('[data-pid]'); if (!r) return;

@@ -24363,7 +24363,7 @@ setInterval(() => { try { if (!mainMenuEl.hidden) updateMenuRes(); } catch (e) {
 document.addEventListener('visibilitychange', () => { try { if (!document.hidden && !mainMenuEl.hidden) updateMenuRes(); } catch (e) {} });
 window.addEventListener('pageshow', () => { try { updateMenuRes(); } catch (e) {} });
 (function () { const w = document.getElementById('mm-avw'), xp = document.getElementById('mm-xp'); let t = 0; if (!w || !xp) return;
-    w.addEventListener('click', e => { e.stopPropagation(); xp.hidden = !xp.hidden; try { GameAudio.sfx('tick'); } catch (x) {} clearTimeout(t); if (!xp.hidden) t = setTimeout(() => { xp.hidden = true; }, 3500); }); })();
+    w.addEventListener('click', e => { e.stopPropagation(); try { GameAudio.sfx('tick'); } catch (x) {} try { PAProfile.open(); } catch (x) {} }); })();
 
 
 // ===== INTRO DEL PROFESOR OAK (partida nueva): bienvenida + elección de Bulbasaur, Charmander o Squirtle =====
@@ -27441,6 +27441,143 @@ html.pq3 #camera-layer{background:#10281a}
 html.pq3 .wx-cv,html.pq3 #weather-sun .ws-rays,html.pq3 #weather-sun .ws-glow{display:none}
 html.pq3 .pokemon-wrapper::before{filter:none !important}
 </style>
+
+<style id="pa-profile">
+/* ===== Tarjeta de perfil / Salón de la Fama ===== */
+#pf-card{position:absolute;inset:0;z-index:290;display:grid;place-items:center;padding:12px;color:#fff;font-family:var(--mm-font,sans-serif);background:rgba(4,7,20,.78);-webkit-tap-highlight-color:transparent;animation:pfFade .25s ease-out both}
+#pf-card.out{animation:pfOut .2s ease-in forwards}
+@keyframes pfFade{from{opacity:0}to{opacity:1}} @keyframes pfOut{to{opacity:0}}
+.pf-panel{position:relative;width:min(560px,100%);max-height:100%;overflow:auto;border-radius:18px;border:2px solid rgba(165,180,252,.55);background:linear-gradient(180deg,#1b2254,#0c1030);box-shadow:0 18px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12);animation:pfPop .35s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes pfPop{from{transform:translateY(16px) scale(.94);opacity:0}}
+.pf-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px}
+.pf-head b{font-size:.78rem;letter-spacing:.22em;color:#c7d2fe}
+.pf-x{all:unset;box-sizing:border-box;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);font-size:.9rem}
+.pf-x:active{transform:scale(.92)}
+.pf-body{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr);gap:12px;padding:6px 14px 12px;align-items:stretch}
+.pf-me{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 6px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);min-width:0}
+.pf-av{position:relative;width:min(100%,120px);aspect-ratio:1;display:grid;place-items:center}
+.pf-av svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.pf-av circle{fill:none;stroke-width:6}
+.pf-av .t{stroke:rgba(8,14,40,.7)} .pf-av .b{stroke:url(#mm-ring-g);stroke-linecap:round;stroke-dasharray:100;filter:drop-shadow(0 0 3px rgba(56,189,248,.8))}
+.pf-av .pic{position:relative;width:80%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3b4a9a,#161c4a)}
+.pf-av .pic img{position:absolute;left:50%;bottom:0;height:112%;width:auto;transform:translateX(-50%);pointer-events:none}
+.pf-av .pic b{position:absolute;inset:0;display:grid;place-items:center;font-size:1.6rem;color:rgba(255,255,255,.5)}
+.pf-lv{display:flex;align-items:baseline;gap:4px;padding:3px 12px 3px;border-radius:999px;background:rgba(6,12,34,.92);border:1.5px solid rgba(125,211,252,.75);line-height:1;margin-top:-4px}
+.pf-lv small{font-size:.5rem;font-weight:800;letter-spacing:.14em;color:#7dd3fc} .pf-lv b{font-size:1rem;font-weight:900}
+.pf-lv.max{border-color:#fde68a} .pf-lv.max small,.pf-lv.max b{color:#fde68a}
+.pf-name{font-size:.86rem;font-weight:800;letter-spacing:.04em;text-align:center;overflow-wrap:anywhere;line-height:1.15}
+.pf-xp{font-size:.5rem;letter-spacing:.08em;color:#a5b4fc;text-align:center}
+.pf-hof{position:relative;border-radius:12px;overflow:hidden;border:2px solid #0b0f2b;background:linear-gradient(180deg,#b6b1f2,#9a95e2);min-width:0}
+.pf-hof::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:#262d63}
+.pf-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:20px 8px 8px}
+.pf-slot{all:unset;box-sizing:border-box;position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.22);border:1.5px dashed rgba(38,45,99,.45);cursor:pointer;overflow:hidden;display:block;-webkit-tap-highlight-color:transparent}
+.pf-slot.on{border-style:solid;border-color:rgba(38,45,99,.35);background:rgba(255,255,255,.3)}
+.pf-slot:active{transform:scale(.96)}
+.pf-slot img{image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.3));-webkit-user-drag:none}
+.pf-slot .plus{position:absolute;inset:0;display:grid;place-items:center;font-size:1.5rem;color:rgba(38,45,99,.55);font-weight:800}
+.pf-slot u{position:absolute;left:3px;top:1px;text-decoration:none;color:#fde047;font-size:.7rem;text-shadow:0 0 3px #000;z-index:2}
+.pf-slot span{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;font-size:.5rem;font-weight:700;text-align:center;color:#fff;background:rgba(20,24,64,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.pf-conf{position:absolute;inset:14px 0 0;pointer-events:none;overflow:hidden}
+.pf-conf i{position:absolute;top:-8px;width:6px;height:6px;opacity:.85;animation:pfConf 5s linear infinite}
+@keyframes pfConf{to{transform:translateY(260px) rotate(300deg);opacity:0}}
+.pf-say{margin:0 14px 12px;padding:9px 12px;border-radius:10px;background:#1d2557;border:2px solid #0b0f2b;font-size:.62rem;letter-spacing:.04em;line-height:1.35;text-align:center;color:#e0e7ff}
+@media (prefers-reduced-motion:reduce){.pf-conf{display:none}.pf-panel{animation:none}}
+@media (min-width:520px){.pf-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* selector de Pokémon */
+#pf-pick{position:absolute;inset:0;z-index:295;display:grid;place-items:center;padding:12px;background:rgba(4,7,20,.7);color:#fff;font-family:var(--mm-font,sans-serif);animation:pfFade .2s ease-out both}
+.pk-panel{width:min(520px,100%);max-height:100%;display:flex;flex-direction:column;border-radius:16px;border:2px solid rgba(165,180,252,.55);background:linear-gradient(180deg,#1b2254,#0c1030);box-shadow:0 18px 50px rgba(0,0,0,.65);overflow:hidden}
+.pk-top{display:flex;gap:8px;align-items:center;padding:10px 12px 6px}
+.pk-top input{flex:1;min-width:0;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:.7rem;outline:none}
+.pk-rm{all:unset;box-sizing:border-box;padding:7px 12px;border-radius:999px;font-size:.56rem;font-weight:800;letter-spacing:.06em;cursor:pointer;background:rgba(248,113,113,.2);border:1px solid rgba(248,113,113,.6);color:#fecaca}
+.pk-list{flex:1;min-height:120px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;padding:6px 12px 12px;align-content:start}
+.pk-it{all:unset;box-sizing:border-box;position:relative;aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);cursor:pointer;overflow:hidden;display:block}
+.pk-it.in{border-color:#fde047;box-shadow:0 0 0 1px #fde047 inset}
+.pk-it:active{background:rgba(255,216,74,.25)}
+.pk-it img{image-rendering:pixelated;pointer-events:none;-webkit-user-drag:none}
+.pk-it u{position:absolute;left:3px;top:1px;text-decoration:none;color:#fde047;font-size:.7rem;text-shadow:0 0 3px #000;z-index:2}
+.pk-it span{position:absolute;left:0;right:0;bottom:0;padding:1px 2px;font-size:.46rem;font-weight:700;text-align:center;background:rgba(10,14,40,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:2}
+.pk-empty{grid-column:1/-1;text-align:center;font-size:.62rem;color:#a5b4fc;padding:18px 6px}
+</style>
+
+<script id="pa-profile-js">
+/* Tarjeta de perfil / Salón de la Fama: al tocar el avatar del menú principal. Guarda los uid de 6 Pokémon de la Caja en 'pokearena.hof'. */
+window.PAProfile = (function () {
+    const KEY = 'pokearena.hof', N = 6;
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
+    const box = () => { try { return (capLoad(CAP_BOX_KEY, []) || []).filter(b => b && b.uid); } catch (e) { return []; } };
+    const loadIds = () => { let a = []; try { a = SaveSys.read(KEY, []); } catch (e) {} a = Array.isArray(a) ? a.slice(0, N) : []; while (a.length < N) a.push(null); return a; };
+    const saveIds = a => { try { SaveSys.write(KEY, a); } catch (e) {} };
+    const fit = img => { try { fitTileImg(img, 0.86); } catch (e) {} };
+    function me() {
+        let t = null, lv = { level: 1, frac: 0, max: false, total: 0, nxt: 0 };
+        try { t = SaveSys.read('pokearena.trainer', null); } catch (e) {}
+        try { lv = lvlInfo(lvlSync().total || 0); } catch (e) {}
+        let src = ''; try { src = (t && t.avatar && PAOak.avatarSrc) ? PAOak.avatarSrc(t.avatar) : ''; } catch (e) {}
+        return { name: (t && t.name) || 'ENTRENADOR', src, lv };
+    }
+    function slotHTML(b, i) {
+        if (!b) return '<button type="button" class="pf-slot" data-i="' + i + '" aria-label="Elegir Pokémon"><i class="plus">+</i></button>';
+        return '<button type="button" class="pf-slot on" data-i="' + i + '"><img src="' + esc(b.sprite) + '" alt="" draggable="false">' + (b.shiny ? '<u>✦</u>' : '') + '<span>' + esc(dispName(b.name)) + '</span></button>';
+    }
+    function open() {
+        if (document.getElementById('pf-card')) return;
+        const root = document.getElementById('main-menu') || document.body, m = me();
+        const el = document.createElement('div'); el.id = 'pf-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Perfil y Salón de la Fama');
+        let conf = ''; const cols = ['#f472b6', '#60a5fa', '#fde047', '#a78bfa', '#4ade80'];
+        for (let i = 0; i < 12; i++) conf += '<i style="left:' + (Math.random() * 96).toFixed(0) + '%;background:' + cols[i % 5] + ';animation-delay:' + (-Math.random() * 5).toFixed(1) + 's;animation-duration:' + (4 + Math.random() * 3).toFixed(1) + 's"></i>';
+        el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL · SALÓN DE LA FAMA</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
+            + '<div class="pf-body"><div class="pf-me"><div class="pf-av"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="t" cx="50" cy="50" r="46"/><circle class="b" cx="50" cy="50" r="46" pathLength="100" style="stroke-dashoffset:' + (100 - m.lv.frac * 100).toFixed(1) + '"/></svg>'
+            + '<div class="pic">' + (m.src ? '<img src="' + esc(m.src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
+            + '<div class="pf-lv' + (m.lv.max ? ' max' : '') + '"><small>NIVEL</small><b>' + m.lv.level + '</b></div>'
+            + '<div class="pf-name">' + esc(m.name) + '</div>'
+            + '<div class="pf-xp">' + (m.lv.max ? 'NIVEL MÁXIMO' : (m.lv.total || 0).toLocaleString('es-ES') + ' / ' + (m.lv.nxt || 0).toLocaleString('es-ES') + ' PTS') + '</div></div>'
+            + '<div class="pf-hof"><div class="pf-conf">' + conf + '</div><div class="pf-grid" id="pf-grid"></div></div></div>'
+            + '<div class="pf-say" id="pf-say"></div></div>';
+        root.appendChild(el);
+        const grid = el.querySelector('#pf-grid'), say = el.querySelector('#pf-say');
+        const render = () => {
+            const bx = box(), by = {}; bx.forEach(b => { by[b.uid] = b; });
+            const ids = loadIds(); let n = 0;
+            grid.innerHTML = ids.map((id, i) => { const b = id ? by[id] : null; if (b) n++; return slotHTML(b, i); }).join('');
+            grid.querySelectorAll('.pf-slot img').forEach(fit);
+            say.textContent = n ? '¡Bienvenido al Salón de la Fama, ' + m.name + '!' : 'Toca una casilla para elegir los Pokémon de tu Salón de la Fama.';
+        };
+        const close = () => { if (el._closing) return; el._closing = 1; sfx('close'); const pk = document.getElementById('pf-pick'); if (pk) pk.remove(); el.classList.add('out'); setTimeout(() => el.remove(), 200); };
+        el.addEventListener('click', e => {
+            if (e.target === el || e.target.closest('.pf-x')) return close();
+            const sl = e.target.closest('.pf-slot'); if (sl) { sfx('tick'); pick(+sl.dataset.i, render); }
+        });
+        render(); sfx('pop');
+    }
+    function pick(slot, done) {
+        const root = document.getElementById('main-menu') || document.body;
+        const ids = loadIds(), bx = box();
+        const pk = document.createElement('div'); pk.id = 'pf-pick';
+        pk.innerHTML = '<div class="pk-panel"><div class="pk-top"><input type="search" placeholder="Buscar en la Caja…" aria-label="Buscar">' + (ids[slot] ? '<button class="pk-rm" type="button">QUITAR</button>' : '') + '<button class="pf-x" type="button" aria-label="Cerrar">✕</button></div><div class="pk-list"></div></div>';
+        root.appendChild(pk);
+        const list = pk.querySelector('.pk-list'), inp = pk.querySelector('input');
+        const draw = () => {
+            const q = inp.value.trim().toLowerCase();
+            const rows = bx.filter(b => !q || dispName(b.name).toLowerCase().includes(q));
+            list.innerHTML = rows.length ? rows.map(b => '<button type="button" class="pk-it' + (ids.indexOf(b.uid) >= 0 ? ' in' : '') + '" data-u="' + esc(b.uid) + '"><img src="' + esc(b.sprite) + '" alt="" draggable="false">' + (b.shiny ? '<u>✦</u>' : '') + '<span>' + esc(dispName(b.name)) + '</span></button>').join('')
+                : '<div class="pk-empty">' + (bx.length ? 'Sin resultados' : 'Aún no tienes Pokémon en la Caja') + '</div>';
+            list.querySelectorAll('.pk-it img').forEach(fit);
+        };
+        inp.addEventListener('input', draw); draw();
+        const end = () => { pk.remove(); };
+        pk.addEventListener('click', e => {
+            if (e.target === pk || e.target.closest('.pf-x')) return end();
+            if (e.target.closest('.pk-rm')) { ids[slot] = null; saveIds(ids); sfx('close'); end(); return done(); }
+            const it = e.target.closest('.pk-it'); if (!it) return;
+            const u = it.dataset.u, j = ids.indexOf(u);
+            if (j >= 0 && j !== slot) ids[j] = ids[slot]; // ya estaba en otra casilla: se intercambian
+            ids[slot] = u; saveIds(ids); sfx('pop'); end(); done();
+        });
+    }
+    return { open };
+})();
+</script>
 </body>
 </html>
 

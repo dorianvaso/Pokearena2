@@ -28,6 +28,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS gifts (id TEXT PRIMARY KEY, acc TEXT NOT NULL, ts INTEGER NOT NULL, body TEXT NOT NULL)'),
         db.prepare('CREATE INDEX IF NOT EXISTS gifts_acc ON gifts (acc, ts)'),
         db.prepare('CREATE TABLE IF NOT EXISTS gift_claims (gid TEXT NOT NULL, h TEXT NOT NULL, PRIMARY KEY (gid, h))'),
+        // amigos: perfil público de cada cuenta (nombre, avatar, nivel, Salón de la Fama y última conexión) y relaciones (st 0 = solicitud de a hacia b, 1 = amigos)
+        db.prepare('CREATE TABLE IF NOT EXISTS profiles (acc TEXT PRIMARY KEY, ts INTEGER NOT NULL, name TEXT, avatar TEXT, lvl INTEGER, hof TEXT)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, st INTEGER NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (a, b))'),
+        db.prepare('CREATE INDEX IF NOT EXISTS friends_b ON friends (b, st)'),
     ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
         .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
@@ -175,6 +179,62 @@ const num = v => (Number.isFinite(v) ? Math.max(0, Math.min(1e12, Math.round(v))
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
 // Un registro global: { rid, arena?, ops?, saves? }. Es idempotente por 'rid' (el cliente puede reintentar).
+// ---- amigos ----
+const SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/[A-Za-z0-9\/_.\-]{1,170}$/;
+const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
+    ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
+async function friendsApi(db, h, route, req) {
+    const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
+    const b = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+    const other = v => { const x = String((b && v) || '').toLowerCase(); return /^[a-f0-9]{8}$/.test(x) ? x : null; };
+    if (route === '/api/f/ping' && req.method === 'POST') {
+        const name = String(b.name || '').replace(/[<>"&]/g, '').trim().slice(0, 24);
+        const avatar = /^[a-z0-9_-]{1,12}$/i.test(b.avatar || '') ? b.avatar : '';
+        const lvl = Math.max(1, Math.min(999, b.lvl | 0 || 1));
+        await q('INSERT INTO profiles (acc, ts, name, avatar, lvl, hof) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(acc) DO UPDATE SET ts = ?2, name = ?3, avatar = ?4, lvl = ?5, hof = ?6',
+            me, now, name, avatar, lvl, JSON.stringify(cleanHof(b.hof))).run();
+        return reply({ ok: true, acc: me, now });
+    }
+    if (route === '/api/f/list' && req.method === 'GET') {
+        const [fr, inc, out] = await db.batch([
+            q('SELECT CASE WHEN f.a = ?1 THEN f.b ELSE f.a END AS acc, p.name, p.avatar, p.lvl, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.st = 1 AND (f.a = ?1 OR f.b = ?1) LIMIT 150', me),
+            q('SELECT f.a AS acc, p.name, p.avatar, p.lvl, p.hof, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = f.a WHERE f.st = 0 AND f.b = ?1 ORDER BY f.ts DESC LIMIT 30', me),
+            q('SELECT f.b AS acc, p.name, p.avatar FROM friends f LEFT JOIN profiles p ON p.acc = f.b WHERE f.st = 0 AND f.a = ?1 ORDER BY f.ts DESC LIMIT 30', me),
+        ]);
+        const hof = t => { try { return JSON.parse(t || '[]'); } catch (e) { return []; } };
+        return reply({ now, me, friends: fr.results, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof) })), outgoing: out.results });
+    }
+    if (route === '/api/f/request' && req.method === 'POST') {
+        const to = other(b.to);
+        if (!to) return reply({ error: 'ID no válido (son 8 caracteres)' }, 400);
+        if (to === me) return reply({ error: 'Ese es tu propio ID' }, 400);
+        if (!(await q('SELECT 1 FROM accounts WHERE substr(h, 1, 8) = ?1', to).first())) return reply({ error: 'No existe ninguna cuenta con ese ID' }, 404);
+        const ex = await q('SELECT a, st FROM friends WHERE (a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1)', me, to).first();
+        if (ex) {
+            if (ex.st === 1) return reply({ ok: true, state: 'friends' });
+            if (ex.a === me) return reply({ ok: true, state: 'sent' });
+            await q('UPDATE friends SET st = 1, ts = ?3 WHERE a = ?1 AND b = ?2', to, me, now).run(); // ya te había enviado una solicitud: se aceptan mutuamente
+            return reply({ ok: true, state: 'friends' });
+        }
+        const cnt = await q('SELECT COUNT(*) AS n FROM friends WHERE a = ?1 OR b = ?1', me).first();
+        if (cnt && cnt.n >= 150) return reply({ error: 'Has alcanzado el límite de amigos y solicitudes' }, 400);
+        await q('INSERT INTO friends (a, b, st, ts) VALUES (?1, ?2, 0, ?3)', me, to, now).run();
+        return reply({ ok: true, state: 'sent' });
+    }
+    if (route === '/api/f/respond' && req.method === 'POST') {
+        const from = other(b.from); if (!from) return reply({ error: 'ID no válido' }, 400);
+        if (b.accept) await q('UPDATE friends SET st = 1, ts = ?3 WHERE a = ?1 AND b = ?2 AND st = 0', from, me, now).run();
+        else await q('DELETE FROM friends WHERE a = ?1 AND b = ?2 AND st = 0', from, me).run();
+        return reply({ ok: true });
+    }
+    if (route === '/api/f/remove' && req.method === 'POST') { // elimina un amigo o cancela una solicitud enviada
+        const who = other(b.acc); if (!who) return reply({ error: 'ID no válido' }, 400);
+        await q('DELETE FROM friends WHERE (a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1)', me, who).run();
+        return reply({ ok: true });
+    }
+    return reply({ error: 'no existe' }, 404);
+}
+
 async function ingest(db, h, b) {
     if (!isObj(b) || typeof b.rid !== 'string' || b.rid.length > 64) return { error: 'registro no válido' };
     if (await db.prepare('SELECT 1 FROM g_seen WHERE rid = ?1').bind(b.rid).first()) return { ok: true, dup: true };
@@ -237,6 +297,7 @@ export default {
                 return reply('{"fresh":' + (results.length ? 'false' : 'true') + ',"settings":' + (by.settings || '{}') + ',"slots":{' + slots + '}}');
             }
             if (route.startsWith('/api/room/')) return await roomApi(db, h, route, req, url);
+            if (route.startsWith('/api/f/')) return await friendsApi(db, h, route, req);
             // ---- consola de desarrollador GLOBAL ----
             if (route === '/api/g/record' && req.method === 'POST') {
                 const t = await req.text(); if (t.length > 3e6) return reply({ error: 'demasiado grande' }, 413);

@@ -6156,7 +6156,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     <div class="mm-title">
       <div id="mm-title-main" class="mm-title-main"></div>
     </div>
-    <div class="mm-res" id="mm-res"><div class="mm-top"><div class="mm-mini"><span class="mm-mini-i"><i class="mm-res-ic mm-res-coin">₽</i><b id="mm-res-money">0</b></span><span class="mm-mini-i"><i class="mm-res-ic mm-res-ball" id="mm-res-ballic"></i><b id="mm-res-n">0</b></span></div><div class="mm-avw" id="mm-avw"><svg class="mm-ring" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="mm-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><circle class="trk" cx="50" cy="50" r="46"/><circle class="bar" id="mm-lvl-bar" cx="50" cy="50" r="46" pathLength="100"/></svg><div class="mm-av" id="mm-av"><img id="mm-av-img" alt="" draggable="false" hidden><b id="mm-av-q">?</b></div><div class="mm-lvl" id="mm-lvl"><small>LVL</small><b id="mm-lvl-n">1</b></div><span class="mm-lvup" id="mm-lvup"></span></div></div><div class="mm-xp" id="mm-xp" hidden></div></div>
+    <div class="mm-res" id="mm-res"><div class="mm-top"><div class="mm-col"><div class="mm-mini"><span class="mm-mini-i"><i class="mm-res-ic mm-res-coin">₽</i><b id="mm-res-money">0</b></span><span class="mm-mini-i"><i class="mm-res-ic mm-res-ball" id="mm-res-ballic"></i><b id="mm-res-n">0</b></span></div><button type="button" class="mm-fr" id="mm-fr" aria-label="Amigos"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm7 .5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM9 13c-3 0-6 1.5-6 4v2h12v-2c0-2.5-3-4-6-4zm7 .3c-.5 0-1 0-1.500.1 1.200.9 2 2.100 2 3.600V19h5v-2c0-2.200-2.600-3.700-5.500-3.700z"/></svg><b>AMIGOS</b><s id="mm-fr-n" hidden>0</s></button></div><div class="mm-avw" id="mm-avw"><svg class="mm-ring" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="mm-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><circle class="trk" cx="50" cy="50" r="46"/><circle class="bar" id="mm-lvl-bar" cx="50" cy="50" r="46" pathLength="100"/></svg><div class="mm-av" id="mm-av"><img id="mm-av-img" alt="" draggable="false" hidden><b id="mm-av-q">?</b></div><div class="mm-lvl" id="mm-lvl"><small>LVL</small><b id="mm-lvl-n">1</b></div><span class="mm-lvup" id="mm-lvup"></span></div></div><div class="mm-xp" id="mm-xp" hidden></div></div>
     <div class="mm-head"><small>MENÚ PRINCIPAL</small><b id="mm-head-t"></b></div>
     <nav id="mm-tabs" class="mm-list" role="menu" aria-label="Opciones"></nav>
     <div class="mm-hint" id="mm-info"><i class="mm-q">?</i><span class="mm-hint-t" id="mm-info-t"></span></div>
@@ -27467,6 +27467,9 @@ html.pq3 .pokemon-wrapper::before{filter:none !important}
 .pf-lv.max{border-color:#fde68a} .pf-lv.max small,.pf-lv.max b{color:#fde68a}
 .pf-name{font-size:.86rem;font-weight:800;letter-spacing:.04em;text-align:center;overflow-wrap:anywhere;line-height:1.15}
 .pf-xp{font-size:.5rem;letter-spacing:.08em;color:#a5b4fc;text-align:center}
+.pf-id{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);font-size:.62rem;-webkit-tap-highlight-color:transparent}
+.pf-id small{font-size:.46rem;font-weight:800;letter-spacing:.14em;color:#7dd3fc} .pf-id b{font-family:ui-monospace,Menlo,monospace;letter-spacing:.08em;font-weight:700}
+.pf-id:active{transform:scale(.95)} .pf-id.ok b{color:#86efac}
 .pf-hof{position:relative;border-radius:12px;overflow:hidden;border:2px solid #0b0f2b;background:linear-gradient(180deg,#b6b1f2,#9a95e2);min-width:0}
 .pf-hof::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:#262d63}
 .pf-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:20px 8px 8px}
@@ -27507,7 +27510,7 @@ window.PAProfile = (function () {
     const sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
     const box = () => { try { return (capLoad(CAP_BOX_KEY, []) || []).filter(b => b && b.uid); } catch (e) { return []; } };
     const loadIds = () => { let a = []; try { a = SaveSys.read(KEY, []); } catch (e) {} a = Array.isArray(a) ? a.slice(0, N) : []; while (a.length < N) a.push(null); return a; };
-    const saveIds = a => { try { SaveSys.write(KEY, a); } catch (e) {} };
+    const saveIds = a => { try { SaveSys.write(KEY, a); } catch (e) {} try { PAFriends.ping(true); } catch (e) {} };
     const fit = img => { try { fitTileImg(img, 0.86); } catch (e) {} };
     function me() {
         let t = null, lv = { level: 1, frac: 0, max: false, total: 0, nxt: 0 };
@@ -27523,32 +27526,34 @@ window.PAProfile = (function () {
     function open() {
         if (document.getElementById('pf-card')) return;
         const root = document.getElementById('main-menu') || document.body, m = me();
-        const el = document.createElement('div'); el.id = 'pf-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Perfil y Salón de la Fama');
+        const el = document.createElement('div'); el.id = 'pf-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Perfil');
         let conf = ''; const cols = ['#f472b6', '#60a5fa', '#fde047', '#a78bfa', '#4ade80'];
         for (let i = 0; i < 12; i++) conf += '<i style="left:' + (Math.random() * 96).toFixed(0) + '%;background:' + cols[i % 5] + ';animation-delay:' + (-Math.random() * 5).toFixed(1) + 's;animation-duration:' + (4 + Math.random() * 3).toFixed(1) + 's"></i>';
-        el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL · SALÓN DE LA FAMA</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
+        el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
             + '<div class="pf-body"><div class="pf-me"><div class="pf-av"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="t" cx="50" cy="50" r="46"/><circle class="b" cx="50" cy="50" r="46" pathLength="100" style="stroke-dashoffset:' + (100 - m.lv.frac * 100).toFixed(1) + '"/></svg>'
             + '<div class="pic">' + (m.src ? '<img src="' + esc(m.src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
             + '<div class="pf-lv' + (m.lv.max ? ' max' : '') + '"><small>NIVEL</small><b>' + m.lv.level + '</b></div>'
             + '<div class="pf-name">' + esc(m.name) + '</div>'
-            + '<div class="pf-xp">' + (m.lv.max ? 'NIVEL MÁXIMO' : (m.lv.total || 0).toLocaleString('es-ES') + ' / ' + (m.lv.nxt || 0).toLocaleString('es-ES') + ' PTS') + '</div></div>'
+            + '<div class="pf-xp">' + (m.lv.max ? 'NIVEL MÁXIMO' : (m.lv.total || 0).toLocaleString('es-ES') + ' / ' + (m.lv.nxt || 0).toLocaleString('es-ES') + ' PTS') + '</div>'
+            + '<button type="button" class="pf-id" title="Toca para copiar tu ID"><small>ID</small><b id="pf-id-v">' + esc((window.PAFriends && PAFriends.acc()) || '········') + '</b></button></div>'
             + '<div class="pf-hof"><div class="pf-conf">' + conf + '</div><div class="pf-grid" id="pf-grid"></div></div></div>'
-            + '<div class="pf-say" id="pf-say"></div></div>';
+            + '</div>';
         root.appendChild(el);
-        const grid = el.querySelector('#pf-grid'), say = el.querySelector('#pf-say');
+        const grid = el.querySelector('#pf-grid');
         const render = () => {
             const bx = box(), by = {}; bx.forEach(b => { by[b.uid] = b; });
             const ids = loadIds(); let n = 0;
             grid.innerHTML = ids.map((id, i) => { const b = id ? by[id] : null; if (b) n++; return slotHTML(b, i); }).join('');
             grid.querySelectorAll('.pf-slot img').forEach(fit);
-            say.textContent = n ? '¡Bienvenido al Salón de la Fama, ' + m.name + '!' : 'Toca una casilla para elegir los Pokémon de tu Salón de la Fama.';
         };
         const close = () => { if (el._closing) return; el._closing = 1; sfx('close'); const pk = document.getElementById('pf-pick'); if (pk) pk.remove(); el.classList.add('out'); setTimeout(() => el.remove(), 200); };
         el.addEventListener('click', e => {
             if (e.target === el || e.target.closest('.pf-x')) return close();
+            if (e.target.closest('.pf-id')) { try { PAFriends.copyId(e.target.closest('.pf-id')); } catch (x) {} return; }
             const sl = e.target.closest('.pf-slot'); if (sl) { sfx('tick'); pick(+sl.dataset.i, render); }
         });
         render(); sfx('pop');
+        try { PAFriends.ensureAcc().then(a => { const v = el.querySelector('#pf-id-v'); if (v && a) v.textContent = a; }); } catch (e) {}
     }
     function pick(slot, done) {
         const root = document.getElementById('main-menu') || document.body;
@@ -27575,7 +27580,182 @@ window.PAProfile = (function () {
             ids[slot] = u; saveIds(ids); sfx('pop'); end(); done();
         });
     }
-    return { open };
+    return { open, hofList() { const bx = box(), by = {}; bx.forEach(b => { by[b.uid] = b; }); return loadIds().map(id => { const b = id ? by[id] : null; return b ? { n: dispName(b.name), s: String(b.sprite), sh: b.shiny ? 1 : 0 } : null; }); } };
+})();
+</script>
+
+<style id="pa-friends">
+.mm-col{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.mm-fr{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:14px;color:#fff;cursor:pointer;margin-right:2px;line-height:1;-webkit-tap-highlight-color:transparent;
+ background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.03)),rgba(8,10,24,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22)}
+.mm-fr svg{width:16px;height:16px;flex:none;color:#7dd3fc}
+.mm-fr b{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.mm-fr s{text-decoration:none;margin-left:auto;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#ef4444;color:#fff;font-size:.56rem;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(8,10,24,.8)}
+.mm-fr s[hidden]{display:none}
+.mm-fr:active{transform:scale(.96)}
+#fr-panel{position:absolute;inset:0;z-index:290;display:grid;place-items:center;padding:12px;color:#fff;font-family:var(--mm-font,sans-serif);background:rgba(4,7,20,.78);animation:pfFade .25s ease-out both}
+#fr-panel.out{animation:pfOut .2s ease-in forwards}
+.fr-box{width:min(520px,100%);max-height:100%;display:flex;flex-direction:column;border-radius:18px;border:2px solid rgba(165,180,252,.55);background:linear-gradient(180deg,#1b2254,#0c1030);box-shadow:0 18px 50px rgba(0,0,0,.65);overflow:hidden;animation:pfPop .35s cubic-bezier(.2,1.3,.4,1) both}
+.fr-scroll{overflow-y:auto;padding:0 14px 14px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.fr-me{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);font-size:.6rem;letter-spacing:.06em}
+.fr-me small{font-size:.5rem;font-weight:800;letter-spacing:.14em;color:#7dd3fc}
+.fr-me b{font-family:ui-monospace,Menlo,monospace;font-size:.9rem;letter-spacing:.12em}
+.fr-btn{all:unset;box-sizing:border-box;padding:7px 12px;border-radius:999px;font-size:.56rem;font-weight:800;letter-spacing:.08em;cursor:pointer;text-align:center;background:rgba(125,211,252,.18);border:1px solid rgba(125,211,252,.6);color:#e0f2fe;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.fr-btn:active{transform:scale(.95)} .fr-btn[disabled]{opacity:.5;pointer-events:none}
+.fr-btn.ok{background:rgba(74,222,128,.22);border-color:rgba(74,222,128,.7);color:#dcfce7}
+.fr-btn.no{background:rgba(248,113,113,.18);border-color:rgba(248,113,113,.6);color:#fecaca}
+.fr-add{display:flex;gap:8px}
+.fr-add input{flex:1;min-width:0;padding:9px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:.72rem;letter-spacing:.1em;outline:none;text-transform:lowercase;font-family:ui-monospace,Menlo,monospace}
+.fr-msg{font-size:.58rem;letter-spacing:.04em;min-height:1em;color:#a5b4fc;margin-top:-4px;padding-left:4px} .fr-msg.err{color:#fca5a5} .fr-msg.good{color:#86efac}
+.fr-h{font-size:.56rem;font-weight:800;letter-spacing:.2em;color:#a5b4fc;display:flex;align-items:center;gap:6px;margin-top:4px} .fr-h i{font-style:normal;color:#fff;background:#ef4444;border-radius:999px;padding:1px 6px;font-size:.5rem}
+.fr-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);min-width:0}
+.fr-av{position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3b4a9a,#161c4a);border:2px solid rgba(255,255,255,.35)}
+.fr-av img{position:absolute;left:50%;bottom:0;height:112%;width:auto;transform:translateX(-50%);pointer-events:none}
+.fr-av b{position:absolute;inset:0;display:grid;place-items:center;font-size:1rem;color:rgba(255,255,255,.5)}
+.fr-nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.fr-nm strong{font-size:.78rem;font-weight:800;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-st{font-size:.56rem;letter-spacing:.05em;color:#94a3b8;display:flex;align-items:center;gap:5px}
+.fr-st::before{content:"";width:8px;height:8px;border-radius:50%;background:#64748b;flex:none}
+.fr-st.on{color:#86efac} .fr-st.on::before{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.fr-x{all:unset;box-sizing:border-box;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#cbd5e1;font-size:.8rem;background:rgba(255,255,255,.08)}
+.fr-conf{display:flex;gap:6px;align-items:center;font-size:.56rem;color:#fecaca}
+.fr-req{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,216,74,.45)}
+.fr-req .pf-body{padding:0}
+.fr-req .pf-me{padding:8px 4px;gap:5px} .fr-req .pf-av{width:min(100%,84px)}
+.fr-req .pf-grid{padding:20px 6px 6px;gap:5px} .fr-req .pf-slot{cursor:default}
+.fr-acts{display:flex;gap:8px} .fr-acts .fr-btn{flex:1}
+.fr-empty{text-align:center;font-size:.6rem;color:#94a3b8;padding:12px 6px;line-height:1.5}
+</style>
+
+<script id="pa-friends-js">
+/* Amigos: solicitudes por ID de cuenta, lista con estado de conexión y última vez en línea. Requiere el servidor (worker.js, /api/f/*). */
+window.PAFriends = (function () {
+    const ONLINE_MS = 5 * 60 * 1000, PING_MS = 150000, REFRESH_MS = 60000;
+    let acc = null, state = { friends: [], incoming: [], outgoing: [], now: 0 }, lastPing = 0, pinging = 0, lastList = 0, panel = null, offset = 0;
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
+    const SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\//;
+    const fit = img => { try { fitTileImg(img, 0.86); } catch (e) {} };
+    const avSrc = k => { try { return k ? PAOak.avatarSrc(k) : ''; } catch (e) { return ''; } };
+    const call = (m, p, b) => SaveSys.call(m, p, b);
+    const canNet = () => { try { return SaveSys.canGlobal; } catch (e) { return false; } };
+    function profile() {
+        let t = null, lv = 1; try { t = SaveSys.read('pokearena.trainer', null); } catch (e) {}
+        try { lv = lvlInfo(lvlSync().total || 0).level; } catch (e) {}
+        let hof = []; try { hof = PAProfile.hofList(); } catch (e) {}
+        return { name: (t && t.name) || '', avatar: (t && t.avatar) || '', lvl: lv, hof };
+    }
+    async function ping(force) {
+        if (!canNet() || pinging) return acc;
+        const now = Date.now(); if (!force && now - lastPing < 20000) return acc;
+        const pf = profile(); if (!pf.name) return acc; // aún sin entrenador
+        pinging = 1;
+        try { await SaveSys.ready; const r = await call('POST', '/api/f/ping', pf); if (r && r.acc) acc = r.acc; if (r && r.now) offset = r.now - Date.now(); lastPing = Date.now(); } catch (e) {}
+        pinging = 0; return acc;
+    }
+    async function ensureAcc() { if (acc) return acc; await ping(true); return acc; }
+    async function refresh() {
+        if (!canNet()) return state;
+        try { await SaveSys.ready; const r = await call('GET', '/api/f/list'); if (r && r.friends) { state = r; acc = r.me || acc; offset = (r.now || 0) - Date.now(); lastList = Date.now(); } } catch (e) {}
+        badge(); if (panel) draw(); return state;
+    }
+    function badge() {
+        const n = document.getElementById('mm-fr-n'); if (!n) return;
+        const c = (state.incoming || []).length; n.hidden = !c; n.textContent = c;
+    }
+    const srvNow = () => Date.now() + offset;
+    function status(ts) {
+        if (!ts) return { on: false, txt: 'Sin conexión reciente' };
+        const d = srvNow() - ts; if (d < ONLINE_MS) return { on: true, txt: 'En línea' };
+        const m = Math.floor(d / 60000), h = Math.floor(m / 60), dd = Math.floor(h / 24);
+        return { on: false, txt: 'Últ. vez ' + (m < 60 ? 'hace ' + m + ' min' : h < 24 ? 'hace ' + h + ' h' : dd < 30 ? 'hace ' + dd + (dd === 1 ? ' día' : ' días') : 'hace más de un mes') };
+    }
+    const avHTML = k => { const src = avSrc(k); return '<span class="fr-av">' + (src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<b>?</b>') + '</span>'; };
+    function reqCard(r) {
+        const src = avSrc(r.avatar), hof = (r.hof || []).slice(0, 6);
+        while (hof.length < 6) hof.push(null);
+        const slots = hof.map(m => (m && SPR_OK.test(m.s || '')) ? '<span class="pf-slot on"><img src="' + esc(m.s) + '" alt="" draggable="false">' + (m.sh ? '<u>✦</u>' : '') + '<span>' + esc(m.n) + '</span></span>' : '<span class="pf-slot"></span>').join('');
+        return '<div class="fr-req" data-acc="' + esc(r.acc) + '"><div class="pf-body"><div class="pf-me"><div class="pf-av"><div class="pic">' + (src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
+            + '<div class="pf-lv"><small>NIVEL</small><b>' + (r.lvl || 1) + '</b></div><div class="pf-name">' + esc(r.name || 'Entrenador') + '</div><div class="pf-xp">ID ' + esc(r.acc) + '</div></div>'
+            + '<div class="pf-hof"><div class="pf-grid">' + slots + '</div></div></div>'
+            + '<div class="fr-acts"><button type="button" class="fr-btn ok" data-act="acc">ACEPTAR</button><button type="button" class="fr-btn no" data-act="rej">RECHAZAR</button></div></div>';
+    }
+    function draw() {
+        if (!panel) return;
+        const body = panel.querySelector('#fr-list'); if (!body) return;
+        const inc = state.incoming || [], out = state.outgoing || [], fr = (state.friends || []).slice().sort((a, b) => ((b.ts || 0) - (a.ts || 0)));
+        let h = '';
+        if (inc.length) h += '<div class="fr-h">SOLICITUDES <i>' + inc.length + '</i></div>' + inc.map(reqCard).join('');
+        if (out.length) h += '<div class="fr-h">ENVIADAS</div>' + out.map(o => '<div class="fr-row" data-acc="' + esc(o.acc) + '">' + avHTML(o.avatar) + '<div class="fr-nm"><strong>' + esc(o.name || 'ID ' + o.acc) + '</strong><span class="fr-st">Pendiente de respuesta</span></div><button type="button" class="fr-x" data-act="cancel" aria-label="Cancelar solicitud">✕</button></div>').join('');
+        h += '<div class="fr-h">AMIGOS · ' + fr.length + '</div>';
+        h += fr.length ? fr.map(f => { const st = status(f.ts); return '<div class="fr-row" data-acc="' + esc(f.acc) + '">' + avHTML(f.avatar) + '<div class="fr-nm"><strong>' + esc(f.name || 'Entrenador') + '</strong><span class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</span></div><button type="button" class="fr-x" data-act="del" aria-label="Eliminar amigo">✕</button></div>'; }).join('')
+            : '<div class="fr-empty">Aún no tienes amigos.<br>Comparte tu ID o escribe el de otro jugador arriba.</div>';
+        const keepScroll = body.parentElement.scrollTop;
+        body.innerHTML = h; body.parentElement.scrollTop = keepScroll;
+        body.querySelectorAll('.fr-req .pf-slot img').forEach(fit);
+    }
+    function msg(t, cls) { const m = panel && panel.querySelector('.fr-msg'); if (m) { m.textContent = t || ''; m.className = 'fr-msg ' + (cls || ''); } }
+    function copyId(btn) {
+        const id = acc; if (!id) return;
+        const done = () => { if (btn) { btn.classList.add('ok'); setTimeout(() => btn.classList.remove('ok'), 1200); } sfx('tick'); };
+        try { navigator.clipboard.writeText(id).then(done, () => { window.prompt('Tu ID:', id); }); } catch (e) { try { window.prompt('Tu ID:', id); } catch (x) {} }
+    }
+    async function open() {
+        if (panel) return;
+        const root = document.getElementById('main-menu') || document.body;
+        const el = document.createElement('div'); el.id = 'fr-panel'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Amigos');
+        el.innerHTML = '<div class="fr-box"><div class="pf-head"><b>AMIGOS</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div><div class="fr-scroll">'
+            + '<div class="fr-me"><small>TU ID</small><b id="fr-me-id">' + esc(acc || '········') + '</b><button type="button" class="fr-btn" data-act="copy" style="margin-left:auto">COPIAR</button></div>'
+            + '<div class="fr-add"><input id="fr-in" type="text" inputmode="text" maxlength="8" placeholder="ID del jugador" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="fr-btn" data-act="send">ENVIAR</button></div><div class="fr-msg"></div>'
+            + '<div id="fr-list"></div></div></div>';
+        root.appendChild(el); panel = el; sfx('pop');
+        if (!canNet()) msg('Los amigos necesitan conexión con el servidor.', 'err');
+        const close = () => { if (!panel) return; sfx('close'); const p = panel; panel = null; p.classList.add('out'); setTimeout(() => p.remove(), 200); };
+        el.addEventListener('click', async e => {
+            if (e.target === el || e.target.closest('.pf-x')) return close();
+            const b = e.target.closest('[data-act]'); if (!b) return;
+            const act = b.dataset.act, row = b.closest('[data-acc]'), who = row && row.dataset.acc;
+            if (act === 'copy') return copyId(b);
+            if (act === 'send') return send();
+            if (act === 'del') { // confirmación en la propia fila
+                row.querySelector('.fr-x').outerHTML = '<span class="fr-conf">¿Eliminar? <button type="button" class="fr-btn no" data-act="del-yes">SÍ</button><button type="button" class="fr-btn" data-act="del-no">NO</button></span>'; return;
+            }
+            if (act === 'del-no') return draw();
+            b.disabled = true;
+            try {
+                if (act === 'acc' || act === 'rej') { await call('POST', '/api/f/respond', { from: who, accept: act === 'acc' }); sfx(act === 'acc' ? 'confirm' : 'close'); msg(act === 'acc' ? '¡Ahora sois amigos!' : '', 'good'); }
+                else if (act === 'cancel' || act === 'del-yes') { await call('POST', '/api/f/remove', { acc: who }); sfx('close'); }
+            } catch (x) { msg('No se pudo completar. Inténtalo de nuevo.', 'err'); }
+            refresh();
+        });
+        const inp = el.querySelector('#fr-in');
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+        async function send() {
+            const id = inp.value.trim().toLowerCase();
+            if (!/^[a-f0-9]{8}$/.test(id)) { msg('El ID tiene 8 caracteres (0-9 y a-f).', 'err'); return; }
+            if (!canNet()) { msg('Sin conexión con el servidor.', 'err'); return; }
+            msg('Enviando…');
+            try {
+                await ensureAcc();
+                const r = await call('POST', '/api/f/request', { to: id });
+                inp.value = ''; sfx('confirm');
+                msg(r && r.state === 'friends' ? '¡Ya sois amigos!' : r && r.state === 'sent' ? 'Solicitud enviada.' : 'Hecho.', 'good');
+                refresh();
+            } catch (e) { msg((e && e.msg) ? e.msg : 'No se pudo enviar la solicitud.', 'err'); }
+        }
+        draw();
+        ensureAcc().then(a => { const v = el.querySelector('#fr-me-id'); if (v && a) v.textContent = a; });
+        refresh();
+    }
+    // sincronización en segundo plano: presencia (cada 2,5 min) y lista (cada minuto, solo con el menú a la vista)
+    const menuOn = () => { try { return !mainMenuEl.hidden; } catch (e) { return false; } };
+    setInterval(() => { if (!document.hidden) ping(); }, PING_MS);
+    setInterval(() => { if (!document.hidden && menuOn() && Date.now() - lastList > REFRESH_MS - 2000) refresh(); }, 15000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { ping(); if (menuOn()) refresh(); } });
+    try { SaveSys.ready.then(() => setTimeout(() => { ping(true).then(() => { if (menuOn()) refresh(); }); }, 3500)); } catch (e) {}
+    const btn = document.getElementById('mm-fr');
+    if (btn) btn.addEventListener('click', e => { e.stopPropagation(); sfx('tick'); open(); });
+    return { open, ping, refresh, ensureAcc, copyId, acc: () => acc };
 })();
 </script>
 </body>

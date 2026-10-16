@@ -23,6 +23,7 @@ html.ios-lite #game-container *{-webkit-backdrop-filter:none !important;backdrop
 
 /* ===== Calidad adaptativa (PerfKit): solo se activa si los fps bajan de verdad ===== */
 html.pq1 #lt-sun{mix-blend-mode:normal}
+html.ios-lite #lt-sun,html.ios-lite #light-map{mix-blend-mode:normal}
 html.pq1 #camera-layer.sh-blur .pokemon-wrapper::before{filter:none}
 html.pq1 .pokemon-wrapper.ability-aura .pokemon img{animation:none;filter:drop-shadow(0 0 7px #ef4444) drop-shadow(0 0 12px #b91c1c)}
 html.pq1 .pokemon-wrapper.lens-aura .pokemon img{animation:none;filter:brightness(1.2) drop-shadow(0 0 7px #4ade80)}
@@ -2993,6 +2994,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #lt-chip { position:absolute; left:8px; top:8px; z-index:30; display:flex; align-items:center; gap:6px; padding:4px 9px 7px; border-radius:9px; background:rgba(10,15,28,.62); border:1px solid rgba(255,255,255,.18); color:#f1f5f9; font:700 11px/1 'PA Chakra S', system-ui,sans-serif; pointer-events:none; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); box-shadow:0 0 10px -2px var(--lt-c,#fbbf24); }
         #lt-chip .lt-ico { font-size:14px; filter:drop-shadow(0 0 4px var(--lt-c,#fbbf24)); }
         #lt-chip .lt-bar { position:absolute; left:7px; right:7px; bottom:2px; height:2px; border-radius:2px; background:rgba(255,255,255,.15); overflow:hidden; }
+        #lt-day .lt-bar { display:none; }
         #lt-chip .lt-bar b { display:block; height:100%; width:100%; transform-origin:left; background:var(--lt-c,#fbbf24); }
         /* ===== Arena con texturas Grass Tiles (se pinta en #arena-bg) ===== */
         /* Tierra fuera de los límites: lienzo 3x3 centrado en la arena (mismo tamaño de píxel), para que el zoom/seguimiento
@@ -21474,6 +21476,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Tiempo de juego (se congela con la pausa y escala con gameSpeed, igual que el clima).
         // Orden: DÍA 30 s -> ATARDECER 15 s -> NOCHE 30 s. DAY_LOOP = true repite el ciclo (la noche vuelve
         // suavemente a día); ponlo en false para que la noche sea el estado final de la partida.
+        // v0.9: la iluminación YA NO CAMBIA durante la partida. Al empezar la arena se sortea día, atardecer o noche y se queda
+        // fija todo el combate (DAY_STATIC). Se elimina así el coste de las transiciones (repintado del mapa de luz, variables CSS
+        // de sombras en cada fotograma, desenfoques) y, en iOS, también el mix-blend-mode del mapa de luz.
+        const DAY_STATIC = true;
         const DAY_LOOP = true;
         const DAY_BLEND_MS = 5000; // duración de cada transición (centrada en el cambio de fase)
         const DAY_PHASES = [
@@ -21511,6 +21517,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function ltBlend(a, b, t) { const o = {}; for (const k in a) o[k] = ltMix(a[k], b[k], t); return o; }
         // Devuelve los parámetros de luz continuos para el instante t, mezclando suavemente en cada frontera de fase.
         function dayParamsAt(t) {
+            if (DAY_STATIC) { // fase fija: sin mezclas ni transiciones (t solo indica QUÉ fase es)
+                let k0 = 0, st0 = 0; t = Math.max(0, t);
+                while (k0 < DAY_PHASES.length - 1 && t >= st0 + DAY_PHASES[k0].ms) { st0 += DAY_PHASES[k0].ms; k0++; }
+                return { P: DAY_PHASES[k0], ph: DAY_PHASES[k0], local: 0 };
+            }
             const wrapped = DAY_LOOP && t >= DAY_TOTAL_MS; // el primer día arranca limpio, sin mezcla con la noche
             t = DAY_LOOP ? ((t % DAY_TOTAL_MS) + DAY_TOTAL_MS) % DAY_TOTAL_MS : Math.min(t, DAY_TOTAL_MS - 1);
             let k = 0, start = 0;
@@ -21534,7 +21545,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         let ltShBlOn = null, ltSpr = null;
         let ltCW = 0, ltCH = 0, ltRO = null; const ltVarCache = {}; let ltLastKey = '', ltCssLast = 0, ltBarLast = '', ltChipRO = null;
         function ltBoxSync() { ltCW = ltBox.clientWidth; ltCH = ltBox.clientHeight; }
-        function ltBoxW() { if (!ltRO && typeof ResizeObserver === 'function') { ltRO = new ResizeObserver(ltBoxSync); ltRO.observe(ltBox); } return ltCW || (ltBoxSync(), ltCW); }
+        function ltBoxW() { if (!ltRO && typeof ResizeObserver === 'function') { ltRO = new ResizeObserver(() => { ltBoxSync(); if (DAY_STATIC) { try { const r = dayParamsAt(dayMs); renderLighting(r.P, r.ph, 0); } catch (e) {} } }); ltRO.observe(ltBox); } return ltCW || (ltBoxSync(), ltCW); }
         function ltBoxH() { return ltCH || (ltBoxSync(), ltCH); }
         function renderLighting(P, ph, local) {
             if (!ltCtx) return;
@@ -21542,24 +21553,32 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // cámara: así, aunque el zoom/travelling muestre zonas fuera de la arena, la luz es continua.
             const W = ltBoxW(), H = ltBoxH(); if (!W || !H) return;
             // Fase estable sin luces puntuales (el día): la imagen del mapa de luz no cambia, no se repinta.
-            const ltKey = ph.id + '|' + W + 'x' + H;
-            const skipPaint = window.PA_PQ >= 2 || (P === ph && P.pl <= 0.02 && ltLastKey === ltKey);
-            ltLastKey = (P === ph && P.pl <= 0.02) ? ltKey : '';
+            // Luces puntuales (resplandor de pokémon y proyectiles al atardecer/noche): obligan a repintar el mapa en cada
+            // pasada y a leer getBoundingClientRect de cada proyectil. Solo en calidad máxima y fuera de iOS; si no, el mapa
+            // de luz es una imagen FIJA que se pinta una vez (y al cambiar el tamaño del visor).
+            const plv = (!window.PA_IOS && !(window.PA_PQ >= 1)) ? P.pl : 0;
+            const ltKey = ph.id + '|' + W + 'x' + H + '|' + (window.PA_IOS ? 'i' : 'd');
+            const skipPaint = (plv <= 0.02 && ltLastKey === ltKey);
+            ltLastKey = (plv <= 0.02) ? ltKey : '';
             if (!skipPaint) {
             const K = 0.34, cw = Math.ceil(W * K), ch = Math.ceil(H * K);
             if (ltMap.width !== cw || ltMap.height !== ch) { ltMap.width = cw; ltMap.height = ch; }
             const c = ltCtx;
             c.setTransform(K, 0, 0, K, 0, 0);
             c.globalCompositeOperation = 'source-over';
-            c.fillStyle = rgb(P.amb, 1); c.fillRect(0, 0, W, H);
+            if (window.PA_IOS) { // sin multiply: velo con alfa que, sobre un tono medio, da el mismo color que multiplicar por "amb"
+                c.clearRect(0, 0, W, H);
+                const cr = P.amb[0] / 255, cg = P.amb[1] / 255, cb = P.amb[2] / 255, cmin = Math.min(cr, cg, cb), a0 = 1 - cmin;
+                if (a0 > 0.003) { const k2 = 90 / (1 - cmin); c.fillStyle = 'rgba(' + Math.round((cr - cmin) * k2) + ',' + Math.round((cg - cmin) * k2) + ',' + Math.round((cb - cmin) * k2) + ',' + a0.toFixed(3) + ')'; c.fillRect(0, 0, W, H); }
+            } else { c.fillStyle = rgb(P.amb, 1); c.fillRect(0, 0, W, H); }
             // viñeta (oclusión ambiental en los bordes del visor)
             const diag = Math.hypot(W, H) / 2;
             let g = c.createRadialGradient(W / 2, H / 2, diag * 0.32, W / 2, H / 2, diag * 1.02);
             g.addColorStop(0, rgb(P.vigCol, 0)); g.addColorStop(1, rgb(P.vigCol, P.vig));
             c.fillStyle = g; c.fillRect(0, 0, W, H);
-            c.globalCompositeOperation = 'lighter';
+            c.globalCompositeOperation = window.PA_IOS ? 'source-over' : 'lighter';
             // luz clave rasante (sol bajo / luna): aclara la zona más cercana a la fuente
-            if (P.keyA > 0.01) {
+            if (P.keyA > 0.01 && !window.PA_IOS) {
                 const kx = P.sunX * W, ky = P.sunY * H, kr = P.keyR * H;
                 g = c.createRadialGradient(kx, ky, 0, kx, ky, kr);
                 g.addColorStop(0, rgb(P.keyRgb, P.keyA)); g.addColorStop(0.5, rgb(P.keyRgb, P.keyA * 0.35)); g.addColorStop(1, rgb(P.keyRgb, 0));
@@ -21567,7 +21586,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             }
             // luces puntuales: pokémon y proyectiles. Se convierten de coordenadas de arena a pantalla
             // con la posición/escala ACTUAL de la capa de cámara (incluye zoom, seguimiento y sacudidas).
-            if (P.pl > 0.02) {
+            if (plv > 0.02) {
                 const lr = ltLayer.getBoundingClientRect(), br = ltBox.getBoundingClientRect();
                 const ox = lr.left - (br.left + ltBox.clientLeft), oy = lr.top - (br.top + ltBox.clientTop);
                 const sc = (lr.width / (ltLayer.offsetWidth || 1)) || 1;
@@ -21577,7 +21596,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     sg.addColorStop(0, 'rgba(255,205,150,0.34)'); sg.addColorStop(1, 'rgba(255,205,150,0)');
                     sx.fillStyle = sg; sx.fillRect(0, 0, 64, 64);
                 }
-                c.globalAlpha = P.pl;
+                c.globalAlpha = plv;
                 for (const p of combatants) {
                     if (p.fainted || !p.wrapper || p.wrapper.style.display === 'none') continue;
                     const lx = ox + (p.x + 35) * sc, ly = oy + (p.y + 74) * sc, r = 54 * sc;
@@ -21643,13 +21662,24 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // API pública para que el resto del juego "reconozca" el momento del día.
         window.GameTime = { phase: 'day', get elapsedMs() { return dayMs; }, isDay: () => window.GameTime.phase === 'day', isDusk: () => window.GameTime.phase === 'dusk', isNight: () => window.GameTime.phase === 'night' };
         function updateDayCycle(dtMs) {
+            if (DAY_STATIC) { // la luz es fija: solo se repinta (a ritmo bajo) si hay luces puntuales dinámicas
+                if (window.PA_IOS || window.PA_PQ >= 1) return;
+                const ph0 = dayParamsAt(dayMs); if (ph0.ph.pl <= 0.02) return;
+                const n0 = performance.now(); if (n0 - ltLastDraw < Math.max(66, window.PA_LT_MS || 33)) return;
+                ltLastDraw = n0; renderLighting(ph0.P, ph0.ph, 0); return;
+            }
             if (!gameOver) dayMs += dtMs;
             const now = performance.now();
             if (now - ltLastDraw < (window.PA_LT_MS || 33)) return;
             ltLastDraw = now;
             const r = dayParamsAt(dayMs); renderLighting(r.P, r.ph, r.local);
         }
-        function resetDayCycle() { dayMs = 0; dayPhaseId = ''; const r = dayParamsAt(0); renderLighting(r.P, r.ph, r.local); }
+        function resetDayCycle() {
+            if (DAY_STATIC) { // sorteo del momento del día de esta arena (día / atardecer / noche)
+                const k = Math.floor(Math.random() * DAY_PHASES.length); dayMs = 0;
+                for (let i = 0; i < k; i++) dayMs += DAY_PHASES[i].ms;
+            } else dayMs = 0;
+            dayPhaseId = ''; ltLastKey = ''; const r = dayParamsAt(dayMs); renderLighting(r.P, r.ph, r.local); }
 
         function placeWrapper(c) { // left/top solo se escriben si la posición cambió
             const st = c.wrapper.style;
@@ -23533,7 +23563,7 @@ function mpSpecFrame(ts) {
     cameraLayer.style.transform = 'translate(' + view.width / 2 + 'px,' + view.height / 2 + 'px) rotate(' + C.r.toFixed(2) + 'deg) scale(' + C.z.toFixed(4) + ') translate(' + (-C.x).toFixed(1) + 'px,' + (-C.y).toFixed(1) + 'px)';
     if (mpSpec.dm != null && ts - mpSpec.ltAt > 100) { // luz del día/noche
         mpSpec.ltAt = ts;
-        try { const r = dayParamsAt(mpSpec.dm + (mpSpec.paused ? 0 : performance.now() - mpSpec.dmAt)); renderLighting(r.P, r.ph, r.local); } catch (ex) {}
+        try { const r = dayParamsAt(DAY_STATIC ? mpSpec.dm : mpSpec.dm + (mpSpec.paused ? 0 : performance.now() - mpSpec.dmAt)); renderLighting(r.P, r.ph, r.local); } catch (ex) {}
     }
     if (mpSpec.wxType && weatherState && ts - mpSpec.wxHud > 250) { // cuenta atrás del clima
         mpSpec.wxHud = ts;
@@ -27405,7 +27435,7 @@ html.ios-lite #countdown-overlay .cd-num.pop{animation-name:cdPopLite}
 html.ios-lite #countdown-overlay .cd-num.go.pop{animation-name:cdGoSlam}
 html.ios-lite #countdown-overlay .cd-rays,html.ios-lite #countdown-overlay .cd-flash{display:none}
 html.ios-lite #countdown-overlay .cd-ring-fg{filter:none}
-html.pq2 #light-map{display:none}
+html.pq2:not(.ios-lite) #light-map{display:none}
 html.pq3 #arena-bg-out{display:none}
 html.pq3 #camera-layer{background:#10281a}
 html.pq3 .wx-cv,html.pq3 #weather-sun .ws-rays,html.pq3 #weather-sun .ws-glow{display:none}

@@ -27624,6 +27624,7 @@ window.PAProfile = (function () {
 .fr-req .pf-me{padding:8px 4px;gap:5px} .fr-req .pf-av{width:min(100%,84px)}
 .fr-req .pf-grid{padding:20px 6px 6px;gap:5px} .fr-req .pf-slot{cursor:default}
 .fr-acts{display:flex;gap:8px} .fr-acts .fr-btn{flex:1}
+.fr-tap{cursor:pointer;-webkit-tap-highlight-color:transparent} .fr-tap:active{background:rgba(255,255,255,.14)}
 .fr-empty{text-align:center;font-size:.6rem;color:#94a3b8;padding:12px 6px;line-height:1.5}
 </style>
 
@@ -27688,11 +27689,32 @@ window.PAFriends = (function () {
         if (inc.length) h += '<div class="fr-h">SOLICITUDES <i>' + inc.length + '</i></div>' + inc.map(reqCard).join('');
         if (out.length) h += '<div class="fr-h">ENVIADAS</div>' + out.map(o => '<div class="fr-row" data-acc="' + esc(o.acc) + '">' + avHTML(o.avatar) + '<div class="fr-nm"><strong>' + esc(o.name || 'ID ' + o.acc) + '</strong><span class="fr-st">Pendiente de respuesta</span></div><button type="button" class="fr-x" data-act="cancel" aria-label="Cancelar solicitud">✕</button></div>').join('');
         h += '<div class="fr-h">AMIGOS · ' + fr.length + '</div>';
-        h += fr.length ? fr.map(f => { const st = status(f.ts); return '<div class="fr-row" data-acc="' + esc(f.acc) + '">' + avHTML(f.avatar) + '<div class="fr-nm"><strong>' + esc(f.name || 'Entrenador') + '</strong><span class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</span></div><button type="button" class="fr-x" data-act="del" aria-label="Eliminar amigo">✕</button></div>'; }).join('')
+        h += fr.length ? fr.map(f => { const st = status(f.ts); return '<div class="fr-row fr-tap" data-friend="1" data-acc="' + esc(f.acc) + '">' + avHTML(f.avatar) + '<div class="fr-nm"><strong>' + esc(f.name || 'Entrenador') + '</strong><span class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</span></div><button type="button" class="fr-x" data-act="del" aria-label="Eliminar amigo">✕</button></div>'; }).join('')
             : '<div class="fr-empty">Aún no tienes amigos.<br>Comparte tu ID o escribe el de otro jugador arriba.</div>';
         const keepScroll = body.parentElement.scrollTop;
         body.innerHTML = h; body.parentElement.scrollTop = keepScroll;
         body.querySelectorAll('.fr-req .pf-slot img').forEach(fit);
+    }
+    // Ficha de perfil de un amigo (la misma tarjeta de perfil, solo lectura): se pide al servidor al tocar su fila
+    async function viewFriend(who) {
+        if (document.getElementById('pf-card') || !who) return;
+        const root = document.getElementById('main-menu') || document.body; sfx('tick');
+        let p = null;
+        try { p = await call('GET', '/api/f/profile?acc=' + encodeURIComponent(who)); } catch (e) { msg(e && e.msg ? e.msg : 'No se pudo cargar el perfil.', 'err'); return; }
+        if (!p || document.getElementById('pf-card')) return;
+        const src = avSrc(p.avatar), hof = (p.hof || []).slice(0, 6), st = status(p.ts);
+        while (hof.length < 6) hof.push(null);
+        const slots = hof.map(m => (m && SPR_OK.test(m.s || '')) ? '<span class="pf-slot on" style="cursor:default"><img src="' + esc(m.s) + '" alt="" draggable="false">' + (m.sh ? '<u>✦</u>' : '') + '<span>' + esc(m.n) + '</span></span>' : '<span class="pf-slot" style="cursor:default"></span>').join('');
+        const el = document.createElement('div'); el.id = 'pf-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Perfil de ' + (p.name || 'amigo'));
+        el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
+            + '<div class="pf-body"><div class="pf-me"><div class="pf-av"><div class="pic">' + (src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
+            + '<div class="pf-lv"><small>NIVEL</small><b>' + (p.lvl || 1) + '</b></div><div class="pf-name">' + esc(p.name || 'Entrenador') + '</div>'
+            + '<div class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</div></div>'
+            + '<div class="pf-hof"><div class="pf-grid">' + slots + '</div></div></div></div>';
+        root.appendChild(el); sfx('pop');
+        el.querySelectorAll('.pf-slot img').forEach(fit);
+        const close = () => { if (el._c) return; el._c = 1; sfx('close'); el.classList.add('out'); setTimeout(() => el.remove(), 200); };
+        el.addEventListener('click', e => { if (e.target === el || e.target.closest('.pf-x')) close(); });
     }
     function msg(t, cls) { const m = panel && panel.querySelector('.fr-msg'); if (m) { m.textContent = t || ''; m.className = 'fr-msg ' + (cls || ''); } }
     function copyId(btn) {
@@ -27713,6 +27735,7 @@ window.PAFriends = (function () {
         const close = () => { if (!panel) return; sfx('close'); const p = panel; panel = null; p.classList.add('out'); setTimeout(() => p.remove(), 200); };
         el.addEventListener('click', async e => {
             if (e.target === el || e.target.closest('.pf-x')) return close();
+            if (!e.target.closest('[data-act]')) { const fr = e.target.closest('.fr-row[data-friend]'); if (fr) viewFriend(fr.dataset.acc); return; }
             const b = e.target.closest('[data-act]'); if (!b) return;
             const act = b.dataset.act, row = b.closest('[data-acc]'), who = row && row.dataset.acc;
             if (act === 'copy') return copyId(b);

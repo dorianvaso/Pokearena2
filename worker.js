@@ -183,7 +183,7 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 const SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/[A-Za-z0-9\/_.\-]{1,170}$/;
 const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
-async function friendsApi(db, h, route, req) {
+async function friendsApi(db, h, route, req, url) {
     const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
     const b = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const other = v => { const x = String((b && v) || '').toLowerCase(); return /^[a-f0-9]{8}$/.test(x) ? x : null; };
@@ -203,6 +203,14 @@ async function friendsApi(db, h, route, req) {
         ]);
         const hof = t => { try { return JSON.parse(t || '[]'); } catch (e) { return []; } };
         return reply({ now, me, friends: fr.results, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof) })), outgoing: out.results });
+    }
+    if (route === '/api/f/profile' && req.method === 'GET') { // ficha completa de un AMIGO (solo si sois amigos)
+        const who = String(url.searchParams.get('acc') || '').toLowerCase();
+        if (!/^[a-f0-9]{8}$/.test(who)) return reply({ error: 'ID no válido' }, 400);
+        if (!(await q('SELECT 1 FROM friends WHERE st = 1 AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))', me, who).first())) return reply({ error: 'No sois amigos' }, 403);
+        const p = await q('SELECT acc, name, avatar, lvl, hof, ts FROM profiles WHERE acc = ?1', who).first();
+        let hof = []; try { hof = JSON.parse((p && p.hof) || '[]'); } catch (e) {}
+        return reply({ now, acc: who, name: (p && p.name) || '', avatar: (p && p.avatar) || '', lvl: (p && p.lvl) || 1, ts: (p && p.ts) || 0, hof });
     }
     if (route === '/api/f/request' && req.method === 'POST') {
         const to = other(b.to);
@@ -297,7 +305,7 @@ export default {
                 return reply('{"fresh":' + (results.length ? 'false' : 'true') + ',"settings":' + (by.settings || '{}') + ',"slots":{' + slots + '}}');
             }
             if (route.startsWith('/api/room/')) return await roomApi(db, h, route, req, url);
-            if (route.startsWith('/api/f/')) return await friendsApi(db, h, route, req);
+            if (route.startsWith('/api/f/')) return await friendsApi(db, h, route, req, url);
             // ---- consola de desarrollador GLOBAL ----
             if (route === '/api/g/record' && req.method === 'POST') {
                 const t = await req.text(); if (t.length > 3e6) return reply({ error: 'demasiado grande' }, 413);

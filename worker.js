@@ -24,6 +24,10 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS room_picks (code TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (code, acc, n))'),
         // última instantánea de la arena que publica el anfitrión (la simula él; el resto de jugadores la ve en directo)
         db.prepare('CREATE TABLE IF NOT EXISTS room_snap (code TEXT PRIMARY KEY, seq INTEGER NOT NULL, data TEXT NOT NULL)'),
+        // ---- PVP 1 contra 1: cola de emparejamiento (un ticket por jugador buscando) y órdenes del invitado hacia el anfitrión ----
+        db.prepare('CREATE TABLE IF NOT EXISTS pvp_queue (acc TEXT PRIMARY KEY, ts INTEGER NOT NULL, name TEXT, avatar TEXT, team TEXT NOT NULL, code TEXT)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS pvp_cmd (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL, acc TEXT NOT NULL, ts INTEGER NOT NULL, data TEXT NOT NULL)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS pvp_cmd_code ON pvp_cmd (code, id)'),
         // ---- regalos enviados desde la consola de desarrollador (Pokémon / objetos) a una cuenta ('acc' = 8 primeros caracteres) o a todas ('*') ----
         db.prepare('CREATE TABLE IF NOT EXISTS gifts (id TEXT PRIMARY KEY, acc TEXT NOT NULL, ts INTEGER NOT NULL, body TEXT NOT NULL)'),
         db.prepare('CREATE INDEX IF NOT EXISTS gifts_acc ON gifts (acc, ts)'),
@@ -64,6 +68,75 @@ async function roomState(db, code, acc) {
     return '{"code":"' + room.code + '","status":"' + room.status + '","host":"' + room.host + '","me":"' + acc + '","result":' + (room.result || 'null') +
         ',"members":' + JSON.stringify(mem.results.map(m => ({ acc: m.acc, name: m.name, avatar: m.avatar || '' }))) +
         ',"picks":{' + Object.keys(picks).map(a => '"' + a + '":[' + picks[a].join(',') + ']').join(',') + '}}';
+}
+// ---- PVP 1 contra 1 ----
+// find: el jugador deja (o refresca) su ticket con sus 6 pokémon y pregunta si ya tiene rival. Quien encuentra primero a otro ticket libre crea
+// la sala (estado 'playing', ambos miembros con sus picks) y será el ANFITRIÓN (simula el combate); el otro se entera en su siguiente consulta.
+const PVP_WAIT = 15000;
+async function pvpApi(db, h, route, req, url) {
+    const acc = h.slice(0, 12), now = Date.now();
+    if (Math.random() < 0.1) await db.batch([
+        db.prepare('DELETE FROM pvp_queue WHERE ts < ?1').bind(now - 60000),
+        db.prepare('DELETE FROM pvp_cmd WHERE ts < ?1').bind(now - ROOM_TTL),
+    ]);
+    if (route === '/api/pvp/cmds' && req.method === 'GET') {
+        const code = cleanCode(url.searchParams.get('code')), since = Math.max(0, +url.searchParams.get('since') || 0);
+        const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+        if (!mine) return reply({ error: 'no estás en esa sala' }, 403);
+        const { results } = await db.prepare('SELECT id, data FROM pvp_cmd WHERE code = ?1 AND id > ?2 AND acc != ?3 ORDER BY id LIMIT 40').bind(code, since, acc).all();
+        return reply('{"cmds":[' + results.map(r => '{"id":' + r.id + ',"c":' + r.data + '}').join(',') + ']}');
+    }
+    if (req.method !== 'POST') return reply({ error: 'no existe' }, 404);
+    const t = await req.text(); if (t.length > 3e5) return reply({ error: 'demasiado grande' }, 413);
+    let b; try { b = JSON.parse(t || '{}'); } catch (e) { return reply({ error: 'json no válido' }, 400); }
+    if (!isObj(b)) return reply({ error: 'petición no válida' }, 400);
+    if (route === '/api/pvp/cancel') { await db.prepare('DELETE FROM pvp_queue WHERE acc = ?1 AND code IS NULL').bind(acc).run(); return reply({ ok: true }); }
+    if (route === '/api/pvp/cmd') {
+        const code = cleanCode(b.code);
+        const room = await db.prepare('SELECT status FROM rooms WHERE code = ?1').bind(code).first();
+        const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
+        if (!room || !mine) return reply({ error: 'no estás en esa sala' }, 403);
+        if (room.status !== 'playing') return reply({ ok: true, stale: true });
+        const d = JSON.stringify(isObj(b.c) ? b.c : {}); if (d.length > 600) return reply({ error: 'orden demasiado grande' }, 413);
+        await db.prepare('INSERT INTO pvp_cmd (code, acc, ts, data) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, now, d).run();
+        return reply({ ok: true });
+    }
+    if (route === '/api/pvp/find') {
+        const mine = await db.prepare('SELECT code FROM pvp_queue WHERE acc = ?1').bind(acc).first();
+        if (mine && mine.code && !b.fresh) { // otro jugador ya te emparejó: tú eres el invitado
+            await db.prepare('DELETE FROM pvp_queue WHERE acc = ?1').bind(acc).run();
+            return reply({ matched: true, code: mine.code, host: false });
+        }
+        const list = (Array.isArray(b.team) ? b.team : []).slice(0, 6).filter(p => isObj(p) && typeof p.id === 'string' && p.id.length <= 40 && JSON.stringify(p).length <= 4000);
+        if (!list.length) return reply({ error: 'tu Salón de la Fama está vacío' }, 400);
+        if (b.fresh) await db.prepare('DELETE FROM pvp_queue WHERE acc = ?1').bind(acc).run(); // primera consulta de una búsqueda nueva: sin restos de otras
+        await db.prepare('INSERT INTO pvp_queue (acc, ts, name, avatar, team, code) VALUES (?1, ?2, ?3, ?4, ?5, NULL) ON CONFLICT(acc) DO UPDATE SET ts = excluded.ts, name = excluded.name, avatar = excluded.avatar, team = excluded.team')
+            .bind(acc, now, cleanName(b.name), cleanAvatar(b.avatar), JSON.stringify(list)).run();
+        const again = await db.prepare('SELECT code FROM pvp_queue WHERE acc = ?1').bind(acc).first();
+        if (again && again.code) { await db.prepare('DELETE FROM pvp_queue WHERE acc = ?1').bind(acc).run(); return reply({ matched: true, code: again.code, host: false }); }
+        const other = await db.prepare('SELECT acc, name, avatar, team FROM pvp_queue WHERE acc != ?1 AND code IS NULL AND ts > ?2 ORDER BY ts LIMIT 1').bind(acc, now - PVP_WAIT).first();
+        if (!other) return reply({ matched: false });
+        let code = '';
+        for (let tries = 0; tries < 8; tries++) {
+            code = Array.from(crypto.getRandomValues(new Uint8Array(5)), x => CODE_CHARS[x % CODE_CHARS.length]).join('');
+            if (!(await db.prepare('SELECT 1 FROM rooms WHERE code = ?1').bind(code).first())) break; code = '';
+        }
+        if (!code) return reply({ error: 'no se pudo crear la partida' }, 500);
+        const claim = await db.prepare('UPDATE pvp_queue SET code = ?1 WHERE acc = ?2 AND code IS NULL').bind(code, other.acc).run();
+        if (!claim.meta || claim.meta.changes !== 1) return reply({ matched: false }); // otro jugador se le adelantó: se vuelve a intentar en la siguiente consulta
+        const st = [
+            db.prepare('INSERT INTO rooms (code, host, status, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, 'playing', now),
+            db.prepare('INSERT INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, acc, cleanName(b.name), now, cleanAvatar(b.avatar)),
+            db.prepare('INSERT INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, other.acc, other.name || 'Jugador', now + 1, other.avatar || ''),
+        ];
+        list.forEach((p, i) => st.push(db.prepare('INSERT INTO room_picks (code, acc, n, data) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, i, JSON.stringify(p))));
+        let ot = []; try { ot = JSON.parse(other.team); } catch (e) {}
+        ot.forEach((p, i) => st.push(db.prepare('INSERT INTO room_picks (code, acc, n, data) VALUES (?1, ?2, ?3, ?4)').bind(code, other.acc, i, JSON.stringify(p))));
+        st.push(db.prepare('DELETE FROM pvp_queue WHERE acc = ?1').bind(acc));
+        await db.batch(st);
+        return reply({ matched: true, code, host: true });
+    }
+    return reply({ error: 'no existe' }, 404);
 }
 async function roomApi(db, h, route, req, url) {
     const acc = h.slice(0, 12), now = Date.now();
@@ -305,6 +378,7 @@ export default {
                 return reply('{"fresh":' + (results.length ? 'false' : 'true') + ',"settings":' + (by.settings || '{}') + ',"slots":{' + slots + '}}');
             }
             if (route.startsWith('/api/room/')) return await roomApi(db, h, route, req, url);
+            if (route.startsWith('/api/pvp/')) return await pvpApi(db, h, route, req, url);
             if (route.startsWith('/api/f/')) return await friendsApi(db, h, route, req, url);
             // ---- consola de desarrollador GLOBAL ----
             if (route === '/api/g/record' && req.method === 'POST') {

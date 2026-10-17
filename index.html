@@ -3,7 +3,7 @@
 <head>
 <script>(function(){try{var u=navigator.userAgent;if(/iP(hone|ad|od)/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)){document.documentElement.classList.add("ios-lite");window.PA_IOS=true;}}catch(e){}})();</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pokémon Arena - Precisión Oficial</title>
     <style id="pa-fonts">
 /* Chakra Petch (SIL OFL) incrustada: funciona sin conexión. "PA Chakra" = tamaño compensado (sustituye a Press Start 2P); "PA Chakra S" = tamaño normal */
@@ -33,6 +33,10 @@ html.pq2 #lt-sun{display:none}
 html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 </style>
 <style>
+        /* Sin zoom por gestos: la página no se sale ni se desplaza al pellizcar o doble toque (iOS) */
+        html, body { touch-action: pan-x pan-y; }
+        html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+        html, body { overflow-x: hidden; max-width: 100vw; }
         html, body {
             height: 100%;
         }
@@ -27861,6 +27865,16 @@ window.PAFriends = (function () {
     return { open, ping, refresh, ensureAcc, copyId, acc: () => acc };
 })();
 </script>
+<script id="pa-nozoom">(function(){try{
+var o={passive:false};
+['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()},o)});
+document.addEventListener('touchstart',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},o);
+document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1||(e.scale&&e.scale!==1))e.preventDefault()},o);
+var last=0;document.addEventListener('touchend',function(e){var n=Date.now();if(n-last<320&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target||{}).tagName||''))e.preventDefault();last=n},o);
+document.addEventListener('dblclick',function(e){e.preventDefault()},o);
+// Si el navegador llegara a hacer zoom (p. ej. al enfocar un campo), vuelve a la escala 1
+if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resize',function(){if(vv.scale>1.01){var m=document.querySelector('meta[name=viewport]');if(m){var c=m.content;m.content=c+', maximum-scale=1.0';setTimeout(function(){window.scrollTo(0,0)},50)}}})}
+}catch(e){}})();</script>
 </body>
 </html>
 

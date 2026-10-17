@@ -114,7 +114,7 @@ async function pvpApi(db, h, route, req, url) {
             .bind(acc, now, cleanName(b.name), cleanAvatar(b.avatar), JSON.stringify(list)).run();
         const again = await db.prepare('SELECT code FROM pvp_queue WHERE acc = ?1').bind(acc).first();
         if (again && again.code) { await db.prepare('DELETE FROM pvp_queue WHERE acc = ?1').bind(acc).run(); return reply({ matched: true, code: again.code, host: false }); }
-        const other = await db.prepare('SELECT acc, name, avatar, team FROM pvp_queue WHERE acc != ?1 AND code IS NULL AND ts > ?2 ORDER BY ts LIMIT 1').bind(acc, now - PVP_WAIT).first();
+        const other = await db.prepare('SELECT acc, name, avatar, team FROM pvp_queue WHERE acc > ?1 AND code IS NULL AND ts > ?2 ORDER BY ts LIMIT 1').bind(acc, now - PVP_WAIT).first(); // solo el de ID menor empareja: así dos jugadores nunca crean dos salas a la vez
         if (!other) return reply({ matched: false });
         let code = '';
         for (let tries = 0; tries < 8; tries++) {
@@ -122,8 +122,10 @@ async function pvpApi(db, h, route, req, url) {
             if (!(await db.prepare('SELECT 1 FROM rooms WHERE code = ?1').bind(code).first())) break; code = '';
         }
         if (!code) return reply({ error: 'no se pudo crear la partida' }, 500);
+        const claimMe = await db.prepare('UPDATE pvp_queue SET code = ?1 WHERE acc = ?2 AND code IS NULL').bind(code, acc).run(); // primero me reservo yo (por si otro me empareja a la vez)
+        if (!claimMe.meta || claimMe.meta.changes !== 1) return reply({ matched: false });
         const claim = await db.prepare('UPDATE pvp_queue SET code = ?1 WHERE acc = ?2 AND code IS NULL').bind(code, other.acc).run();
-        if (!claim.meta || claim.meta.changes !== 1) return reply({ matched: false }); // otro jugador se le adelantó: se vuelve a intentar en la siguiente consulta
+        if (!claim.meta || claim.meta.changes !== 1) { await db.prepare('UPDATE pvp_queue SET code = NULL WHERE acc = ?1 AND code = ?2').bind(acc, code).run(); return reply({ matched: false }); } // otro jugador se le adelantó
         const st = [
             db.prepare('INSERT INTO rooms (code, host, status, ts) VALUES (?1, ?2, ?3, ?4)').bind(code, acc, 'playing', now),
             db.prepare('INSERT INTO room_members (code, acc, name, ts, avatar) VALUES (?1, ?2, ?3, ?4, ?5)').bind(code, acc, cleanName(b.name), now, cleanAvatar(b.avatar)),

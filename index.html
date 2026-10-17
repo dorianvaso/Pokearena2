@@ -24133,7 +24133,7 @@ function lvlSync() {
     let dirty = false;
     try {
         (capLoad(CAP_BOX_KEY, []) || []).forEach(b => {
-            if (!b || !b.uid || x.reg[b.uid] != null || !validIVs(b.iv)) return;
+            if (!b || !b.uid || b.traded || x.reg[b.uid] != null || !validIVs(b.iv)) return; // los recibidos por intercambio con Oak no suman al nivel
             let pts = 0; try { pts = pcAppraise(b).pts; } catch (e) {}
             if (pts > 0) { x.reg[b.uid] = pts; dirty = true; }
         });
@@ -25455,6 +25455,7 @@ function registerCapture(name, sprite, how, traits) {
     const bt = validBody(traits) ? traits : rollBody(clean);
     const entry = { uid: (traits && traits.uid) || newUid(), name: clean, sprite: sprite, shiny: shiny, how: how, ts: Date.now(), iv: tr.iv, nature: tr.nature, gender: bt.gender, hf: bt.hf, wf: bt.wf };
     if (capAbility) entry.ability = capAbility;
+    if (traits && traits.traded) entry.traded = true; // recibido por intercambio: no suma al nivel y no se puede volver a intercambiar
     if (traits && traits.gmax) entry.gmax = true; // signo de forma Gigamax: en la Raid puede volverse Gigamax 5 s
     // Movimiento libre con el que nació (p. ej. Terremoto en Tyranitar): queda fijo para siempre en la Caja.
     if (traits && traits.learnedMove && movesData[traits.learnedMove]) entry.learnedMove = traits.learnedMove;
@@ -27953,8 +27954,8 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
 #oak-trade .tr-anim[hidden]{display:none}
 #oak-trade .tr-lane{position:relative;width:100%;height:100%}
 #oak-trade .tr-sp{position:absolute;left:50%;width:min(46vw,190px);aspect-ratio:1;margin-left:calc(min(46vw,190px) / -2);object-fit:contain;image-rendering:pixelated}
-#oak-trade .tr-sp.a{top:14%}
-#oak-trade .tr-sp.b{bottom:14%;opacity:0}
+#oak-trade .tr-sp.a,#oak-trade .tr-sp.b{top:50%;margin-top:calc(min(46vw,190px) / -2 - 40px)}
+#oak-trade .tr-sp.b{opacity:0}
 #oak-trade .tr-ball{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:linear-gradient(#e63946 0 46%,#222 46% 54%,#f4f4f6 54%);border:3px solid #222;opacity:0;box-shadow:0 0 0 0 rgba(255,255,255,.8)}
 #oak-trade .tr-ball::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#f4f4f6;border:3px solid #222;box-sizing:border-box}
 #oak-trade .tr-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
@@ -28031,7 +28032,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
     }
     function sortedBox() {
       const box = capLoad(CAP_BOX_KEY, []);
-      return box.map(e => e).sort((a, c) => ((a.box | 0) - (c.box | 0)) || ((a.sub | 0) - (c.sub | 0)) || ((a.slot | 0) - (c.slot | 0)));
+      return box.filter(e => e && !e.traded).sort((a, c) => ((a.box | 0) - (c.box | 0)) || ((a.sub | 0) - (c.sub | 0)) || ((a.slot | 0) - (c.slot | 0)));
     }
     function renderSlot() {
       const s = $('tr-slot');
@@ -28043,7 +28044,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
     }
     function openPick() {
       const list = sortedBox(), g = $('tr-pgrid');
-      if (!list.length) g.innerHTML = '<div class="tr-empty">Tu Caja está vacía.<br>Captura Pokémon en la arena para poder intercambiarlos.</div>';
+      if (!list.length) g.innerHTML = '<div class="tr-empty">No tienes Pokémon que se puedan intercambiar.<br>Los que recibes de un intercambio no se pueden volver a intercambiar.</div>';
       else g.innerHTML = list.map((e, i) => '<button type="button" class="tr-cell" data-i="' + i + '">' + (e.shiny ? '<u>✦</u>' : '') + '<img alt="" loading="lazy" src="' + esc(e.sprite) + '"><span>' + esc(dispName(capClean(e.name))) + '</span></button>').join('');
       g._list = list; $('tr-pick').hidden = false; g.scrollTop = 0; sfx('pop');
       g.querySelectorAll('img').forEach(im => { try { fitTileImg(im, 0.86); } catch (e) {} });
@@ -28057,7 +28058,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
     $('tr-slot').addEventListener('click', () => { if (!busy) openPick(); });
     function openTrade() {
       sel = null; busy = false; root.classList.remove('busy'); $('tr-anim').hidden = true; $('tr-pick').hidden = true;
-      renderSlot(); speak('¡Hola! Si quieres intercambiar un Pokémon, déjalo en la casilla y pulsa el botón. Yo te daré otro de estadísticas parecidas.');
+      renderSlot(); speak('¡Hola! Si quieres intercambiar un Pokémon, déjalo en la casilla y pulsa el botón. Yo te daré otro de estadísticas parecidas. Eso sí: los que ya recibiste de mí no se pueden volver a intercambiar.');
       root.hidden = false; sfx('pop');
     }
     function closeTrade() { if (busy) return; root.hidden = true; sfx('close'); }
@@ -28067,7 +28068,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
     function doTrade() {
       if (!sel || busy) return;
       const box = capLoad(CAP_BOX_KEY, []);
-      const idx = box.findIndex(e => e && ((sel.uid && e.uid === sel.uid) || (!sel.uid && e.ts === sel.ts && e.name === sel.name)));
+      const idx = box.findIndex(e => e && !e.traded && ((sel.uid && e.uid === sel.uid) || (!sel.uid && e.ts === sel.ts && e.name === sel.name)));
       if (idx < 0) { speak('Mmm… no encuentro ese Pokémon en tu Caja.'); sel = null; renderSlot(); return; }
       const given = box[idx], rw = pickReward(given);
       if (!rw) { speak('Lo siento, ahora mismo no tengo nada que ofrecerte.'); return; }
@@ -28082,7 +28083,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
       if ((given.candy | 0) > 0) { try { bagAdd(CANDY_ID, given.candy | 0); } catch (e) {} }
       capSave(CAP_BOX_KEY, box);
       let reg = { isNew: false };
-      try { reg = registerCapture(rw.name, newSprite, 'trade', { iv: iv, nature: nature, ability: abl, gender: body.gender, hf: body.hf, wf: body.wf }); } catch (e) { console.error(e); }
+      try { reg = registerCapture(rw.name, newSprite, 'trade', { iv: iv, nature: nature, ability: abl, gender: body.gender, hf: body.hf, wf: body.wf, traded: true }); } catch (e) { console.error(e); }
       try { const nb = capLoad(CAP_BOX_KEY, []); const last = nb[nb.length - 1]; if (last && typeof place.box === 'number') { last.box = place.box; last.sub = place.sub | 0; last.slot = place.slot; capSave(CAP_BOX_KEY, nb); } } catch (e) {}
       try { lvlSync(); } catch (e) {}
       // animación

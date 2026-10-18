@@ -83,7 +83,13 @@ async function pvpApi(db, h, route, req, url) {
         const code = cleanCode(url.searchParams.get('code')), since = Math.max(0, +url.searchParams.get('since') || 0);
         const mine = await db.prepare('SELECT 1 FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc).first();
         if (!mine) return reply({ error: 'no estás en esa sala' }, 403);
-        const { results } = await db.prepare('SELECT id, data FROM pvp_cmd WHERE code = ?1 AND id > ?2 AND acc != ?3 ORDER BY id LIMIT 40').bind(code, since, acc).all();
+        const wait = Math.min(6, Math.max(0, +url.searchParams.get('wait') || 0)), endAt = Date.now() + wait * 1000; // sondeo largo: responde en cuanto llega una orden (máx. 6 s)
+        let results;
+        for (;;) {
+            ({ results } = await db.prepare('SELECT id, data FROM pvp_cmd WHERE code = ?1 AND id > ?2 AND acc != ?3 ORDER BY id LIMIT 40').bind(code, since, acc).all());
+            if (results.length || Date.now() >= endAt) break;
+            await new Promise(r => setTimeout(r, 250));
+        }
         return reply('{"cmds":[' + results.map(r => '{"id":' + r.id + ',"c":' + r.data + '}').join(',') + ']}');
     }
     if (req.method !== 'POST') return reply({ error: 'no existe' }, 404);
@@ -156,6 +162,12 @@ async function roomApi(db, h, route, req, url) {
     }
     if (route === '/api/room/snap' && req.method === 'GET') { // los jugadores piden la última instantánea de la arena (solo si es más nueva que 'since')
         const code = cleanCode(url.searchParams.get('code')), since = Math.max(0, +url.searchParams.get('since') || 0);
+        const wait = Math.min(6, Math.max(0, +url.searchParams.get('wait') || 0)), endAt = Date.now() + wait * 1000; // sondeo largo (PVP): espera a una instantánea más nueva (máx. 6 s)
+        if (wait > 0) for (;;) {
+            const q = await db.prepare('SELECT r.status AS status, s.seq AS seq FROM rooms r LEFT JOIN room_snap s ON s.code = r.code WHERE r.code = ?1').bind(code).first();
+            if (!q || q.status !== 'playing' || (q.seq || 0) > since || Date.now() >= endAt) break;
+            await new Promise(r => setTimeout(r, 250));
+        }
         const [mine, row] = await db.batch([
             db.prepare('SELECT 1 AS ok FROM room_members WHERE code = ?1 AND acc = ?2').bind(code, acc),
             db.prepare('SELECT r.status AS status, s.seq AS seq, CASE WHEN s.seq > ?2 THEN s.data END AS data FROM rooms r LEFT JOIN room_snap s ON s.code = r.code WHERE r.code = ?1').bind(code, since),

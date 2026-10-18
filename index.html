@@ -21746,7 +21746,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             c.globalCompositeOperation = 'source-over';
             if (window.PA_IOS) { // sin multiply: velo con alfa que, sobre un tono medio, da el mismo color que multiplicar por "amb"
                 c.clearRect(0, 0, W, H);
-                const cr = P.amb[0] / 255, cg = P.amb[1] / 255, cb = P.amb[2] / 255, cmin = Math.min(cr, cg, cb), a0 = 1 - cmin;
+                const kk = (P.keyA || 0) * 0.5, ia = [0, 1, 2].map(i => Math.min(255, P.amb[i] + (P.keyRgb ? P.keyRgb[i] : 0) * kk)); // iOS no dibuja la luz clave ni el brillo de los pokémon (suman luz en el resto de dispositivos): se reparte en la luz ambiente para que la noche no quede mucho más negra
+                const cr = ia[0] / 255, cg = ia[1] / 255, cb = ia[2] / 255, cmin = Math.min(cr, cg, cb), a0 = 1 - cmin;
                 if (a0 > 0.003) { const k2 = 90 / (1 - cmin); c.fillStyle = 'rgba(' + Math.round((cr - cmin) * k2) + ',' + Math.round((cg - cmin) * k2) + ',' + Math.round((cb - cmin) * k2) + ',' + a0.toFixed(3) + ')'; c.fillRect(0, 0, W, H); }
             } else { c.fillStyle = rgb(P.amb, 1); c.fillRect(0, 0, W, H); }
             // viñeta (oclusión ambiental en los bordes del visor)
@@ -23618,7 +23619,7 @@ function mpSpecEnd(why) {
 async function mpSpecPoll() {
     if (!mpSpec.on) return;
     try {
-        const r = await SaveSys.call('GET', '/api/room/snap?code=' + encodeURIComponent(mpSpec.code) + '&since=' + mpSpec.seq);
+        const r = await SaveSys.call('GET', '/api/room/snap?code=' + encodeURIComponent(mpSpec.code) + '&since=' + mpSpec.seq + ((window.PAPvp && PAPvp.on) ? '&wait=5' : ''));
         if (!mpSpec.on) return;
         mpSpec.fails = 0;
         if (r.status !== 'playing') { if (window.PAPvp && PAPvp.on) { PAPvp.guestOver(r.status); return; } mpSpecEnd(r.status); return; } // terminó (resultado en la sala), se reinició o se cerró
@@ -23631,7 +23632,7 @@ async function mpSpecPoll() {
     }
     const el = mpSpecEl(), stale = performance.now() - mpSpec.lastAt > 15000 && mpSpec.seq > 0, noconn = mpSpec.fails >= 3;
     const live = el.querySelector('.sp-live'); live.classList.toggle('off', stale || noconn); live.textContent = noconn ? 'SIN CONEXIÓN' : stale ? 'SIN SEÑAL' : 'EN DIRECTO';
-    mpSpec.tm = setTimeout(mpSpecPoll, (window.PAPvp && PAPvp.on) ? 300 : MP_SNAP_MS);
+    mpSpec.tm = setTimeout(mpSpecPoll, (window.PAPvp && PAPvp.on) ? 20 : MP_SNAP_MS);
 }
 
 // Escala un estilo en línea del mundo del anfitrión al del espectador (solo si las pantallas difieren).
@@ -28305,7 +28306,7 @@ body.pvp-on #lt-chip{top:126px!important}
 /* PVP 1 contra 1: emparejamiento por el servidor, 6 pokémon del Salón de la Fama, VS, HUD y lanzar/retirar a mano.
    El anfitrión (quien encontró al rival) simula la arena; el invitado la ve en directo (visor del multijugador) y le manda órdenes. */
 window.PAPvp = (function () {
-    const P = { on: false, host: false, guest: false, searching: false, code: '', me: '', foe: '', st: null, teams: {}, order: [], names: {}, avatars: {}, view: null, viewAt: 0, live: false, over: false, winner: '', pending: {}, cd: {}, emptySince: {}, tm: {}, cmdSince: 0, limit: 480000, askAt: 0, res: null };
+    const P = { on: false, host: false, guest: false, searching: false, code: '', me: '', foe: '', st: null, teams: {}, order: [], names: {}, avatars: {}, view: null, viewAt: 0, live: false, over: false, winner: '', pending: {}, opt: {}, cd: {}, emptySince: {}, tm: {}, cmdSince: 0, limit: 480000, askAt: 0, res: null };
     const esc = mpEsc, sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
     const baseOf = id => String(id).replace(/_\d+$/, '');
     const $ = id => document.getElementById(id);
@@ -28368,7 +28369,7 @@ window.PAPvp = (function () {
     // ---------- inicio: VS y arranque ----------
     function begin(st) {
         closeFind();
-        Object.assign(P, { on: true, host: st.host === st.me, guest: st.host !== st.me, code: st.code, me: st.me, st, view: null, live: false, over: false, winner: '', pending: {}, cd: {}, emptySince: {}, cmdSince: 0, res: null, teams: {}, order: [], names: {}, avatars: {} });
+        Object.assign(P, { on: true, host: st.host === st.me, guest: st.host !== st.me, code: st.code, me: st.me, st, view: null, live: false, over: false, winner: '', pending: {}, opt: {}, cd: {}, emptySince: {}, cmdSince: 0, res: null, teams: {}, order: [], names: {}, avatars: {} });
         st.members.forEach(m => {
             P.order.push(m.acc); P.names[m.acc] = m.name; P.avatars[m.acc] = m.avatar || '';
             P.teams[m.acc] = { acc: m.acc, name: m.name, avatar: m.avatar || '', slots: (st.picks[m.acc] || []).filter(p => speciesMeta[p.id]).slice(0, 6).map(p => ({ base: p.id, id: p.id, traits: p.traits || {}, sprite: p.sprite || '', name: p.name || dispName(p.id), ratio: 1, ty: '' })) };
@@ -28464,7 +28465,7 @@ window.PAPvp = (function () {
     function hostBegin() {
         buildHud(); P.live = true; P.view = view(); render(P.view);
         clearInterval(P.tm.tick); clearInterval(P.tm.cmd);
-        P.tm.tick = setInterval(hostTick, 250); P.tm.cmd = setInterval(pollCmds, 300);
+        P.tm.tick = setInterval(hostTick, 250); cmdLoop(P.code);
     }
     function hostTick() {
         if (!P.on || !P.host || P.over || !gameRunning) return;
@@ -28491,11 +28492,14 @@ window.PAPvp = (function () {
     async function pollCmds() {
         if (!P.on || !P.host || P.over || P.busyCmd) return; P.busyCmd = true;
         try {
-            const r = await SaveSys.call('GET', '/api/pvp/cmds?code=' + encodeURIComponent(P.code) + '&since=' + P.cmdSince);
+            const r = await SaveSys.call('GET', '/api/pvp/cmds?code=' + encodeURIComponent(P.code) + '&since=' + P.cmdSince + '&wait=5');
             if ((r.cmds || []).length) setTimeout(pushNow, 80); // la orden ya se aplicó: se publica enseguida para que el invitado la vea sin esperar
             (r.cmds || []).forEach(x => { P.cmdSince = Math.max(P.cmdSince, x.id); const c = x.c || {}, s = Math.max(0, Math.min(5, c.s | 0)); if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); });
-        } catch (e) {}
+        } catch (e) { await new Promise(r => setTimeout(r, 1000)); }
         P.busyCmd = false;
+    }
+    async function cmdLoop(code) { // sondeo largo continuo: cada orden del invitado llega al anfitrión en cuanto el servidor la recibe
+        while (P.on && P.host && !P.over && P.code === code) { const t0 = performance.now(); await pollCmds(); if (performance.now() - t0 < 60) await new Promise(r => setTimeout(r, 60)); }
     }
     function pushNow() { // instantánea inmediata (sin esperar al siguiente turno del temporizador)
         if (!P.on || !P.host || P.over || typeof mpHost === 'undefined' || mpHost.busy || !multiPlan) return;
@@ -28556,7 +28560,7 @@ window.PAPvp = (function () {
     function card(sl, d) {
         const hp = d[1], mx = d[2] || 1, r = Math.max(0, Math.min(1, hp / mx)), cls = r > .5 ? '' : r > .2 ? 'm' : 'l';
         const spr = d[5] || sl.sprite;
-        return '<div class="pv-card on"><div class="pv-por"><img alt="" draggable="false" src="' + esc(spr) + '"></div><div class="pv-inf"><div class="pv-pk">' + esc(d[4] || sl.name) + '</div><div class="pv-tys">' + String(d[3] || '').split(',').filter(Boolean).map(tyChip).join('') + '</div><div class="pv-hp"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div><div class="pv-hpn">' + hp + ' / ' + mx + '</div></div></div>';
+        return '<div class="pv-card on"><div class="pv-por"><img alt="" draggable="false" src="' + esc(spr) + '"></div><div class="pv-inf"><div class="pv-pk">' + esc(d[4] || sl.name) + '</div><div class="pv-tys">' + String(d[3] || '').split(',').filter(Boolean).map(tyChip).join('') + '</div><div class="pv-hp"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div><div class="pv-hpn">' + (d[6] ? '…' : hp + ' / ' + mx) + '</div></div></div>';
     }
     function cards(acc, v, mineSide) {
         const T = P.teams[acc], arr = v.a[acc] || [], on = [];
@@ -28568,6 +28572,9 @@ window.PAPvp = (function () {
         if (!P.on || !v) return; P.view = v; P.viewAt = performance.now(); if (P.guest && !init) P.live = true;
         const top = $('pvp-top'), mine = $('pvp-me'); if (!top || !mine) return;
         const f = P.foe, m = P.me; if (!P.teams[f] || !P.teams[m] || !v.a[f] || !v.a[m]) return;
+        { const now = performance.now(); // invitado: el HUD responde al instante; el servidor lo confirma (o lo corrige) en la siguiente instantánea
+          v = { t: v.t, w: v.w, a: Object.assign({}, v.a) };
+          v.a[m] = v.a[m].map((d, i) => { const o = P.opt[i]; if (!o) return d; if (d[0] === o.to || now - o.t > 2500) { delete P.opt[i]; return d; } const sl = P.teams[m].slots[i]; return o.to === 1 ? [1, 100, 100, sl.ty || '', sl.name, '', 1] : [0, o.r != null ? o.r : 100]; }); }
         const pbs = acc => v.a[acc].map(d => '<i class="pv-pb s' + d[0] + '"></i>').join('');
         const left = acc => v.a[acc].filter(d => d[0] !== 2).length;
         const htop = '<div class="pv-head"><div class="pv-av">' + avHtml(P.names[f], P.avatars[f]) + '</div><div class="pv-nm">' + esc(P.names[f]) + '</div><div class="pv-pbs">' + pbs(f) + '</div><span class="pv-sp"></span><span class="pv-clk" id="pv-clk">⏱ ' + clockTxt(v.t) + '</span><button type="button" class="pv-x" aria-label="Rendirse" title="Rendirse">✕</button></div>' + cards(f, v, false);
@@ -28577,18 +28584,19 @@ window.PAPvp = (function () {
             const r = d[0] === 1 ? d[1] / (d[2] || 1) : d[0] === 0 ? d[1] / 100 : 0, pend = P.pending[i] && performance.now() - P.pending[i] < 4000;
             return '<button type="button" class="pv-ball s' + d[0] + (pend ? ' pend' : '') + '" data-s="' + i + '" aria-label="' + esc(sl.name) + '"><img alt="" draggable="false" src="' + esc(sl.sprite) + '">' + (d[0] !== 2 ? '<span class="pv-bhp"><i style="width:' + Math.round(Math.max(0, Math.min(1, r)) * 100) + '%"></i></span>' : '') + (d[0] === 1 ? '<em>↩</em>' : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</button>';
         }).join('');
-        const nf = v.a[m].filter(d => d[0] === 1).length;
+        const nf = P.teams[m].slots.filter((sl, i) => { const o = P.opt[i]; return o ? o.to === 1 : (v.a[m][i] || [])[0] === 1; }).length;
         const hmine = '<div class="pv-head"><div class="pv-av">' + avHtml(P.names[m], P.avatars[m] || mpProfile().avatar) + '</div><div class="pv-nm">' + esc(P.names[m]) + '</div><div class="pv-pbs">' + pbs(m) + '</div><span class="pv-sp"></span><span class="pv-nm" style="max-width:none;color:#94a3b8">Quedan ' + left(m) + '/' + P.teams[m].slots.length + '</span></div>' + cards(m, v, true) + '<div class="pv-balls">' + balls + '</div>';
         if (mine._h !== hmine) { mine.innerHTML = hmine; mine._h = hmine; }
     }
     function ballTap(i, el) {
         if (!P.on || P.over || !P.live || !P.view) return;
-        const d = (P.view.a[P.me] || [])[i]; if (!d || d[0] === 2) return;
-        const nf = P.view.a[P.me].filter(x => x[0] === 1).length;
+        const d0 = (P.view.a[P.me] || [])[i]; if (!d0 || d0[0] === 2) return;
+        const oo = P.opt[i], cur = oo ? oo.to : d0[0], d = [cur];
+        const nf = P.teams[P.me].slots.filter((sl, k) => { const o = P.opt[k]; return o ? o.to === 1 : (P.view.a[P.me][k] || [])[0] === 1; }).length;
         if (d[0] === 0 && nf >= 2) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); return; }
         sfx(d[0] === 0 ? 'pop' : 'tick');
         if (P.host) { if (d[0] === 0) launch(P.me, i); else recall(P.me, i); P.view = view(); render(P.view); setTimeout(pushNow, 80); }
-        else { P.pending[i] = performance.now(); sendCmd({ t: d[0] === 0 ? 'L' : 'R', s: i }); if (el) el.classList.add('pend'); }
+        else { P.opt[i] = { to: d[0] === 0 ? 1 : 0, t: performance.now(), r: d0[0] === 1 ? Math.round(100 * d0[1] / (d0[2] || 1)) : d0[1] }; sendCmd({ t: d[0] === 0 ? 'L' : 'R', s: i }); render(P.view); }
     }
     function surrender(btn) {
         if (P.over) return;

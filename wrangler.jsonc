@@ -3,5 +3,7 @@
   "main": "worker.js",
   "compatibility_date": "2025-01-01",
   "assets": { "directory": ".", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
-  "d1_databases": [{ "binding": "DB", "database_name": "pokearena-db" }]
+  "d1_databases": [{ "binding": "DB", "database_name": "pokearena-db" }],
+  "durable_objects": { "bindings": [{ "name": "PVP", "class_name": "PvpRoom" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PvpRoom"] }]
 }

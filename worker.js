@@ -36,6 +36,11 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS profiles (acc TEXT PRIMARY KEY, ts INTEGER NOT NULL, name TEXT, avatar TEXT, lvl INTEGER, hof TEXT)'),
         db.prepare('CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, st INTEGER NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (a, b))'),
         db.prepare('CREATE INDEX IF NOT EXISTS friends_b ON friends (b, st)'),
+        // chat entre amigos: registro permanente (a < b identifica la pareja; frm = quién escribe, too = quién recibe) y último mensaje leído por cada cuenta en cada conversación
+        db.prepare('CREATE TABLE IF NOT EXISTS chat (id INTEGER PRIMARY KEY AUTOINCREMENT, pair TEXT NOT NULL, a TEXT NOT NULL, b TEXT NOT NULL, frm TEXT NOT NULL, too TEXT NOT NULL, ts INTEGER NOT NULL, txt TEXT NOT NULL)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS chat_pair ON chat (pair, id)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS chat_too ON chat (too, id)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS chat_read (acc TEXT NOT NULL, peer TEXT NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (acc, peer))'),
     ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
         .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
@@ -283,13 +288,15 @@ async function friendsApi(db, h, route, req, url) {
         return reply({ ok: true, acc: me, now });
     }
     if (route === '/api/f/list' && req.method === 'GET') {
-        const [fr, inc, out] = await db.batch([
+        const [fr, inc, out, unr] = await db.batch([
             q('SELECT CASE WHEN f.a = ?1 THEN f.b ELSE f.a END AS acc, p.name, p.avatar, p.lvl, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.st = 1 AND (f.a = ?1 OR f.b = ?1) LIMIT 150', me),
             q('SELECT f.a AS acc, p.name, p.avatar, p.lvl, p.hof, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = f.a WHERE f.st = 0 AND f.b = ?1 ORDER BY f.ts DESC LIMIT 30', me),
             q('SELECT f.b AS acc, p.name, p.avatar FROM friends f LEFT JOIN profiles p ON p.acc = f.b WHERE f.st = 0 AND f.a = ?1 ORDER BY f.ts DESC LIMIT 30', me),
+            q('SELECT c.frm AS acc, COUNT(*) AS n FROM chat c WHERE c.too = ?1 AND c.id > COALESCE((SELECT r.last FROM chat_read r WHERE r.acc = ?1 AND r.peer = c.frm), 0) GROUP BY c.frm', me),
         ]);
+        const unread = {}; for (const r of unr.results) unread[r.acc] = r.n;
         const hof = t => { try { return JSON.parse(t || '[]'); } catch (e) { return []; } };
-        return reply({ now, me, friends: fr.results, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof) })), outgoing: out.results });
+        return reply({ now, me, friends: fr.results, unread, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof) })), outgoing: out.results });
     }
     if (route === '/api/f/profile' && req.method === 'GET') { // ficha completa de un AMIGO (solo si sois amigos)
         const who = String(url.searchParams.get('acc') || '').toLowerCase();
@@ -321,6 +328,40 @@ async function friendsApi(db, h, route, req, url) {
         if (b.accept) await q('UPDATE friends SET st = 1, ts = ?3 WHERE a = ?1 AND b = ?2 AND st = 0', from, me, now).run();
         else await q('DELETE FROM friends WHERE a = ?1 AND b = ?2 AND st = 0', from, me).run();
         return reply({ ok: true });
+    }
+    const areFriends = who => q('SELECT 1 FROM friends WHERE st = 1 AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))', me, who).first();
+    const pairOf = who => (me < who ? me + ':' + who : who + ':' + me);
+    if (route === '/api/f/chat/send' && req.method === 'POST') {
+        const to = other(b.to); if (!to) return reply({ error: 'ID no válido' }, 400);
+        const txt = String(b.txt || '').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim().slice(0, 300);
+        if (!txt) return reply({ error: 'mensaje vacío' }, 400);
+        if (!(await areFriends(to))) return reply({ error: 'Solo puedes escribir a tus amigos' }, 403);
+        const rc = await q('SELECT COUNT(*) AS n FROM chat WHERE frm = ?1 AND ts > ?2', me, now - 60000).first();
+        if (rc && rc.n >= 25) return reply({ error: 'Vas demasiado rápido, espera un momento' }, 429);
+        const a = me < to ? me : to, bb = me < to ? to : me;
+        const r = await q('INSERT INTO chat (pair, a, b, frm, too, ts, txt) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)', pairOf(to), a, bb, me, to, now, txt).run();
+        const id = r && r.meta ? r.meta.last_row_id : 0;
+        await q('INSERT INTO chat_read (acc, peer, last) VALUES (?1, ?2, ?3) ON CONFLICT(acc, peer) DO UPDATE SET last = MAX(last, ?3)', me, to, id).run(); // lo que escribes tú cuenta como leído
+        return reply({ ok: true, id, ts: now });
+    }
+    if (route === '/api/f/chat' && req.method === 'GET') { // historial de una conversación (solo con amigos); after = último id que ya tienes
+        const who = String(url.searchParams.get('acc') || '').toLowerCase();
+        if (!/^[a-f0-9]{8}$/.test(who)) return reply({ error: 'ID no válido' }, 400);
+        const after = Math.max(0, +url.searchParams.get('after') || 0), before = Math.max(0, +url.searchParams.get('before') || 0);
+        const { results } = before
+            ? await q('SELECT id, frm, ts, txt FROM chat WHERE pair = ?1 AND id < ?2 ORDER BY id DESC LIMIT 60', pairOf(who), before).all()
+            : after ? await q('SELECT id, frm, ts, txt FROM chat WHERE pair = ?1 AND id > ?2 ORDER BY id LIMIT 100', pairOf(who), after).all()
+            : await q('SELECT id, frm, ts, txt FROM (SELECT id, frm, ts, txt FROM chat WHERE pair = ?1 ORDER BY id DESC LIMIT 60) ORDER BY id', pairOf(who)).all();
+        const msgs = before ? results.reverse() : results;
+        const top = msgs.reduce((m, r) => Math.max(m, r.id), 0);
+        if (top && !before && url.searchParams.get('read') === '1') await q('INSERT INTO chat_read (acc, peer, last) VALUES (?1, ?2, ?3) ON CONFLICT(acc, peer) DO UPDATE SET last = MAX(last, ?3)', me, who, top).run();
+        return reply({ now, me, msgs, more: !after && msgs.length >= 60 });
+    }
+    if (route === '/api/f/inbox' && req.method === 'GET') { // mensajes nuevos para mí (sondeo ligero); after < 0 solo devuelve el id actual
+        const after = +url.searchParams.get('after');
+        if (!(after >= 0)) { const m = await q('SELECT COALESCE(MAX(id), 0) AS m FROM chat WHERE too = ?1', me).first(); return reply({ now, max: (m && m.m) || 0, msgs: [] }); }
+        const { results } = await q('SELECT c.id, c.frm, c.ts, c.txt, p.name, p.avatar FROM chat c LEFT JOIN profiles p ON p.acc = c.frm WHERE c.too = ?1 AND c.id > ?2 ORDER BY c.id LIMIT 30', me, after).all();
+        return reply({ now, max: results.reduce((m, r) => Math.max(m, r.id), after), msgs: results });
     }
     if (route === '/api/f/remove' && req.method === 'POST') { // elimina un amigo o cancela una solicitud enviada
         const who = other(b.acc); if (!who) return reply({ error: 'ID no válido' }, 400);
@@ -441,6 +482,23 @@ export default {
                 const arenas = ar.results.map(r => '{"_k":' + JSON.stringify(r.k) + ',"_acc":"' + r.acc + '",' + r.sum.slice(1)).join(',');
                 const saves = sv.results.map(r => '{"_acc":"' + r.acc + '",' + r.body.slice(1)).join(',');
                 return reply('{"totals":' + JSON.stringify(ct.results[0]) + ',"species":' + JSON.stringify(species) + ',"arenas":[' + arenas + '],"saves":[' + saves + ']}');
+            }
+            if ((route === '/api/g/chats' || route === '/api/g/chat') && req.method === 'POST') {
+                const key = env.ADMIN_KEY;
+                if (!key) return reply({ error: 'falta configurar ADMIN_KEY en Cloudflare' }, 403);
+                const b = await req.json().catch(() => ({}));
+                if (b.key !== key) return reply({ error: 'clave incorrecta' }, 403);
+                if (route === '/api/g/chats') {
+                    const { results } = await db.prepare('SELECT g.pair, g.n, g.last, g.a, g.b, pa.name AS na, pb.name AS nb, (SELECT txt FROM chat WHERE id = g.last) AS lt, (SELECT ts FROM chat WHERE id = g.last) AS lts FROM (SELECT pair, COUNT(*) AS n, MAX(id) AS last, MIN(a) AS a, MIN(b) AS b FROM chat GROUP BY pair ORDER BY last DESC LIMIT 300) g LEFT JOIN profiles pa ON pa.acc = g.a LEFT JOIN profiles pb ON pb.acc = g.b ORDER BY g.last DESC').all();
+                    return reply({ chats: results });
+                }
+                const pair = String(b.pair || '');
+                if (!/^[a-f0-9]{8}:[a-f0-9]{8}$/.test(pair)) return reply({ error: 'conversación no válida' }, 400);
+                const [ms, pr] = await db.batch([
+                    db.prepare('SELECT id, frm, ts, txt FROM (SELECT id, frm, ts, txt FROM chat WHERE pair = ?1 ORDER BY id DESC LIMIT 3000) ORDER BY id').bind(pair),
+                    db.prepare('SELECT acc, name, avatar FROM profiles WHERE acc IN (?1, ?2)').bind(pair.slice(0, 8), pair.slice(9)),
+                ]);
+                return reply({ msgs: ms.results, profiles: pr.results });
             }
             if (route === '/api/g/save' && req.method === 'GET') { // la Caja de una partida del registro
                 const row = await db.prepare('SELECT pc FROM g_saves WHERE id = ?1').bind(url.searchParams.get('k') || '').first();

@@ -5271,6 +5271,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     #main-menu { --mc-acc: #38bdf8; }
     #main-menu [data-id="arena"]   { --c: #ff4d6d; }
     #main-menu [data-id="raids"] { --c: #a78bfa; }
+    #main-menu [data-id="liga"] { --c: #2dd4a7; }
     #main-menu [data-id="pokedex"] { --c: #4ade80; }
     #main-menu [data-id="pc"]      { --c: #38bdf8; }
     #main-menu [data-id="bolsa"]   { --c: #f472b6; }
@@ -5314,6 +5315,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     #main-menu [data-id="arena"]   { --as: cover;  --ap: 7% 50%; }
     #main-menu [data-id="arena"] .mc-art { inset: 0; }
     #main-menu [data-id="raids"] { --as: 250% auto; --ap: 87% 0%; }
+    #main-menu [data-id="liga"] { --c: #2dd4a7; --as: 250% auto; --ap: 50% 20%; }
     #main-menu [data-id="pokedex"] { --as: 240% auto; --ap: 77% 38%; }
     #main-menu [data-id="pc"]      { --as: 218% auto; --ap: 4% 60%; }
     #main-menu [data-id="bolsa"]   { --as: 300% auto; --ap: 58% 100%; }
@@ -24624,7 +24626,7 @@ function buildMainMenu() {
         b.setAttribute('role', 'menuitem');
         b.style.setProperty('--i', i);
         b.dataset.id = it.id;
-        if ((it.id === 'raids' || it.id === 'liga') && !devUnlocked()) { b.classList.add('mm-locked'); b.setAttribute('aria-disabled', 'true'); }
+        if (it.id === 'raids' && !devUnlocked()) { b.classList.add('mm-locked'); b.setAttribute('aria-disabled', 'true'); }
         b.innerHTML = '<span class="mc-frame"></span><span class="mc-in"><span class="mc-art"><i class="mc-pic"></i></span><span class="mc-shade"></span><span class="mc-num"></span><span class="mc-ico">' + (MM_ICONS[it.id] || '') + '</span><span class="mc-txt"><b class="mc-name"></b><em class="mc-desc"></em><u class="mc-cta"></u></span></span>';
         const pic = b.querySelector('.mc-pic');
         if (it.id === 'arena' && classicArt) { pic.style.backgroundImage = classicArt; pic.style.backgroundPosition = '38% 50%'; }
@@ -24643,7 +24645,7 @@ function buildMainMenu() {
         b.querySelector('.mc-name').textContent = it.label;
         b.querySelector('.mc-cta').textContent = 'ENTRAR';
         b.addEventListener('click', () => {
-            if ((it.id === 'raids' || it.id === 'liga') && !devUnlocked()) return; // Raids y Liga: solo con el modo desarrollador activo
+            if (it.id === 'raids' && !devUnlocked()) return; // Raids y Liga: solo con el modo desarrollador activo
             if (mainMenuEl.classList.contains('leaving') || performance.now() - (window.__mmTitleGo || -1e9) < 700) return;
             if (mainMenuIndex !== i) { selectMainMenuItem(i); GameAudio.sfx('tick'); return; }
             GameAudio.sfx(it.id === 'arena' ? 'confirm' : 'tick');
@@ -28323,10 +28325,10 @@ window.PAProfile = (function () {
         el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
             + '<div class="pf-body"><div class="pf-me"><div class="pf-av"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="t" cx="50" cy="50" r="46"/><circle class="b" cx="50" cy="50" r="46" pathLength="100" style="stroke-dashoffset:' + (100 - m.lv.frac * 100).toFixed(1) + '"/></svg>'
             + '<div class="pic">' + (m.src ? '<img src="' + esc(m.src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
-            + (window.PALiga ? PALiga.medalsHtml() : '') + '<div class="pf-lv' + (m.lv.max ? ' max' : '') + '"><small>NIVEL</small><b>' + m.lv.level + '</b></div>'
+            + '<div class="pf-lv' + (m.lv.max ? ' max' : '') + '"><small>NIVEL</small><b>' + m.lv.level + '</b></div>'
             + '<div class="pf-name">' + esc(m.name) + '</div>'
             + '<div class="pf-xp">' + (m.lv.max ? 'NIVEL MÁXIMO' : (m.lv.total || 0).toLocaleString('es-ES') + ' / ' + (m.lv.nxt || 0).toLocaleString('es-ES') + ' PTS') + '</div>'
-            + '<button type="button" class="pf-id" title="Toca para copiar tu ID"><small>ID</small><b id="pf-id-v">' + esc((window.PAFriends && PAFriends.acc()) || '········') + '</b></button></div>'
+            + '<button type="button" class="pf-id" title="Toca para copiar tu ID"><small>ID</small><b id="pf-id-v">' + esc((window.PAFriends && PAFriends.acc()) || '········') + '</b></button>' + (window.PALiga ? PALiga.medalsHtml() : '') + '</div>'
             + '<div class="pf-hof"><div class="pf-conf">' + conf + '</div><div class="pf-grid" id="pf-grid"></div></div></div>'
             + '</div>';
         root.appendChild(el);
@@ -29296,13 +29298,13 @@ window.PAPvp = (function () {
 #lg-tw .lg-floor:last-child::before{bottom:50%}
 #lg-tw .lg-node{position:absolute;left:2px;top:50%;margin-top:-16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:.9rem;background:#0b1226;border:2px solid rgba(125,211,252,.4);color:#9fb4c8;z-index:1}
 #lg-tw .lg-card{position:relative;flex:1;min-width:0;overflow:hidden;border-radius:16px;background:var(--glass);border:1px solid rgba(125,211,252,.22);box-shadow:0 6px 22px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);transform:skewX(-5deg);transform-origin:50% 50%}
-#lg-tw .lg-in{position:absolute;inset:0;transform:skewX(5deg);margin:0 -10px;padding:0 24px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+#lg-tw .lg-in{position:absolute;inset:0;transform:skewX(5deg);margin:0 -10px;padding:16px 24px 0;display:flex;flex-direction:column;justify-content:center;gap:3px}
 #lg-tw .lg-nm{font-size:1.45rem;font-style:italic;letter-spacing:.03em;text-transform:uppercase;line-height:1;white-space:nowrap}
 #lg-tw .lg-bar{width:34px;height:3px;border-radius:3px;background:var(--mint);margin:2px 0 3px}
 #lg-tw .lg-sub{font-size:.62rem;letter-spacing:.16em;color:#9fb4c8;text-transform:uppercase}
 #lg-tw .lg-art{position:absolute;right:-6px;bottom:0;top:0;width:58%;transform:skewX(5deg);overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 38%);mask-image:linear-gradient(90deg,transparent,#000 38%)}
 #lg-tw .lg-art img{position:absolute;right:6%;bottom:-12%;height:112%;width:auto;object-fit:contain;object-position:50% 0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.55))}
-#lg-tw .lg-tag{position:absolute;right:18px;top:8px;transform:skewX(5deg);font-size:.56rem;letter-spacing:.16em;padding:3px 9px;border-radius:999px;background:rgba(6,12,34,.92);border:1px solid rgba(125,211,252,.5);color:var(--sky);z-index:2;white-space:nowrap}
+#lg-tw .lg-tag{position:absolute;left:26px;top:8px;transform:skewX(5deg);font-size:.56rem;letter-spacing:.16em;padding:3px 9px;border-radius:999px;background:rgba(6,12,34,.92);border:1px solid rgba(125,211,252,.5);color:var(--sky);z-index:2;white-space:nowrap}
 #lg-tw .lg-medal-s{position:absolute;right:16px;bottom:8px;width:34px;height:34px;transform:skewX(5deg);z-index:2;filter:drop-shadow(0 0 7px rgba(190,230,255,.9)) drop-shadow(0 1px 1px #000)}
 #lg-tw .lg-q{position:absolute;right:26px;top:50%;margin-top:-26px;transform:skewX(5deg);font-size:3.2rem;font-style:italic;color:rgba(125,211,252,.10);line-height:52px}
 #lg-tw .lg-floor.cur .lg-card{border-color:var(--mint);box-shadow:0 0 0 1px rgba(45,212,167,.5),0 0 26px rgba(45,212,167,.35),0 6px 22px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);animation:lgGlow 1.6s ease-in-out infinite alternate;cursor:pointer}
@@ -29385,7 +29387,7 @@ window.PAPvp = (function () {
 #lg-res button.g{background:linear-gradient(180deg,#334155,#1e293b);border-color:rgba(148,163,184,.5)}
 #lg-res button:active{transform:scale(.97)}
 /* medallas en la tarjeta de perfil */
-.pf-medals{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:2px 0 -2px;min-height:26px}
+.pf-medals{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:4px 0 0}
 .pf-medals img{width:26px;height:26px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(190,230,255,.85)) drop-shadow(0 1px 1px #000);animation:lgMedalGlow 2.2s ease-in-out infinite alternate}
 .pf-medals .em{width:26px;height:26px;border-radius:50%;border:1px dashed rgba(255,255,255,.28);opacity:.6}
 </style>

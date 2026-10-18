@@ -6424,7 +6424,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 <div class="hp-bar-container"><div id="charizardgmax-hp" class="hp-bar"></div></div>
                 <div class="xp-bar-container"><div id="charizardgmax-xp" class="xp-bar"></div></div>
             </div>
-            <div id="charizardgmax" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10196.gif" alt="Charizard Gigamax" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif';}"></div>
+            <div id="charizardgmax" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10196.gif" alt="Charizard Gigamax" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/10196.png';}"></div>
         </div>
 
         <!-- Mareep -->
@@ -7585,7 +7585,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // spAttack/spDefense -> se usan cuando el movimiento es de categoría 'special'
         const pokemonStats = {
             // ALFA de Raids: estadísticas super buffeadas (no es una especie de la arena normal).
-            charizardgmax: { hp: 3400, attack: 480, defense: 400, spAttack: 700, spDefense: 430, speed: 430, type: 'fire', type2: 'flying' },
+            charizardgmax: { hp: 2278, attack: 322, defense: 268, spAttack: 469, spDefense: 288, speed: 288, type: 'fire', type2: 'flying' },
             butterflygmax: { hp: 3300, attack: 450, defense: 390, spAttack: 690, spDefense: 420, speed: 390, type: 'bug', type2: 'flying' },
             pikachu:  { hp: 35, attack: 55, defense: 40, spAttack: 50, spDefense: 50, speed: 90, type: 'electric' },
             squirtle: { hp: 44, attack: 48, defense: 65, spAttack: 50, spDefense: 64, speed: 43, type: 'water' },
@@ -14649,7 +14649,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Para añadir más ALFAs basta con sumar su entrada a RAID_ALPHAS (+ su wrapper HTML, sus stats y su movimiento).
         const RAID_ALPHAS = [
             { id: 'charizardgmax', name: 'Charizard Gigamax', sound: document.getElementById('snd-charizard-gmax'), attackKey: 'gigallamarada', ability: 'marllamas', alpha: true,
-              formName: 'Charizard', formSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif', gmaxSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10196.gif' } // formName: en la Caja/Pokédex es una forma de Charizard
+              formName: 'Charizard', formSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif', gmaxSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10196.gif' } // formName: en la Caja/Pokédex es una forma de Charizard
         ];
         RAID_ALPHAS.forEach(a => { speciesMeta[a.id] = a; });
         let raidPendingAlpha = null; // ALFA elegido al abrir la selección de equipo (para clasificar al equipo contra él)
@@ -14768,7 +14768,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Un Butterfree de la Caja con el signo Gigamax, llevado a una Raid, se vuelve Gigamax UNA vez por vida al tocar el
         // botón GIGAMAX del HUD: durante 5 s es enorme, con más PS y poder y usa Gigaestupor; luego vuelve a la normalidad.
         const GMAX_DURATION_MS = 5000;
-        const GMAX_SPRITE_CHARIZARD = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10196.gif';
+        const GMAX_SPRITE_CHARIZARD = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10196.gif';
         function gmaxSpriteFor(name) { return /charizard/i.test(String(name || '')) ? GMAX_SPRITE_CHARIZARD : GMAX_SPRITE_URL; }
         function gmaxFormOf(c) { // forma Gigamax según el pokémon (Butterfree o Charizard)
             const n = String((c && (c.dexName || c.name)) || '');

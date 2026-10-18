@@ -22658,6 +22658,7 @@ const SaveSys = (() => {
         get net() { return net; },                 // 'ok' | 'sync' | 'offline' | 'local'
         get pending() { return dirty.size; },
         get token() { return token; },
+        wsUrl(p) { if (API === null || !token) return ''; const base = API || location.origin; return base.replace(/^http/, 'ws') + p + (p.indexOf('?') < 0 ? '?' : '&') + 'k=' + token; },
         accountLink() {
             if (!token) return '';
             const base = location.href.split(/[?#]/)[0];
@@ -23623,7 +23624,7 @@ async function mpSpecPoll() {
         if (!mpSpec.on) return;
         mpSpec.fails = 0;
         if (r.status !== 'playing') { if (window.PAPvp && PAPvp.on) { PAPvp.guestOver(r.status); return; } mpSpecEnd(r.status); return; } // terminó (resultado en la sala), se reinició o se cerró
-        if (r.snap && r.seq > mpSpec.seq) { mpSpec.seq = r.seq; mpSpecApply(r.snap); }
+        if (r.snap && r.seq > mpSpec.seq) { mpSpec.seq = r.seq; if (!(window.PAPvp && PAPvp.on && PAPvp.wsLive())) mpSpecApply(r.snap); }
     } catch (e) {
         if (!mpSpec.on) return;
         if (e && (e.status === 403 || e.status === 404) && window.PAPvp && PAPvp.on) { PAPvp.guestOver('gone'); return; }
@@ -23690,7 +23691,7 @@ function mpSpecWeather(w, now) { // clima: se enciende el mismo efecto visual y 
 
 function mpSpecApply(s) {
     const el = mpSpecEl(), now = performance.now();
-    mpSpec.dur = mpSpec.prevAt ? Math.max(450, Math.min(1600, now - mpSpec.prevAt)) : MP_SNAP_MS; mpSpec.prevAt = now; mpSpec.lastAt = now;
+    mpSpec.dur = mpSpec.prevAt ? Math.max((window.PAPvp && PAPvp.on && PAPvp.wsLive()) ? 110 : 450, Math.min(1600, now - mpSpec.prevAt)) : MP_SNAP_MS; mpSpec.prevAt = now; mpSpec.lastAt = now;
     const kx = mpSpec.kx = bounds.width / (s.w || bounds.width), ky = mpSpec.ky = bounds.height / (s.h || bounds.height); // el anfitrión puede tener otra pantalla: se reescalan las posiciones
     const members = (mp.st && mp.st.members) || [], me = mp.st && mp.st.me, nameOf = a => (members.find(m => m.acc === a) || {}).name || '?';
     const seen = new Set();
@@ -28369,12 +28370,13 @@ window.PAPvp = (function () {
     // ---------- inicio: VS y arranque ----------
     function begin(st) {
         closeFind();
-        Object.assign(P, { on: true, host: st.host === st.me, guest: st.host !== st.me, code: st.code, me: st.me, st, view: null, live: false, over: false, winner: '', pending: {}, opt: {}, cd: {}, emptySince: {}, cmdSince: 0, res: null, teams: {}, order: [], names: {}, avatars: {} });
+        Object.assign(P, { on: true, host: st.host === st.me, guest: st.host !== st.me, code: st.code, me: st.me, st, view: null, live: false, over: false, winner: '', pending: {}, opt: {}, cd: {}, emptySince: {}, cmdSince: 0, seen: {}, ws: null, wsFails: 0, wsAt: 0, res: null, teams: {}, order: [], names: {}, avatars: {} });
         st.members.forEach(m => {
             P.order.push(m.acc); P.names[m.acc] = m.name; P.avatars[m.acc] = m.avatar || '';
             P.teams[m.acc] = { acc: m.acc, name: m.name, avatar: m.avatar || '', slots: (st.picks[m.acc] || []).filter(p => speciesMeta[p.id]).slice(0, 6).map(p => ({ base: p.id, id: p.id, traits: p.traits || {}, sprite: p.sprite || '', name: p.name || dispName(p.id), ratio: 1, ty: '' })) };
         });
         P.foe = other(P.me);
+        wsOpen(); // el canal en tiempo real se abre ya, durante la animación de VS
         vsIntro(() => { if (!P.on) return; if (P.host) launchHost(st); else startGuest(st); });
     }
     function vsIntro(done) {
@@ -28489,12 +28491,19 @@ window.PAPvp = (function () {
         end((a[0] !== b[0] ? a[0] > b[0] : a[1] >= b[1]) ? P.order[0] : P.order[1], 'tiempo');
     }
     function afterKo(c) { P.live && checkEnd(); }
+    function applyCmd(c) { // orden del invitado (llega por WebSocket y también por HTTP: el id 'u' evita aplicarla dos veces)
+        c = c || {}; if (P.over) return false;
+        if (c.u) { if (P.seen[c.u]) return false; P.seen[c.u] = 1; }
+        const s = Math.max(0, Math.min(5, c.s | 0));
+        if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); else return false;
+        return true;
+    }
     async function pollCmds() {
         if (!P.on || !P.host || P.over || P.busyCmd) return; P.busyCmd = true;
         try {
             const r = await SaveSys.call('GET', '/api/pvp/cmds?code=' + encodeURIComponent(P.code) + '&since=' + P.cmdSince + '&wait=5');
-            if ((r.cmds || []).length) setTimeout(pushNow, 80); // la orden ya se aplicó: se publica enseguida para que el invitado la vea sin esperar
-            (r.cmds || []).forEach(x => { P.cmdSince = Math.max(P.cmdSince, x.id); const c = x.c || {}, s = Math.max(0, Math.min(5, c.s | 0)); if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); });
+            let any = false; (r.cmds || []).forEach(x => { P.cmdSince = Math.max(P.cmdSince, x.id); if (applyCmd(x.c)) any = true; });
+            if (any) setTimeout(pushNow, 40); // la orden ya se aplicó: se publica enseguida para que el invitado la vea sin esperar
         } catch (e) { await new Promise(r => setTimeout(r, 1000)); }
         P.busyCmd = false;
     }
@@ -28502,7 +28511,9 @@ window.PAPvp = (function () {
         while (P.on && P.host && !P.over && P.code === code) { const t0 = performance.now(); await pollCmds(); if (performance.now() - t0 < 60) await new Promise(r => setTimeout(r, 60)); }
     }
     function pushNow() { // instantánea inmediata (sin esperar al siguiente turno del temporizador)
-        if (!P.on || !P.host || P.over || typeof mpHost === 'undefined' || mpHost.busy || !multiPlan) return;
+        if (!P.on || !P.host || P.over || typeof mpHost === 'undefined' || !multiPlan) return;
+        if (wsSnap()) return;
+        if (mpHost.busy) return;
         mpHost.busy = true;
         SaveSys.call('POST', '/api/room/snap', { code: P.code, snap: mpSnapshot(multiPlan) }).catch(() => {}).then(() => { mpHost.busy = false; });
     }
@@ -28529,7 +28540,40 @@ window.PAPvp = (function () {
     }
 
     // ---------- invitado ----------
-    function sendCmd(c) { SaveSys.call('POST', '/api/pvp/cmd', { code: P.code, c }).catch(() => {}); }
+    // ---------- tiempo real: WebSocket (Durable Object). Si el servidor no lo ofrece, todo sigue por HTTP ----------
+    const wsReady = () => !!(P.ws && P.ws.readyState === 1);
+    function wsSend(o) { if (!wsReady() || P.ws.bufferedAmount > 600000) return false; try { P.ws.send(JSON.stringify(o)); return true; } catch (e) { return false; } }
+    function wsSnap() { // anfitrión: instantánea directa al invitado
+        if (!P.host || P.over || !wsReady() || !multiPlan || !gameRunning) return false;
+        try { return wsSend({ k: 's', snap: mpSnapshot(multiPlan) }); } catch (e) { return false; }
+    }
+    function wsOpen() {
+        if (!P.on || P.over || typeof WebSocket === 'undefined' || P.wsFails >= 4) return;
+        if (P.ws && P.ws.readyState <= 1) return;
+        let url = ''; try { url = SaveSys.wsUrl('/api/pvp/ws?code=' + encodeURIComponent(P.code)); } catch (e) {}
+        if (!url) return;
+        const code = P.code; let ws, opened = false; try { ws = new WebSocket(url); } catch (e) { return; }
+        P.ws = ws;
+        ws.onopen = () => { opened = true; P.wsFails = 0; if (P.host) { clearInterval(P.tm.wsp); P.tm.wsp = setInterval(wsSnap, 140); } };
+        ws.onmessage = ev => {
+            if (typeof ev.data !== 'string' || !P.on || P.over) return;
+            let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+            if (P.host && m.k === 'c') { if (applyCmd(m.c)) { pushNow(); setTimeout(pushNow, 60); } }
+            else if (P.guest && m.k === 's' && m.snap && mpSpec.on) { P.wsAt = performance.now(); try { mpSpecApply(m.snap); } catch (e) { console.error(e); } }
+        };
+        ws.onclose = () => {
+            if (P.ws === ws) P.ws = null; clearInterval(P.tm.wsp);
+            if (!opened) P.wsFails++;
+            if (P.on && !P.over && P.code === code) setTimeout(wsOpen, opened ? 400 : 1500 * Math.max(1, P.wsFails));
+        };
+        ws.onerror = () => {};
+    }
+    const wsLive = () => wsReady() && performance.now() - P.wsAt < 1500;
+    function sendCmd(c) {
+        c.u = Math.random().toString(36).slice(2, 10); // mismo id por las dos vías: el anfitrión aplica la orden una sola vez
+        wsSend({ k: 'c', c });
+        SaveSys.call('POST', '/api/pvp/cmd', { code: P.code, c }).catch(() => {});
+    }
     async function guestOver(status) {
         if (P.over) return; P.over = true;
         try { mpSpec.on = false; clearTimeout(mpSpec.tm); cancelAnimationFrame(mpSpec.raf); } catch (e) {}
@@ -28626,12 +28670,13 @@ window.PAPvp = (function () {
     function cleanup() {
         Object.keys(P.tm).forEach(k => { clearInterval(P.tm[k]); clearTimeout(P.tm[k]); }); P.tm = {};
         const wasGuest = P.guest;
+        try { const w = P.ws; P.ws = null; if (w) w.close(); } catch (e) {}
         P.on = false; P.host = false; P.guest = false; P.live = false; pvpDuel = false; multiPlan = null; try { mpHostEnd(); } catch (e) {}
         removeHud(); document.body.classList.remove('pvp-on');
         ['pvp-res', 'pvp-vs'].forEach(id => { const n = $(id); if (n) n.remove(); });
         if (wasGuest || mpSpec.on || document.querySelector('#camera-layer .mp-ghost')) { try { mpSpec.on = false; clearTimeout(mpSpec.tm); cancelAnimationFrame(mpSpec.raf); mpSpecClear(); } catch (e) {} }
     }
-    return { open, view, render, hostBegin, afterKo, hostAbort, guestOver, get on() { return P.on; }, get guest() { return P.guest; }, _P: P };
+    return { open, view, render, hostBegin, afterKo, hostAbort, guestOver, get on() { return P.on; }, get guest() { return P.guest; }, wsLive, _P: P };
 })();
 </script>
 </body>

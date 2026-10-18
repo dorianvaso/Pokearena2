@@ -366,6 +366,24 @@ async function ingest(db, h, b) {
     return { ok: true };
 }
 
+// ---- Tiempo real del PVP (opcional): una sala de Durable Object por partida que reenvía cada mensaje al OTRO jugador ----
+// Sin el binding PVP el juego sigue funcionando igual por HTTP (más lento).
+export class PvpRoom {
+    constructor(state) { this.state = state; }
+    async fetch(req) {
+        if ((req.headers.get('Upgrade') || '').toLowerCase() !== 'websocket') return new Response('websocket', { status: 426 });
+        const pair = new WebSocketPair(), client = pair[0], server = pair[1];
+        this.state.acceptWebSocket(server);
+        return new Response(null, { status: 101, webSocket: client });
+    }
+    webSocketMessage(ws, msg) {
+        if (typeof msg !== 'string' || msg.length > 600000) return;
+        for (const o of this.state.getWebSockets()) if (o !== ws) { try { o.send(msg); } catch (e) {} }
+    }
+    webSocketClose(ws, code) { try { ws.close(code && code !== 1005 && code !== 1006 ? code : 1000); } catch (e) {} }
+    webSocketError() {}
+}
+
 export default {
     async fetch(req, env) {
         const url = new URL(req.url);
@@ -374,6 +392,17 @@ export default {
         if (route === '/api/health') return reply({ ok: true, app: 'PokeArena' });
         try {
             const db = env.DB; await init(db);
+            if (route === '/api/pvp/ws') { // WebSocket del PVP: se autentica con ?k=<token> (el navegador no puede mandar cabeceras)
+                if (!env.PVP) return reply({ error: 'tiempo real no disponible' }, 501);
+                if ((req.headers.get('Upgrade') || '').toLowerCase() !== 'websocket') return reply({ error: 'se esperaba websocket' }, 426);
+                const k = url.searchParams.get('k') || '', code = cleanCode(url.searchParams.get('code'));
+                if (!/^[a-f0-9]{48}$/.test(k)) return reply({ error: 'cuenta no válida' }, 401);
+                const wh = await sha(k), wacc = wh.slice(0, 12);
+                if (!(await db.prepare('SELECT 1 FROM accounts WHERE h = ?1').bind(wh).first())) return reply({ error: 'cuenta no válida' }, 401);
+                const wr = await db.prepare('SELECT r.status FROM rooms r JOIN room_members m ON m.code = r.code WHERE r.code = ?1 AND m.acc = ?2').bind(code, wacc).first();
+                if (!wr || wr.status !== 'playing') return reply({ error: 'no estás en esa partida' }, 403);
+                return env.PVP.get(env.PVP.idFromName(code)).fetch(req);
+            }
             if (route === '/api/session' && req.method === 'POST') {
                 const token = hex(crypto.getRandomValues(new Uint8Array(24)));
                 await db.prepare('INSERT INTO accounts (h, created) VALUES (?1, ?2)').bind(await sha(token), Date.now()).run();

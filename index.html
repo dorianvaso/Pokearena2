@@ -23523,7 +23523,7 @@ function mpHostBegin(code) {
         const plan = multiPlan; if (!plan || !gameRunning || mpHost.busy) return;
         mpHost.busy = true;
         SaveSys.call('POST', '/api/room/snap', { code, snap: mpSnapshot(plan) }).catch(() => {}).then(() => { mpHost.busy = false; });
-    }, MP_SNAP_MS);
+    }, pvpDuel ? 500 : MP_SNAP_MS); // PVP: instantánea más frecuente (el invitado juega con lo que ve)
 }
 function mpHostEnd() { clearInterval(mpHost.timer); mpHost.timer = 0; mpHost.busy = false; try { if (mpHost.obs) mpHost.obs.disconnect(); } catch (ex) {} mpHost.obs = null; }
 // El anfitrión sale de la arena antes de que termine: la sala vuelve al lobby para que nadie se quede mirando una partida parada.
@@ -23631,7 +23631,7 @@ async function mpSpecPoll() {
     }
     const el = mpSpecEl(), stale = performance.now() - mpSpec.lastAt > 15000 && mpSpec.seq > 0, noconn = mpSpec.fails >= 3;
     const live = el.querySelector('.sp-live'); live.classList.toggle('off', stale || noconn); live.textContent = noconn ? 'SIN CONEXIÓN' : stale ? 'SIN SEÑAL' : 'EN DIRECTO';
-    mpSpec.tm = setTimeout(mpSpecPoll, MP_SNAP_MS);
+    mpSpec.tm = setTimeout(mpSpecPoll, (window.PAPvp && PAPvp.on) ? 300 : MP_SNAP_MS);
 }
 
 // Escala un estilo en línea del mundo del anfitrión al del espectador (solo si las pantallas difieren).
@@ -27686,7 +27686,7 @@ html.pq3 .pokemon-wrapper::before{filter:none !important}
 .pf-hof{position:relative;border-radius:12px;overflow:hidden;border:2px solid #0b0f2b;background:linear-gradient(180deg,#b6b1f2,#9a95e2);min-width:0}
 .pf-hof::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;background:#262d63}
 .pf-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:20px 8px 8px}
-.pf-slot{all:unset;box-sizing:border-box;position:relative;aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.22);border:1.5px dashed rgba(38,45,99,.45);cursor:pointer;overflow:hidden;display:block;-webkit-tap-highlight-color:transparent}
+.pf-slot{all:unset;box-sizing:border-box;position:relative;height:0;padding-top:100%;min-width:0;border-radius:10px;background:rgba(255,255,255,.22);border:1.5px dashed rgba(38,45,99,.45);cursor:pointer;overflow:hidden;display:block;-webkit-tap-highlight-color:transparent}
 .pf-slot.on{border-style:solid;border-color:rgba(38,45,99,.35);background:rgba(255,255,255,.3)}
 .pf-slot:active{transform:scale(.96)}
 .pf-slot img{image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.3));-webkit-user-drag:none}
@@ -27706,7 +27706,7 @@ html.pq3 .pokemon-wrapper::before{filter:none !important}
 .pk-top input{flex:1;min-width:0;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:.7rem;outline:none}
 .pk-rm{all:unset;box-sizing:border-box;padding:7px 12px;border-radius:999px;font-size:.56rem;font-weight:800;letter-spacing:.06em;cursor:pointer;background:rgba(248,113,113,.2);border:1px solid rgba(248,113,113,.6);color:#fecaca}
 .pk-list{flex:1;min-height:120px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;padding:6px 12px 12px;align-content:start}
-.pk-it{all:unset;box-sizing:border-box;position:relative;aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);cursor:pointer;overflow:hidden;display:block}
+.pk-it{all:unset;box-sizing:border-box;position:relative;height:0;padding-top:100%;min-width:0;border-radius:9px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);cursor:pointer;overflow:hidden;display:block}
 .pk-it.in{border-color:#fde047;box-shadow:0 0 0 1px #fde047 inset}
 .pk-it:active{background:rgba(255,216,74,.25)}
 .pk-it img{image-rendering:pixelated;pointer-events:none;-webkit-user-drag:none}
@@ -28464,7 +28464,7 @@ window.PAPvp = (function () {
     function hostBegin() {
         buildHud(); P.live = true; P.view = view(); render(P.view);
         clearInterval(P.tm.tick); clearInterval(P.tm.cmd);
-        P.tm.tick = setInterval(hostTick, 250); P.tm.cmd = setInterval(pollCmds, 600);
+        P.tm.tick = setInterval(hostTick, 250); P.tm.cmd = setInterval(pollCmds, 300);
     }
     function hostTick() {
         if (!P.on || !P.host || P.over || !gameRunning) return;
@@ -28492,9 +28492,15 @@ window.PAPvp = (function () {
         if (!P.on || !P.host || P.over || P.busyCmd) return; P.busyCmd = true;
         try {
             const r = await SaveSys.call('GET', '/api/pvp/cmds?code=' + encodeURIComponent(P.code) + '&since=' + P.cmdSince);
+            if ((r.cmds || []).length) setTimeout(pushNow, 80); // la orden ya se aplicó: se publica enseguida para que el invitado la vea sin esperar
             (r.cmds || []).forEach(x => { P.cmdSince = Math.max(P.cmdSince, x.id); const c = x.c || {}, s = Math.max(0, Math.min(5, c.s | 0)); if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); });
         } catch (e) {}
         P.busyCmd = false;
+    }
+    function pushNow() { // instantánea inmediata (sin esperar al siguiente turno del temporizador)
+        if (!P.on || !P.host || P.over || typeof mpHost === 'undefined' || mpHost.busy || !multiPlan) return;
+        mpHost.busy = true;
+        SaveSys.call('POST', '/api/room/snap', { code: P.code, snap: mpSnapshot(multiPlan) }).catch(() => {}).then(() => { mpHost.busy = false; });
     }
     function end(winAcc, how, by) { // fin del duelo (solo anfitrión)
         if (P.over) return; P.over = true; P.winner = winAcc;
@@ -28581,7 +28587,7 @@ window.PAPvp = (function () {
         const nf = P.view.a[P.me].filter(x => x[0] === 1).length;
         if (d[0] === 0 && nf >= 2) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); return; }
         sfx(d[0] === 0 ? 'pop' : 'tick');
-        if (P.host) { if (d[0] === 0) launch(P.me, i); else recall(P.me, i); P.view = view(); render(P.view); }
+        if (P.host) { if (d[0] === 0) launch(P.me, i); else recall(P.me, i); P.view = view(); render(P.view); setTimeout(pushNow, 80); }
         else { P.pending[i] = performance.now(); sendCmd({ t: d[0] === 0 ? 'L' : 'R', s: i }); if (el) el.classList.add('pend'); }
     }
     function surrender(btn) {

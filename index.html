@@ -214,6 +214,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             z-index: 5;
             display: none;
             cursor: pointer;
+            left: 0; top: 0; /* la posición va en 'translate' (ver placeWrapper): no fuerza diseño en cada paso */
         }
 
         /* Capa de cámara: todo el campo (líneas, pokeball central y pokémon)
@@ -7558,6 +7559,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (!SPR_NOSTATIC[id]) return null; // el sprite estático Gen V existe: NUNCA se cambia por el render moderno de HOME (un fallo puntual de red se reintenta)
             return SPR_HOME + (pre.indexOf('shiny') >= 0 ? 'shiny/' : '') + id + '.png'; // sin sprite estático: render de HOME
         }
+        // Miniaturas del HUD (récords, feed de combate): se usa el sprite ESTÁTICO Gen V (mismo estilo, sin animar). Cada GIF visible
+        // se vuelve a decodificar y repintar en cada fotograma de su animación; a 17-32 px la animación casi no se aprecia.
+        function sprThumb(u) { const m = /^(.*\/black-white\/)animated\/((?:back\/)?(?:shiny\/)?\d+)\.gif$/.exec(String(u || '')); return m ? m[1] + m[2] + '.png' : u; }
         function unshinyUrl(u) { return u ? sprSet(u, isBackSpr(u), false) : u; }
         function migrateSpriteData(v) { // partidas guardadas: URLs de Showdown y los .png estáticos de la v0.47 -> animated Gen V
             try { const raw = JSON.stringify(v);
@@ -7590,13 +7594,13 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const sb = document.createElement('style');
                 sb.textContent = ':where(.spr-breathe){transform-origin:50% 100%}.spr-breathe{animation:sprBreathe var(--sb-t,3.4s) ease-in-out var(--sb-d,0s) infinite}'
                     + '@keyframes sprBreathe{0%,100%{scale:1 1;translate:0 0}50%{scale:.982 1.04;translate:0 -.5%}}'
-                    + '@media (prefers-reduced-motion:reduce){.spr-breathe{animation:none}}';
+                    + '@media (prefers-reduced-motion:reduce){.spr-breathe{animation:none}}html.pq2 #game-container .spr-breathe{animation:none}';
                 document.head.appendChild(sb);
                 const STAT = /\/sprites\/pokemon\/[^?#]*\.png(?:[?#]|$)/;
                 document.addEventListener('load', e => {
                     const im = e.target; if (!(im instanceof HTMLImageElement)) return;
                     if (im.style.visibility === 'hidden') im.style.visibility = '';
-                    if (STAT.test(im.currentSrc || im.src)) {
+                    if (STAT.test(im.currentSrc || im.src) && !(im.closest && im.closest('.fd-s,.rec-box'))) {
                         if (!im.classList.contains('spr-breathe')) {
                             im.style.setProperty('--sb-d', (-Math.random() * 3.4).toFixed(2) + 's');
                             im.style.setProperty('--sb-t', (3 + Math.random() * 1.2).toFixed(2) + 's');
@@ -7608,7 +7612,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         })();
 
         const viewport = document.getElementById('game-container');
-        const container = document.getElementById('camera-layer'); // capa de cámara: aquí se insertan proyectiles/partículas para que también sigan el zoom
+        const container = document.getElementById('camera-layer'); { const _ac = container.appendChild; container.appendChild = function (n) { return n && n._sink ? n : _ac.call(this, n); }; } // los efectos sumidero nunca entran en el DOM // capa de cámara: aquí se insertan proyectiles/partículas para que también sigan el zoom
         const battleLogEl = document.getElementById('battle-log');
         const playPauseBtn = document.getElementById('btn-play-pause');
         const iconPlay = document.getElementById('icon-play');
@@ -13954,7 +13958,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 }
             }
 
+            let fitN = 0;
             function fit() {
+                if (W && ++fitN % 45) return; // el tamaño solo se revisa unas 1,3 veces/s: leer clientWidth cada fotograma forzaba diseño
                 const w = cv.parentElement.clientWidth | 0, h = cv.parentElement.clientHeight | 0;
                 if (w === W && h === H) return;
                 W = w; H = h; cv.width = Math.max(2, W * Q | 0); cv.height = Math.max(2, H * Q | 0);
@@ -14622,7 +14628,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 } else { sc = 1 + 0.045 * Math.sin((tt - 1000) / 330); } // respira, amenazante
             }
             a.facing = facing;
-            a.wrapper.style.left = a.x + 'px'; a.wrapper.style.top = a.y + 'px';
+            a.wrapper.style.translate = a.x + 'px ' + a.y + 'px';
             if (el) el.style.transform = `translateX(-50%) translate(${shx}px, ${-lift}px) scaleX(${facing}) rotate(${rot}deg) scale(${sc})`;
             // ceniza que cae y brasas que suben
             const ctx = st.ctx; ctx.setTransform(st.dpr, 0, 0, st.dpr, 0, 0); ctx.clearRect(0, 0, st.W, st.H);
@@ -14687,7 +14693,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 if (ph < 0.08 || ph > 0.92) squash = 0.9;                // pequeño aplastamiento al tocar el suelo
             }
             w.facing = facing;
-            wr.style.left = w.x + 'px'; wr.style.top = w.y + 'px';
+            wr.style.translate = w.x + 'px ' + w.y + 'px';
             if (el) el.style.transform = `translateX(-50%) translateY(${-lift}px) scaleX(${facing}) rotate(${tilt}deg) scaleY(${squash})`;
 
             // confeti
@@ -17867,7 +17873,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function fxMakeEl() {
             const el = document.createElement('div'), nat = el.animate;
             el._an = [];
-            el.animate = function (k, o) { const a = nat.call(this, k, o); this._an.push(a); return a; };
+            el.animate = function (k, o) {
+                if (this._sink) return { cancel() {}, finish() {}, pause() {}, play() {}, reverse() {}, onfinish: null, oncancel: null, finished: Promise.resolve(), currentTime: 0, playState: 'finished' }; // sumidero: ni se anima (cada animación de un nodo oculto costaba un recálculo de estilo por fotograma)
+                const a = nat.call(this, k, o); this._an.push(a); return a;
+            };
             return el;
         }
         function makeFxPool(max, budgeted) {
@@ -17880,11 +17889,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (budgeted && window.PA_FXMAX && SINK.test(cls)) {
                         const now = performance.now();
                         if (now - rec > 350) { rec = now; try { live = container.querySelectorAll('.spark-particle,.dash-fx,.phys-fx,.trail-dot').length; } catch (e) {} }
-                        if (live >= window.PA_FXMAX) { const sk = free.pop() || fxMakeEl(); sk._pf = false; sk.className = cls + ' fx-sink'; return sk; }
+                        if (live >= window.PA_FXMAX) { const sk = free.pop() || fxMakeEl(); sk._pf = false; sk._sink = true; sk.className = cls + ' fx-sink'; return sk; }
                         live++;
                     }
                     const el = free.pop() || fxMakeEl();
-                    el._pf = false; el.className = cls; return el;
+                    el._pf = false; el._sink = false; el.className = cls; return el;
                 },
                 put(el) {
                     if (!el || el._pf) return;           // evita meter dos veces el mismo elemento
@@ -22295,7 +22304,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     slot.sig = sig;
                     slot.el.classList.toggle('is-empty', !e);
                     if (!e) { slot.val.textContent = '-'; slot.el.title = ''; return; }
-                    if (slot.img.getAttribute('src') !== e.sprite) { slot.img.src = e.sprite; layoutSprite(slot.img, slot.img.parentElement, e.sprite, 0.94); }
+                    if (slot.img._ts !== e.sprite) { slot.img._ts = e.sprite; slot.img.src = sprThumb(e.sprite); layoutSprite(slot.img, slot.img.parentElement, e.sprite, 0.94); }
                     slot.val.textContent = kind === 'time' ? formatArenaTime(e.v / 1000) : e.v + ' KO';
                     slot.el.title = dispName(e.name) + ' · ' + (kind === 'time' ? formatArenaTime(e.v / 1000) : e.v + ' KOs');
                 });
@@ -22322,7 +22331,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function feedSrc(c) { return (c && (c.currentFrontSrc || (c.imgEl ? c.imgEl.src : ''))) || ''; }
         function feedSprite(src, f) {
             const box = document.createElement('span'); box.className = 'fd-s';
-            const img = document.createElement('img'); img.alt = ''; img.draggable = false; img.src = src;
+            const img = document.createElement('img'); img.alt = ''; img.draggable = false; img.src = sprThumb(src);
             box.appendChild(img);
             box._img = img; box._src = src; box._f = f || 0.96;
             return box;
@@ -22748,8 +22757,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function placeWrapper(c) { // left/top solo se escriben si la posición cambió
             const st = c.wrapper.style;
             if (c._pwEl !== c.wrapper) { c._pwEl = c.wrapper; c._px = c._py = NaN; }
-            if (c._px !== c.x) { c._px = c.x; st.left = c.x + 'px'; }
-            if (c._py !== c.y) { c._py = c.y; st.top = c.y + 'px'; }
+            if (c._px !== c.x || c._py !== c.y) { c._px = c.x; c._py = c.y; st.translate = c.x + 'px ' + c.y + 'px'; }
         }
         const loopSnapshot = [], loopSnapCmp = (a, b) => b._spd - a._spd;
         function gameLoop(timestamp) {
@@ -24388,7 +24396,7 @@ function mpSnapshot(plan) {
         let fx = ''; for (let ch = w.firstElementChild; ch; ch = ch.nextElementSibling) if (ch !== hud && ch !== pk) fx += ch.outerHTML; fx = noId(fx); if (fx.length > 2500) fx = '';
         let src = im ? (im.src || '') : ''; if (src.length > 500) src = '';
         e.push({
-            i: id, x: Math.round(parseFloat(w.style.left) || 0), y: Math.round(parseFloat(w.style.top) || 0),
+            i: id, x: Math.round(parseFloat(w.style.translate) || 0), y: Math.round(parseFloat((w.style.translate || '').split(' ')[1]) || 0),
             k: w.className.replace(/\b(camera-focus|is-mine)\b/g, '').replace(/\s+/g, ' ').trim(), h: hh, f: fx, s: src,
             ps: pk ? pk.style.cssText : '', is: im ? im.style.cssText : '', z: w.style.zIndex || '', o: (c && c.owner) || ''
         });
@@ -28601,6 +28609,15 @@ html.bio-arena #weather-sun .wx-cv { mix-blend-mode:normal; }
 html.pq3.bio-arena #weather-rain::before { content:''; position:absolute; left:-10%; right:-10%; top:-80px; bottom:0; background:repeating-linear-gradient(84deg, rgba(0,0,0,0) 0 11px, rgba(62,98,185,.55) 11px 12px, rgba(0,0,0,0) 12px 26px); animation:wrFall .42s linear infinite; -webkit-mask-image:repeating-linear-gradient(0deg,#000 0 12px,transparent 12px 46px); mask-image:repeating-linear-gradient(0deg,#000 0 12px,transparent 12px 46px); }
 </style>
 <style id="pa-ios-perf">
+/* ===== v-perf: animaciones que no se ven no se calculan ===== */
+/* Los velos de clima inactivos (opacidad 0) seguían animando brumas, tintes y rayos en cada fotograma: pausados salvo el clima activo */
+#weather-sun:not(.active) *,#weather-sun:not(.active)::before,#weather-sun:not(.active)::after,#weather-sun:not(.active) *::before,#weather-sun:not(.active) *::after{animation-play-state:paused !important}
+#weather-sand:not(.active) *,#weather-sand:not(.active)::before,#weather-sand:not(.active)::after,#weather-sand:not(.active) *::before,#weather-sand:not(.active) *::after{animation-play-state:paused !important}
+#weather-rain:not(.active) *,#weather-rain:not(.active)::before,#weather-rain:not(.active)::after,#weather-rain:not(.active) *::before,#weather-rain:not(.active) *::after{animation-play-state:paused !important}
+#weather-snow:not(.active) *,#weather-snow:not(.active)::before,#weather-snow:not(.active)::after,#weather-snow:not(.active) *::before,#weather-snow:not(.active) *::after{animation-play-state:paused !important}
+/* destello de opacidad .88-1 de las fichas de ataque/defensa: imperceptible y costaba un cálculo de estilo por fotograma y ficha */
+.atk-stat-badge,.def-stat-badge{animation:none}
+.atk-stat-badge.bump,.def-stat-badge.bump{animation:atkChipBump .35s cubic-bezier(.2,1.6,.4,1)}
 /* ===== iOS: cuenta regresiva nítida y ligera (sin desenfoque animado ni capas enormes) + niveles extra de calidad ===== */
 .fx-sink{display:none !important}
 @keyframes cdPopLite{0%{transform:scale(1.3);opacity:0}40%{transform:scale(.94);opacity:1}70%{transform:scale(1.04)}100%{transform:scale(1)}}

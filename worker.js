@@ -33,7 +33,7 @@ function init(db) {
         db.prepare('CREATE INDEX IF NOT EXISTS gifts_acc ON gifts (acc, ts)'),
         db.prepare('CREATE TABLE IF NOT EXISTS gift_claims (gid TEXT NOT NULL, h TEXT NOT NULL, PRIMARY KEY (gid, h))'),
         // amigos: perfil público de cada cuenta (nombre, avatar, nivel, Salón de la Fama y última conexión) y relaciones (st 0 = solicitud de a hacia b, 1 = amigos)
-        db.prepare('CREATE TABLE IF NOT EXISTS profiles (acc TEXT PRIMARY KEY, ts INTEGER NOT NULL, name TEXT, avatar TEXT, lvl INTEGER, hof TEXT)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS profiles (acc TEXT PRIMARY KEY, ts INTEGER NOT NULL, name TEXT, avatar TEXT, lvl INTEGER, hof TEXT, medals TEXT)'),
         db.prepare('CREATE TABLE IF NOT EXISTS friends (a TEXT NOT NULL, b TEXT NOT NULL, st INTEGER NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (a, b))'),
         db.prepare('CREATE INDEX IF NOT EXISTS friends_b ON friends (b, st)'),
         // chat entre amigos: registro permanente (a < b identifica la pareja; frm = quién escribe, too = quién recibe) y último mensaje leído por cada cuenta en cada conversación
@@ -44,6 +44,7 @@ function init(db) {
     ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
         .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
+      .then(() => db.prepare('ALTER TABLE profiles ADD COLUMN medals TEXT').run().catch(() => {})) // medallas de la Liga (ids) que ven los amigos en la ficha de perfil
       .then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
       .catch(e => { ready = null; throw e; }));
 }
@@ -273,6 +274,8 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 // Un registro global: { rid, arena?, ops?, saves? }. Es idempotente por 'rid' (el cliente puede reintentar).
 // ---- amigos ----
 const SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/[A-Za-z0-9\/_.\-]{1,170}$/;
+const cleanMedals = a => [...new Set((Array.isArray(a) ? a : []).map(x => String(x || '')).filter(x => /^[a-z]{1,12}$/.test(x)))].slice(0, 16);
+const parseMedals = t => { try { return cleanMedals(JSON.parse(t || '[]')); } catch (e) { return []; } };
 const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
 async function friendsApi(db, h, route, req, url) {
@@ -283,28 +286,28 @@ async function friendsApi(db, h, route, req, url) {
         const name = String(b.name || '').replace(/[<>"&]/g, '').trim().slice(0, 24);
         const avatar = /^[a-z0-9_-]{1,12}$/i.test(b.avatar || '') ? b.avatar : '';
         const lvl = Math.max(1, Math.min(999, b.lvl | 0 || 1));
-        await q('INSERT INTO profiles (acc, ts, name, avatar, lvl, hof) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(acc) DO UPDATE SET ts = ?2, name = ?3, avatar = ?4, lvl = ?5, hof = ?6',
-            me, now, name, avatar, lvl, JSON.stringify(cleanHof(b.hof))).run();
+        await q('INSERT INTO profiles (acc, ts, name, avatar, lvl, hof, medals) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(acc) DO UPDATE SET ts = ?2, name = ?3, avatar = ?4, lvl = ?5, hof = ?6, medals = ?7',
+            me, now, name, avatar, lvl, JSON.stringify(cleanHof(b.hof)), JSON.stringify(cleanMedals(b.medals))).run();
         return reply({ ok: true, acc: me, now });
     }
     if (route === '/api/f/list' && req.method === 'GET') {
         const [fr, inc, out, unr] = await db.batch([
             q('SELECT CASE WHEN f.a = ?1 THEN f.b ELSE f.a END AS acc, p.name, p.avatar, p.lvl, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.st = 1 AND (f.a = ?1 OR f.b = ?1) LIMIT 150', me),
-            q('SELECT f.a AS acc, p.name, p.avatar, p.lvl, p.hof, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = f.a WHERE f.st = 0 AND f.b = ?1 ORDER BY f.ts DESC LIMIT 30', me),
+            q('SELECT f.a AS acc, p.name, p.avatar, p.lvl, p.hof, p.medals, p.ts FROM friends f LEFT JOIN profiles p ON p.acc = f.a WHERE f.st = 0 AND f.b = ?1 ORDER BY f.ts DESC LIMIT 30', me),
             q('SELECT f.b AS acc, p.name, p.avatar FROM friends f LEFT JOIN profiles p ON p.acc = f.b WHERE f.st = 0 AND f.a = ?1 ORDER BY f.ts DESC LIMIT 30', me),
             q('SELECT c.frm AS acc, COUNT(*) AS n FROM chat c WHERE c.too = ?1 AND c.id > COALESCE((SELECT r.last FROM chat_read r WHERE r.acc = ?1 AND r.peer = c.frm), 0) GROUP BY c.frm', me),
         ]);
         const unread = {}; for (const r of unr.results) unread[r.acc] = r.n;
         const hof = t => { try { return JSON.parse(t || '[]'); } catch (e) { return []; } };
-        return reply({ now, me, friends: fr.results, unread, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof) })), outgoing: out.results });
+        return reply({ now, me, friends: fr.results, unread, incoming: inc.results.map(r => ({ ...r, hof: hof(r.hof), medals: parseMedals(r.medals) })), outgoing: out.results });
     }
     if (route === '/api/f/profile' && req.method === 'GET') { // ficha completa de un AMIGO (solo si sois amigos)
         const who = String(url.searchParams.get('acc') || '').toLowerCase();
         if (!/^[a-f0-9]{8}$/.test(who)) return reply({ error: 'ID no válido' }, 400);
         if (!(await q('SELECT 1 FROM friends WHERE st = 1 AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))', me, who).first())) return reply({ error: 'No sois amigos' }, 403);
-        const p = await q('SELECT acc, name, avatar, lvl, hof, ts FROM profiles WHERE acc = ?1', who).first();
+        const p = await q('SELECT acc, name, avatar, lvl, hof, medals, ts FROM profiles WHERE acc = ?1', who).first();
         let hof = []; try { hof = JSON.parse((p && p.hof) || '[]'); } catch (e) {}
-        return reply({ now, acc: who, name: (p && p.name) || '', avatar: (p && p.avatar) || '', lvl: (p && p.lvl) || 1, ts: (p && p.ts) || 0, hof });
+        return reply({ now, acc: who, name: (p && p.name) || '', avatar: (p && p.avatar) || '', lvl: (p && p.lvl) || 1, ts: (p && p.ts) || 0, hof, medals: parseMedals(p && p.medals) });
     }
     if (route === '/api/f/request' && req.method === 'POST') {
         const to = other(b.to);

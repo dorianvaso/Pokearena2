@@ -25910,7 +25910,7 @@ function drawBioImg(cw,ch,bio){
  let bakeP=null,bakeId='';try{const lm=document.getElementById('light-map');if(lm&&getComputedStyle(lm).display==='none'&&typeof dayParamsAt==='function'){const r=dayParamsAt(dayMs);bakeP=r.P;bakeId=r.ph.id;}}catch(e){}
  const key=cw+'x'+ch+bio+(bakeP?'|'+bakeId:'');if(cv.dataset.mode==='bio'&&cv.dataset.key===key)return;
  const q=Math.min(1,Math.sqrt(2.6e6/(cw*ch))),W=Math.round(cw*q),H=Math.round(ch*q);
- cv.dataset.mode='bio';cv.dataset.key=key;raid=null;falls=null;
+ cv.dataset.mode='bio';cv.dataset.bio=bio;cv.dataset.key=key;raid=null;falls=null;
  cv.width=W;cv.height=H;cv.style.imageRendering='auto';
  const g=cv.getContext('2d'),PF=B.PF,s=Math.max(cw/B.IW,ch/B.IH); // escala "cubrir": sin deformar la imagen
  let ox=cw/2-(PF.x+PF.w/2)*s,oy=ch/2-(PF.y+PF.h/2)*s;ox=Math.min(0,Math.max(cw-B.IW*s,ox));oy=Math.min(0,Math.max(ch-B.IH*s,oy));
@@ -25952,7 +25952,7 @@ function drawPvp(cw,ch){
   const ov=document.getElementById('arena-bg-out');if(!ov)return;
   forestOuter(ov,W,H,k);
  }
- function draw(){
+ function draw0(){
   if(!TS||!DC)return;
   const cw=lay.clientWidth||box.clientWidth,ch=lay.clientHeight||box.clientHeight;if(!cw||!ch)return;
   if(window.PA_ARENA_MODE==='pvp'){drawPvp(cw,ch);return;} // PVP: coliseo
@@ -26193,7 +26193,15 @@ function paintRaid(f){
   g.fillStyle=ph===1?'rgba(240,248,255,.95)':'rgba(220,235,255,.5)';g.fillRect(X,Y,1,1);
   if(ph===1){g.fillRect(X-1,Y,3,1);g.fillRect(X,Y-1,1,3);}}
 }
-window.PA_redrawArena=()=>sched(); // lo llama setArenaMode al cambiar de modo
+// Pinta el mapa YA (no en el siguiente fotograma) y, si el lienzo todavía tiene el de otra arena (o el diseño procedural del arranque),
+// lo oculta hasta que el mapa correcto esté dibujado: así no hay fogonazo de la arena anterior antes de la cuenta atrás.
+function draw(){
+ draw0();
+ const m=window.PA_ARENA_MODE,want=m==='pvp'?'pvp':m==='raids'?'bio:lava':m==='classic'?'bio:'+(window.PA_BIOME||'forest'):'classic';
+ const have=cv.dataset.mode==='bio'?'bio:'+cv.dataset.bio:cv.dataset.mode;
+ cv.style.visibility=(have===want)?'':'hidden';
+}
+window.PA_redrawArena=()=>{try{draw();}catch(e){}sched();}; // lo llama setArenaMode / pickBiome al cambiar de modo o bioma
 
 function paintFalls(f){
  if(raid){paintRaid(f);return;}
@@ -28650,7 +28658,8 @@ window.PAFriends = (function () {
         let t = null, lv = 1; try { t = SaveSys.read('pokearena.trainer', null); } catch (e) {}
         try { lv = lvlInfo(lvlSync().total || 0).level; } catch (e) {}
         let hof = []; try { hof = PAProfile.hofList(); } catch (e) {}
-        return { name: (t && t.name) || '', avatar: (t && t.avatar) || '', lvl: lv, hof };
+        let medals = []; try { medals = PALiga.medals(); } catch (e) {}
+        return { name: (t && t.name) || '', avatar: (t && t.avatar) || '', lvl: lv, hof, medals };
     }
     async function ping(force) {
         if (!canNet() || pinging) return acc;
@@ -28683,7 +28692,7 @@ window.PAFriends = (function () {
         while (hof.length < 6) hof.push(null);
         const slots = hof.map(m => (m && SPR_OK.test(m.s || '')) ? '<span class="pf-slot on"><img src="' + esc(m.s) + '" alt="" draggable="false">' + (m.sh ? '<u>✦</u>' : '') + '<span>' + esc(m.n) + '</span></span>' : '<span class="pf-slot"></span>').join('');
         return '<div class="fr-req" data-acc="' + esc(r.acc) + '"><div class="pf-body"><div class="pf-me"><div class="pf-av"><div class="pic">' + (src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
-            + '<div class="pf-lv"><small>NIVEL</small><b>' + (r.lvl || 1) + '</b></div><div class="pf-name">' + esc(r.name || 'Entrenador') + '</div><div class="pf-xp">ID ' + esc(r.acc) + '</div></div>'
+            + '<div class="pf-lv"><small>NIVEL</small><b>' + (r.lvl || 1) + '</b></div><div class="pf-name">' + esc(r.name || 'Entrenador') + '</div><div class="pf-xp">ID ' + esc(r.acc) + '</div>' + (window.PALiga ? PALiga.medalsHtmlOf(r.medals) : '') + '</div>'
             + '<div class="pf-hof"><div class="pf-grid">' + slots + '</div></div></div>'
             + '<div class="fr-acts"><button type="button" class="fr-btn ok" data-act="acc">ACEPTAR</button><button type="button" class="fr-btn no" data-act="rej">RECHAZAR</button></div></div>';
     }
@@ -28715,7 +28724,7 @@ window.PAFriends = (function () {
         el.innerHTML = '<div class="pf-panel"><div class="pf-head"><b>PERFIL</b><button class="pf-x" type="button" aria-label="Cerrar">✕</button></div>'
             + '<div class="pf-body"><div class="pf-me"><div class="pf-av"><div class="pic">' + (src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<b>?</b>') + '</div></div>'
             + '<div class="pf-lv"><small>NIVEL</small><b>' + (p.lvl || 1) + '</b></div><div class="pf-name">' + esc(p.name || 'Entrenador') + '</div>'
-            + '<div class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</div></div>'
+            + '<div class="fr-st' + (st.on ? ' on' : '') + '">' + esc(st.txt) + '</div>' + (window.PALiga ? PALiga.medalsHtmlOf(p.medals) : '') + '</div>'
             + '<div class="pf-hof"><div class="pf-grid">' + slots + '</div></div></div></div>';
         root.appendChild(el); sfx('pop');
         el.querySelectorAll('.pf-slot img').forEach(fit);
@@ -29885,6 +29894,11 @@ window.PAPvp = (function () {
 #pvp-vs.th-fire .vs-half.b{background:linear-gradient(340deg,#7c2d12,#ea580c 55%,#f59e0b)}
 #pvp-vs .vs-embers{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden}
 #pvp-vs .vs-embers i{position:absolute;bottom:-8px;width:5px;height:5px;border-radius:50%;background:#fde68a;box-shadow:0 0 9px 2px rgba(251,146,60,.85);opacity:0;animation:lgEmber linear infinite}
+
+/* discurso final sobre la arena: se ve el campo de combate detrás */
+#lg-dlg.over,#lg-dlg.th-fire.over{background:linear-gradient(180deg,rgba(5,10,24,.12),rgba(5,10,24,.5) 70%)}
+#lg-dlg.th-fire.over{background:linear-gradient(180deg,rgba(40,14,6,.14),rgba(40,14,6,.55) 70%)}
+#lg-dlg.over .dl-rays{opacity:.45}
 </style>
 <script id="pa-liga">
 /* ===== LIGA: torre de combates contra la IA. Reutiliza el sistema del PVP (PAPvp.startBot). ===== */
@@ -29952,12 +29966,13 @@ window.PALiga = (function () {
     const SLOTS = 4; // pisos visibles de la torre
     const medals = () => { let m = []; try { m = SaveSys.read(KEY, []); } catch (e) {} return Array.isArray(m) ? m : []; };
     const hasMedal = id => medals().indexOf(id) >= 0;
-    function addMedal(id) { const m = medals(); if (m.indexOf(id) < 0) { m.push(id); try { SaveSys.write(KEY, m); } catch (e) {} } }
+    function addMedal(id) { const m = medals(); if (m.indexOf(id) < 0) { m.push(id); try { SaveSys.write(KEY, m); } catch (e) {} try { window.PAFriends && PAFriends.ping(true); } catch (e) {} } }
     const medalSrc = id => { const L = LEVELS.find(l => l.medal === id); return L ? L.medalImg : IMG.medal; };
-    function medalsHtml() {
-        const m = medals(); if (!m.length) return '';
+    function medalsHtmlOf(ids) {
+        const m = (Array.isArray(ids) ? ids : []).filter(id => LEVELS.some(l => l.medal === id)); if (!m.length) return '';
         return '<div class="pf-medals" aria-label="Medallas">' + m.map(id => '<img alt="Medalla" title="Medalla" draggable="false" src="' + medalSrc(id) + '">').join('') + '</div>';
     }
+    function medalsHtml() { return medalsHtmlOf(medals()); }
     const curIndex = () => { const i = LEVELS.findIndex(l => !hasMedal(l.medal)); return i < 0 ? LEVELS.length : i; };
 
     // ---------- diálogo ----------
@@ -30069,19 +30084,20 @@ window.PALiga = (function () {
     }
     function finishFight(lv, win) {
         const sy = $('lg-say'); if (sy) sy.remove();
-        PAPvp.leave(); // vuelve al menú principal
-        setTimeout(() => {
-            if (win) {
-                dialog(lv, lv.win, () => { const first = !hasMedal(lv.medal); addMedal(lv.medal); medalCeremony(lv, () => open()); }, true);
-            } else {
-                const r = document.createElement('div'); r.id = 'lg-res';
-                r.innerHTML = '<div class="rs"><h2>DERROTA</h2><div class="rs-t"><b>' + esc(lv.name) + ':</b> ' + esc(lv.lose) + '</div><button type="button" data-a="again">REINTENTAR</button><button type="button" class="g" data-a="menu">VOLVER A LA LIGA</button></div>';
-                document.body.appendChild(r); sfx('pop');
-                r.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; sfx('tick'); r.remove(); if (b.dataset.a === 'again') { open(); setTimeout(() => { const g = document.querySelector('#lg-tw .lg-go'); if (g && !g.disabled) g.click(); }, 60); } else open(); });
-            }
-        }, 450);
+        // el combate ya terminó pero la arena sigue a la vista: el líder habla AQUÍ y solo después se vuelve al menú
+        if (win) {
+            dialog(lv, lv.win, () => { addMedal(lv.medal); PAPvp.leave(); setTimeout(() => medalCeremony(lv, () => open()), 450); }, true);
+        } else {
+            dialog(lv, [{ t: lv.lose, fx: '' }], () => { PAPvp.leave(); setTimeout(() => defeat(lv), 450); }, true);
+        }
     }
-    return { open, medalsHtml, medals, _levels: LEVELS };
+    function defeat(lv) {
+        const r = document.createElement('div'); r.id = 'lg-res';
+        r.innerHTML = '<div class="rs"><h2>DERROTA</h2><button type="button" data-a="again">REINTENTAR</button><button type="button" class="g" data-a="menu">VOLVER A LA LIGA</button></div>';
+        document.body.appendChild(r); sfx('pop');
+        r.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; sfx('tick'); r.remove(); if (b.dataset.a === 'again') { open(); setTimeout(() => { const g = document.querySelector('#lg-tw .lg-go'); if (g && !g.disabled) g.click(); }, 60); } else open(); });
+    }
+    return { open, medalsHtml, medalsHtmlOf, medals, _levels: LEVELS };
 })();
 </script>
 <style id="pa-raidfx-css">

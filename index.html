@@ -7547,6 +7547,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // los 4 sprites estáticos); 3) si es una forma sin sprite, lo mismo con la especie base. null = no hay más.
         const SPR_NEXT_RE = /^(.*\/black-white\/)(?:animated\/)?((?:back\/)?(?:shiny\/)?)(\d+)\.(gif|png)$/;
         const SPR_HOME = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/';
+        const SPR_NOSTATIC = { 10264: 1, 10265: 1, 10266: 1, 10267: 1, 10268: 1, 10269: 1, 10270: 1, 10271: 1, 10301: 1, 10327: 1, 10328: 1, 10329: 1 }; // ids sin black-white/<id>.png
         function sprNext(u) {
             const hm = /^(.*\/other\/home\/)(shiny\/)?(\d+)\.png$/.exec(String(u || ''));
             if (hm) { const b2 = SPR_FORM_BASE[hm[3]]; return b2 ? hm[1] + (hm[2] || '') + b2 + '.png' : null; }
@@ -7554,6 +7555,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const root = m[1], pre = m[2], id = m[3];
             if (m[4] === 'gif') return root + pre + id + '.png';
             const b = SPR_FORM_BASE[id]; if (b) return root + 'animated/' + pre + b + '.gif';
+            if (!SPR_NOSTATIC[id]) return null; // el sprite estático Gen V existe: NUNCA se cambia por el render moderno de HOME (un fallo puntual de red se reintenta)
             return SPR_HOME + (pre.indexOf('shiny') >= 0 ? 'shiny/' : '') + id + '.png'; // sin sprite estático: render de HOME
         }
         function unshinyUrl(u) { return u ? sprSet(u, isBackSpr(u), false) : u; }
@@ -7575,9 +7577,34 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (d && d.set) Object.defineProperty(HTMLImageElement.prototype, 'src', { get: d.get, set(v) { v = sprResolve(sprNorm(v)); if (typeof v === 'string' && d.get.call(this) === v && this.complete) return; d.set.call(this, v); }, configurable: true, enumerable: true });
             document.addEventListener('error', e => { // sprite que no carga -> siguiente de la cadena (ver sprNext)
                 const im = e.target; if (!(im instanceof HTMLImageElement)) return;
-                sprBad[im.src] = true;
-                const n = sprNext(im.src); if (n) d.set.call(im, sprResolve(n));
+                const src0 = im.src.split('?')[0];
+                if (/\/black-white\/(?:back\/|shiny\/)*\d+\.png$/.test(src0) && (im.__sr || 0) < 2) { // estático Gen V: reintenta antes de rendirse (no cae al render moderno)
+                    const k = im.__sr = (im.__sr || 0) + 1; setTimeout(() => { if (im.isConnected && im.src.split('?')[0] === src0) d.set.call(im, src0 + '?r=' + k); }, 1200 * k); return;
+                }
+                sprBad[src0] = true;
+                const n = sprNext(src0); if (n) d.set.call(im, sprResolve(n));
             }, true);
+            // Respiración: los sprites ESTÁTICOS (.png: sin versión animada) se mueven suavemente para no desentonar con los GIF animados.
+            // Usa las propiedades independientes scale/translate: se componen con cualquier transform que ya tenga la imagen (volteos, giros...).
+            try {
+                const sb = document.createElement('style');
+                sb.textContent = ':where(.spr-breathe){transform-origin:50% 100%}.spr-breathe{animation:sprBreathe var(--sb-t,3.4s) ease-in-out var(--sb-d,0s) infinite}'
+                    + '@keyframes sprBreathe{0%,100%{scale:1 1;translate:0 0}50%{scale:.982 1.04;translate:0 -.5%}}'
+                    + '@media (prefers-reduced-motion:reduce){.spr-breathe{animation:none}}';
+                document.head.appendChild(sb);
+                const STAT = /\/sprites\/pokemon\/[^?#]*\.png(?:[?#]|$)/;
+                document.addEventListener('load', e => {
+                    const im = e.target; if (!(im instanceof HTMLImageElement)) return;
+                    if (im.style.visibility === 'hidden') im.style.visibility = '';
+                    if (STAT.test(im.currentSrc || im.src)) {
+                        if (!im.classList.contains('spr-breathe')) {
+                            im.style.setProperty('--sb-d', (-Math.random() * 3.4).toFixed(2) + 's');
+                            im.style.setProperty('--sb-t', (3 + Math.random() * 1.2).toFixed(2) + 's');
+                            im.classList.add('spr-breathe');
+                        }
+                    } else if (im.classList.contains('spr-breathe')) im.classList.remove('spr-breathe');
+                }, true);
+            } catch (e) {}
         })();
 
         const viewport = document.getElementById('game-container');
@@ -28032,7 +28059,7 @@ const DV = (() => {
         sfx('close'); renderSaves();
         try { await PAGlobal.refresh(); if (view === 'list' && tab === 'saves') renderSaves(); } catch (e) {}
     }
-    function spriteImg(u) { return u ? '<img src="' + esc(u) + '" alt="" loading="lazy" onerror="var n=sprNext(this.src);if(n)this.src=n;else this.style.visibility=\'hidden\'">' : ''; }
+    function spriteImg(u) { return u ? '<img src="' + esc(u) + '" alt="" loading="lazy" onerror="var u=this.src.split(\'?\')[0],n=sprNext(u);if(n)this.src=n;else if(!/black-white\\/(?:back\\/|shiny\\/)*\\d+\\.png$/.test(u))this.style.visibility=\'hidden\'">' : ''; }
     // fila de un pokémon en el detalle de una arena (tocable: abre su ficha)
     function ordRow(cls, n, p, line1, line2, tag) {
         return '<button type="button" class="dv-ord ' + cls + '" data-pid="' + esc(p.id) + '"><span class="n">' + n + '</span><span class="sp">' + spriteImg(p.sprite) + '</span><span class="nm"><b>' + esc(line1) + '</b><span>' + line2 + '</span></span>'

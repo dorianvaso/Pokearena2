@@ -713,24 +713,6 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             filter: drop-shadow(0 0 6px #fff9c4);
         }
 
-        /* Ditto (Impostor): gelatina violeta que lo envuelve y un anillo expansivo (distinta a la animación de evolución) */
-        .dit-goo { position: absolute; left: 50%; top: 52%; width: 95%; aspect-ratio: 1; margin: 0; pointer-events: none; z-index: 7; opacity: 0;
-            background: radial-gradient(circle at 35% 30%, #f5d0fe 0%, #c084fc 45%, #9333ea 100%); border-radius: 50%;
-            box-shadow: 0 0 14px rgba(192, 132, 252, 0.9); animation: ditGoo 0.9s ease-in-out forwards; }
-        .dit-ring { position: absolute; left: 50%; top: 52%; width: 60%; aspect-ratio: 1; pointer-events: none; z-index: 6; border: 3px solid #e9d5ff; border-radius: 50%; opacity: 0;
-            animation: ditRing 0.9s ease-out forwards; }
-        @keyframes ditGoo {
-            0%   { transform: translate(-50%, -50%) scale(0.2, 0.2); opacity: 0; }
-            20%  { transform: translate(-50%, -50%) scale(1.15, 0.8); opacity: 0.95; border-radius: 50% 45% 55% 50%; }
-            40%  { transform: translate(-50%, -50%) scale(0.85, 1.2); opacity: 1; border-radius: 45% 55% 50% 50%; }
-            60%  { transform: translate(-50%, -50%) scale(1.2, 0.85); opacity: 1; border-radius: 55% 45% 50% 50%; }
-            80%  { transform: translate(-50%, -50%) scale(0.95, 1.05); opacity: 0.9; }
-            100% { transform: translate(-50%, -50%) scale(0.2, 0.2); opacity: 0; }
-        }
-        @keyframes ditRing {
-            0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0.9; }
-            100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
-        }
         @keyframes evoGlowPulse {
             0%, 100% {
                 filter: brightness(1) saturate(1) drop-shadow(0 0 0px #fff);
@@ -15088,6 +15070,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Se llama al declarar el ganador: prepara los datos del resumen y entrega las recompensas (se guardan al momento).
         function aeBegin(w, raidWin, livesLeft) {
             aeClear();
+            try { combatants.forEach(dittoRevert); } catch (e) {}
             combatants.forEach(c => { try { aeTallySnap(c); } catch (e) {} });
             aeTallySnap(w);
             const list = Object.keys(arenaTally).map(k => arenaTally[k]);
@@ -16069,6 +16052,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         }
 
         function capThrow(c) {
+            try { dittoRevert(c); } catch (e) {} // Ditto transformado se captura como Ditto
             const ballId = capSelBall, item = capBallItem(ballId);
             const calc = capCalc(c, ballId);
             // Se decide el resultado al lanzar: 4 comprobaciones (3 sacudidas + clic final), cada una con prob. P^(1/4) → éxito total = P.
@@ -22267,6 +22251,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function dittoTransform(c, target) {
             if (!c.wrapper || !target || !target.wrapper || c.fainted) return false;
             const ownHp = c.stats.hp;
+            if (!c.dittoOrig) { const im0 = c.wrapper.querySelector('.pokemon img'); c.dittoOrig = { stats: c.stats, baseStats: c.baseStats, attackKey: c.attackKey, ability: c.ability, name: c.name, dexName: c.dexName, sound: c.sound, src: c.currentFrontSrc || (im0 && im0.src) || '', scale: im0 ? im0.style.transform : '', size: [...c.wrapper.classList].find(k => /^size-/.test(k)) || 'size-xs' }; }
             c.morphedFrom = target.id;
             c.stats = Object.assign({}, target.stats, { hp: ownHp }); // los PS no se copian (como en los juegos)
             c.baseStats = Object.assign({}, target.baseStats || target.stats, { hp: (c.baseStats && c.baseStats.hp) || ownHp });
@@ -22277,14 +22262,20 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             c.speedStage = 0; c.attackStage = 0; c.defenseDropStacks = 0; try { updateDefenseDebuffBadge(c); } catch (e) {}
             try { showAbilityNotification(c, 'impostor', '¡Se transforma en ' + target.name + '!'); } catch (e) {}
             logMessage(`¡Ditto se transformó en ${target.name}!`, 'ability');
-            // animación propia
-            const w = c.wrapper;
-            const goo = document.createElement('div'); goo.className = 'dit-goo';
-            const ring = document.createElement('div'); ring.className = 'dit-ring';
-            w.appendChild(goo); w.appendChild(ring);
-            setTimeout(() => { goo.remove(); ring.remove(); }, 1000);
-            try { spawnSparks(c.x + 35, c.y + 35, '#d8b4fe', 12); } catch (e) {}
-            try { playAttackCry(c); } catch (e) {}
+            // animación: la misma de evolución (silueta blanca brillante + chispas), pero corta (~0,9 s)
+            const w = c.wrapper, DIT_MS = 900;
+            c.isEvolving = true; c.isChasing = false; c.chaseTargetId = null;
+            w.classList.add('evolving');
+            try { playEvolutionRiseSound(DIT_MS); } catch (e) {}
+            const sp = setInterval(() => { if (!c.fainted) spawnSparks(c.x + 35, c.y + 35, '#fff9c4', 3); }, 150);
+            activeTimers.push(sp);
+            activeTimers.push(setTimeout(() => clearInterval(sp), DIT_MS - 100));
+            activeTimers.push(setTimeout(() => {
+                w.classList.remove('evolving'); c.isEvolving = false;
+                if (c.fainted) return;
+                try { spawnBurst(c.x + 35, c.y + 35, '#ffffff'); spawnSparks(c.x + 35, c.y + 35, '#ffffff', 10); playEvolutionChime(); } catch (e) {}
+                if (c.sound) c.sound.play().catch(() => {});
+            }, DIT_MS));
             const tImg = target.wrapper.querySelector('.pokemon img');
             let src = target.currentFrontSrc || (tImg && tImg.src) || '';
             if (src && isBackSpr(src)) src = sprSet(src, false, false);
@@ -22298,8 +22289,23 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 if (tSize) { SIZE_KEYS.forEach(k => c.wrapper.classList.remove('size-' + k)); c.wrapper.classList.add(tSize); }
                 applyBodySize(c.wrapper, target.name, c.hf);
                 const nt = c.wrapper.querySelector('.pokemon-name-tag'); if (nt) nt.textContent = target.name;
-            }, 430);
+            }, 450);
             return true;
+        }
+
+        // Devuelve a Ditto a su verdadera forma (al capturarlo o al declarar ganador): siempre se captura/registra como Ditto.
+        function dittoRevert(c) {
+            if (!c || c.id !== 'ditto' || !c.dittoOrig) return;
+            const o = c.dittoOrig; c.dittoOrig = null; c.morphedFrom = null;
+            c.stats = Object.assign({}, o.stats, { hp: c.stats.hp }); c.baseStats = o.baseStats; c.attackKey = o.attackKey; c.ability = o.ability;
+            c.name = o.name; c.dexName = o.dexName; c.sound = o.sound;
+            try {
+                const im = c.wrapper && c.wrapper.querySelector('.pokemon img');
+                if (im && o.src) { im.onerror = null; im.src = sprFor(c, unshinyUrl(isBackSpr(o.src) ? sprSet(o.src, false, false) : o.src)); im.alt = o.name; im.style.transform = o.scale || ''; c.currentFrontSrc = im.src; c.vFacing = 'front'; try { syncFrontToBackScale(c); } catch (e) {} }
+                SIZE_KEYS.forEach(k => c.wrapper.classList.remove('size-' + k)); c.wrapper.classList.add(o.size);
+                applyBodySize(c.wrapper, o.name, c.hf);
+                const nt = c.wrapper.querySelector('.pokemon-name-tag'); if (nt) nt.textContent = o.name;
+            } catch (e) {}
         }
 
         // Intenta un nuevo ataque cuando el cooldown del combatiente se cumple.

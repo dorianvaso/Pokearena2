@@ -30657,20 +30657,17 @@ window.PAPvp = (function () {
 #lg-splash.th-dark{background:#05030a}
 #lg-splash.th-dark .sp-bg{inset:0;opacity:1;animation:none;background:radial-gradient(circle at 50% 50%,rgba(70,36,120,.55),#05030a 72%)}
 #lg-splash .sp-fog{position:absolute;inset:-20%;pointer-events:none;background:radial-gradient(ellipse at 18% 82%,rgba(150,120,210,.28),transparent 50%),radial-gradient(ellipse at 82% 70%,rgba(110,80,180,.25),transparent 55%);animation:lgFogDrift 8s ease-in-out infinite alternate}
-#lg-splash .sp-coin{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#e0b341 45%,#8a5a12);box-shadow:0 0 34px rgba(224,179,65,.85),inset 0 0 0 5px rgba(255,255,255,.28),inset 0 0 0 10px rgba(120,70,10,.5);animation:lgCoin 1.1s cubic-bezier(.3,.6,.4,1) both,lgCoinOut .25s 1.1s ease-in forwards}
-@keyframes lgCoin{0%{transform:perspective(520px) translateY(62vh) rotateX(0) scale(.6);opacity:0}15%{opacity:1}55%{transform:perspective(520px) translateY(-20vh) rotateX(900deg) scale(1.18)}85%{transform:perspective(520px) translateY(2vh) rotateX(1620deg) scale(1)}100%{transform:perspective(520px) translateY(0) rotateX(1800deg) scale(1);opacity:1}}
-@keyframes lgCoinOut{to{opacity:0;transform:perspective(520px) scale(1.7)}}
 #lg-splash .sp-sl{position:absolute;left:-20%;width:140%;height:6px;top:50%;background:linear-gradient(90deg,transparent,#fff 20%,#e0b341 50%,#fff 80%,transparent);box-shadow:0 0 18px #fff;opacity:0;transform:rotate(-24deg) scaleX(0);animation:lgSlash .4s var(--d) cubic-bezier(.2,.9,.3,1) both}
-#lg-splash .sp-sl.a{--d:1.1s;margin-top:-11vh}
-#lg-splash .sp-sl.b{--d:1.2s}
-#lg-splash .sp-sl.c{--d:1.3s;margin-top:11vh}
+#lg-splash .sp-sl.a{--d:.2s;margin-top:-11vh}
+#lg-splash .sp-sl.b{--d:.3s}
+#lg-splash .sp-sl.c{--d:.4s;margin-top:11vh}
 @keyframes lgSlash{0%{transform:rotate(-24deg) scaleX(0);opacity:1}55%{transform:rotate(-24deg) scaleX(1);opacity:1}100%{transform:rotate(-24deg) scaleX(1);opacity:0}}
-#lg-splash.th-dark .sp-band{background:linear-gradient(90deg,#0b0614,#2a1747 38%,#4c2a85 55%,#2a1747 72%,#0b0614);box-shadow:0 0 70px rgba(139,92,246,.7),0 0 0 2px rgba(224,179,65,.5);animation:lgSplBand .45s 1.2s cubic-bezier(.2,.9,.3,1) both}
+#lg-splash.th-dark .sp-band{background:linear-gradient(90deg,#0b0614,#2a1747 38%,#4c2a85 55%,#2a1747 72%,#0b0614);box-shadow:0 0 70px rgba(139,92,246,.7),0 0 0 2px rgba(224,179,65,.5);animation:lgSplBand .45s .3s cubic-bezier(.2,.9,.3,1) both}
 #lg-splash.th-dark .sp-nm{animation:none;white-space:nowrap;font-size:clamp(2.2rem,13.2vw,5.4rem);color:#fffbeb;text-shadow:0 5px 0 #2a1747,0 0 30px rgba(224,179,65,.9);letter-spacing:.08em}
-#lg-splash.th-dark .sp-nm i{display:inline-block;font-style:inherit;opacity:0;animation:lgLet .55s calc(1.4s + var(--k) * .09s) cubic-bezier(.2,1.3,.4,1) both}
+#lg-splash.th-dark .sp-nm i{display:inline-block;font-style:inherit;opacity:0;animation:lgLet .55s calc(.55s + var(--k) * .09s) cubic-bezier(.2,1.3,.4,1) both}
 @keyframes lgLet{from{opacity:0;transform:translateY(-34px) scale(1.7);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
-#lg-splash.th-dark .sp-sub{color:#e9d5ff;text-shadow:0 2px 0 #2a1747;animation-delay:2.3s}
-#lg-splash.th-dark .sp-fl{background:#fff;animation:lgFlash .6s 1.1s ease-out forwards}
+#lg-splash.th-dark .sp-sub{color:#e9d5ff;text-shadow:0 2px 0 #2a1747;animation-delay:1.5s}
+#lg-splash.th-dark .sp-fl{background:#fff;animation:lgFlash .6s .2s ease-out forwards}
 #lg-say.th-dark{background:linear-gradient(180deg,rgba(34,20,56,.96),rgba(10,6,20,.96));border-color:#e0b341;box-shadow:0 6px 22px rgba(0,0,0,.6),0 0 18px rgba(139,92,246,.4);color:#f5f3ff}
 #lg-say.th-dark .sy-av{border-color:#e0b341;background:#1a1030}
 #lg-say.th-dark b{color:#e0b341}
@@ -30764,7 +30761,7 @@ window.PALiga = (function () {
             lose: '¡Ay, ay, ay! ¡Casi te quemas! Pero el fuego se aviva con cada derrota. ¡Vuelve cuando tu equipo arda más fuerte, que aquí te espero con la estufa encendida!'
         }
         ,{
-            id: 'grimsley', diff: 4, theme: 'dark', power: 1.25, fast: true, smart: true,
+            id: 'grimsley', diff: 4, theme: 'dark', fast: true, smart: true,
             name: 'GRIMSLEY', title: 'LÍDER DE GIMNASIO · SINIESTRO', sprite: IMG.grimsley, medal: 'eclipse', medalName: 'Medalla Eclipse', medalImg: IMG.medal4,
             team: [['pawniard', 2, 'kingambit'], ['sandile', 2, 'krookodile'], ['larvitar', 2, 'tyranitar'], ['scraggy', 1, 'scrafty'], ['sneasel', 1, 'weavile'], ['carvanha', 1, 'sharpedo']],
             lines: {
@@ -30842,12 +30839,12 @@ window.PALiga = (function () {
         const dark = lv.theme === 'dark';
         if (dark) { // Grimsley: una moneda gira en la oscuridad, tres tajos la cortan y el nombre emerge letra a letra
             const letters = String(lv.name).split('').map((ch, k) => '<i style="--k:' + k + '">' + esc(ch) + '</i>').join('');
-            el.innerHTML = '<div class="sp-bg"></div><div class="sp-fog"></div><i class="sp-coin"></i><i class="sp-sl a"></i><i class="sp-sl b"></i><i class="sp-sl c"></i><div class="sp-band"></div><div class="sp-in"><div class="sp-nm">' + letters + '</div><div class="sp-sub">' + esc(lv.title) + '</div></div><div class="sp-fl"></div>';
+            el.innerHTML = '<div class="sp-bg"></div><div class="sp-fog"></div><i class="sp-sl a"></i><i class="sp-sl b"></i><i class="sp-sl c"></i><div class="sp-band"></div><div class="sp-in"><div class="sp-nm">' + letters + '</div><div class="sp-sub">' + esc(lv.title) + '</div></div><div class="sp-fl"></div>';
         } else el.innerHTML = '<div class="sp-bg"></div><div class="sp-band"></div><div class="sp-in"><div class="sp-nm">' + esc(lv.name) + '</div><div class="sp-sub">' + esc(lv.title) + '</div></div><div class="sp-fl"></div>';
         document.body.appendChild(el);
-        if (dark) { sfx('pop'); setTimeout(() => sfx('tick'), 350); setTimeout(() => sfx('tick'), 700); setTimeout(() => sfx('go'), 1100); setTimeout(() => sfx('confirm'), 1400); } else { sfx('go'); setTimeout(() => sfx('confirm'), 280); }
+        if (dark) { sfx('pop'); setTimeout(() => sfx('go'), 200); setTimeout(() => sfx('confirm'), 500); } else { sfx('go'); setTimeout(() => sfx('confirm'), 280); }
         let gone = false; const end = () => { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => { el.remove(); done && done(); }, 320); };
-        el.addEventListener('click', end); setTimeout(end, dark ? 3700 : 2100);
+        el.addEventListener('click', end); setTimeout(end, dark ? 2900 : 2100);
     }
     // frase del líder durante el combate (cinta breve arriba)
     function say(lv, text) {

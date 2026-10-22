@@ -2370,6 +2370,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             animation: seedSpin 0.25s linear infinite;
         }
         @keyframes seedSpin { to { transform: rotate(360deg); } }
+        /* Chuzos: carámbano afilado que vuela de punta (sin girar) */
+        .seed-particle.ice-spike { width: 6px; height: 16px; border-radius: 0; clip-path: polygon(50% 0, 100% 78%, 50% 100%, 0 78%); background: linear-gradient(180deg, #ffffff 0%, #bae6fd 40%, #38bdf8 100%); box-shadow: none; animation: none; filter: drop-shadow(0 0 3px rgba(125,211,252,.95)); }
 
         @keyframes bubbleWobble {
             0% { transform: translateY(0) scale(1); }
@@ -6689,6 +6691,100 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             <div id="aurorus" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/699.gif" alt="Aurorus"></div>
         </div>
 
+
+        <!-- Sneasel -->
+        <div id="sneasel-wrapper" class="pokemon-wrapper size-ms">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Sneasel</div>
+                <div class="hp-bar-container"><div id="sneasel-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="sneasel-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="sneasel" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/215.gif" alt="Sneasel"></div>
+        </div>
+
+        <!-- Weavile -->
+        <div id="weavile-wrapper" class="pokemon-wrapper size-mb">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Weavile</div>
+                <div class="hp-bar-container"><div id="weavile-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="weavile-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="weavile" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/461.gif" alt="Weavile"></div>
+        </div>
+
+
+        <!-- Grubbin -->
+        <div id="grubbin-wrapper" class="pokemon-wrapper size-xs">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Grubbin</div>
+                <div class="hp-bar-container"><div id="grubbin-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="grubbin-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="grubbin" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/736.gif" alt="Grubbin"></div>
+        </div>
+
+        <!-- Charjabug -->
+        <div id="charjabug-wrapper" class="pokemon-wrapper size-sm">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Charjabug</div>
+                <div class="hp-bar-container"><div id="charjabug-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="charjabug-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="charjabug" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/737.gif" alt="Charjabug"></div>
+        </div>
+
+        <!-- Vikavolt -->
+        <div id="vikavolt-wrapper" class="pokemon-wrapper size-mb">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Vikavolt</div>
+                <div class="hp-bar-container"><div id="vikavolt-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="vikavolt-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="vikavolt" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/738.gif" alt="Vikavolt"></div>
+        </div>
+
+
+        <!-- Skarmory -->
+        <div id="skarmory-wrapper" class="pokemon-wrapper size-md">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Skarmory</div>
+                <div class="hp-bar-container"><div id="skarmory-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="skarmory-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="skarmory" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/227.gif" alt="Skarmory"></div>
+        </div>
+
+
+        <!-- Honedge -->
+        <div id="honedge-wrapper" class="pokemon-wrapper size-sm">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Honedge</div>
+                <div class="hp-bar-container"><div id="honedge-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="honedge-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="honedge" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/679.gif" alt="Honedge"></div>
+        </div>
+
+        <!-- Doublade -->
+        <div id="doublade-wrapper" class="pokemon-wrapper size-sm">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Doublade</div>
+                <div class="hp-bar-container"><div id="doublade-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="doublade-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="doublade" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/680.gif" alt="Doublade"></div>
+        </div>
+
+        <!-- Aegislash -->
+        <div id="aegislash-wrapper" class="pokemon-wrapper size-md">
+            <div class="pokemon-hud">
+                <div class="pokemon-name-tag">Aegislash</div>
+                <div class="hp-bar-container"><div id="aegislash-hp" class="hp-bar"></div></div>
+                <div class="xp-bar-container"><div id="aegislash-xp" class="xp-bar"></div></div>
+            </div>
+            <div id="aegislash" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/681.gif" alt="Aegislash"></div>
+        </div>
+
         <!-- Larvitar -->
         <div id="larvitar-wrapper" class="pokemon-wrapper size-ms">
             <div class="pokemon-hud">
@@ -7426,6 +7522,15 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     <audio id="snd-archeops" src="https://play.pokemonshowdown.com/audio/cries/archeops.mp3"></audio>
     <audio id="snd-amaura" src="https://play.pokemonshowdown.com/audio/cries/amaura.mp3"></audio>
     <audio id="snd-aurorus" src="https://play.pokemonshowdown.com/audio/cries/aurorus.mp3"></audio>
+    <audio id="snd-sneasel" src="https://play.pokemonshowdown.com/audio/cries/sneasel.mp3"></audio>
+    <audio id="snd-weavile" src="https://play.pokemonshowdown.com/audio/cries/weavile.mp3"></audio>
+    <audio id="snd-grubbin" src="https://play.pokemonshowdown.com/audio/cries/grubbin.mp3"></audio>
+    <audio id="snd-charjabug" src="https://play.pokemonshowdown.com/audio/cries/charjabug.mp3"></audio>
+    <audio id="snd-vikavolt" src="https://play.pokemonshowdown.com/audio/cries/vikavolt.mp3"></audio>
+    <audio id="snd-skarmory" src="https://play.pokemonshowdown.com/audio/cries/skarmory.mp3"></audio>
+    <audio id="snd-honedge" src="https://play.pokemonshowdown.com/audio/cries/honedge.mp3"></audio>
+    <audio id="snd-doublade" src="https://play.pokemonshowdown.com/audio/cries/doublade.mp3"></audio>
+    <audio id="snd-aegislash" src="https://play.pokemonshowdown.com/audio/cries/aegislash.mp3"></audio>
     <audio id="snd-larvitar" src="https://play.pokemonshowdown.com/audio/cries/larvitar.mp3"></audio>
     <audio id="snd-pupitar" src="https://play.pokemonshowdown.com/audio/cries/pupitar.mp3"></audio>
     <audio id="snd-fomantis" src="https://play.pokemonshowdown.com/audio/cries/fomantis.mp3"></audio>
@@ -7526,7 +7631,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
            Todas las especies y formas (también las posteriores a la 5.ª generación) tienen su versión animated en esa carpeta. */
         const SPR_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
         const SPR_GENV = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/';
-        const SPR_DEX = {"amaura":698,"aurorus":699,"archen":566,"archeops":567,"miltank":241,"gible":443,"gabite":444,"garchomp":445,"teddiursa":216,"ursaring":217,"ursaluna":901,"horsea":116,"seadra":117,"kingdra":230,"sandile":551,"krokorok":552,"krookodile":553,"tynamo":602,"eelektrik":603,"eelektross":604,"gligar":207,"gliscor":472,"vullaby":629,"mandibuzz":630,"basculin":550,"basculegion":902,"leafeon":470,"glaceon":471,"sylveon":700,"murkrow":198,"honchkrow":430,"trapinch":328,"vibrava":329,"flygon":330,"espeon":196,"umbreon":197,"eevee":133,"vaporeon":134,"jolteon":135,"flareon":136,"drifloon":425,"drifblim":426,"scraggy":559,"scrafty":560,"snubbull":209,"granbull":210,"bulbasaur":1,"ivysaur":2,"venusaur":3,"charmander":4,"charmeleon":5,"charizard":6,"squirtle":7,"wartortle":8,"blastoise":9,"caterpie":10,"metapod":11,"butterfree":12,"weedle":13,"kakuna":14,"beedrill":15,"spearow":21,"fearow":22,"pikachu":25,"raichu":26,"vulpix":37,"ninetales":38,"mankey":56,"primeape":57,"abra":63,"kadabra":64,"alakazam":65,"geodude":74,"graveler":75,"golem":76,"slowpoke":79,"slowbro":80,"gastly":92,"haunter":93,"gengar":94,"cubone":104,"marowak":105,"mareep":179,"flaaffy":180,"ampharos":181,"slowking":199,"girafarig":203,"riolu":447,"lucario":448,"drilbur":529,"excadrill":530,"pawniard":624,"bisharp":625,"mimikyu":778,"rookidee":821,"corvisquire":822,"corviknight":823,"maschiff":942,"mabosstiff":943,"tinkatink":957,"tinkatuff":958,"tinkaton":959,"larvitar":246,"pupitar":247,"tyranitar":248,"munchlax":446,"snorlax":143,"buneary":427,"lopunny":428,"joltik":595,"galvantula":596,"farigiraf":981,"heracross":214,"hawlucha":701,"relicanth":369,"lapras":131,"cranidos":408,"rampardos":409,"fomantis":753,"lurantis":754,"kingambit":983,"toxel":848,"meowth":52,"persian":53,"rockruff":744,"lycanroc-midnight":10126,"lycanroc-dusk":10152,"wimpod":767,"starly":396,"staravia":397,"staraptor":398,"larvesta":636,"volcarona":637,"inkay":686,"malamar":687,"golisopod":768,"mareanie":747,"greavard":971,"houndstone":972,"ferroseed":597,"ferrothorn":598,"wingull":278,"pelipper":279,"magnemite":81,"magneton":82,"magnezone":462,"shroomish":285,"breloom":286,"morelull":755,"shiinotic":756,"darumaka":554,"darmanitan":555,"turtonator":776,"milcery":868,"alcremie":869,"toxapex":748,"lycanroc":745,"toxtricity":849,"butterfree-gmax":10198,"charizard-gmax":10196,"toxtricity-lowkey":10184,"mimikyu-busted":10143}; // identificador de especie/forma -> nº de Pokédex (o id de forma de PokeAPI)
+        const SPR_DEX = {"honedge":679,"doublade":680,"aegislash":681,"skarmory":227,"grubbin":736,"charjabug":737,"vikavolt":738,"sneasel":215,"weavile":461,"amaura":698,"aurorus":699,"archen":566,"archeops":567,"miltank":241,"gible":443,"gabite":444,"garchomp":445,"teddiursa":216,"ursaring":217,"ursaluna":901,"horsea":116,"seadra":117,"kingdra":230,"sandile":551,"krokorok":552,"krookodile":553,"tynamo":602,"eelektrik":603,"eelektross":604,"gligar":207,"gliscor":472,"vullaby":629,"mandibuzz":630,"basculin":550,"basculegion":902,"leafeon":470,"glaceon":471,"sylveon":700,"murkrow":198,"honchkrow":430,"trapinch":328,"vibrava":329,"flygon":330,"espeon":196,"umbreon":197,"eevee":133,"vaporeon":134,"jolteon":135,"flareon":136,"drifloon":425,"drifblim":426,"scraggy":559,"scrafty":560,"snubbull":209,"granbull":210,"bulbasaur":1,"ivysaur":2,"venusaur":3,"charmander":4,"charmeleon":5,"charizard":6,"squirtle":7,"wartortle":8,"blastoise":9,"caterpie":10,"metapod":11,"butterfree":12,"weedle":13,"kakuna":14,"beedrill":15,"spearow":21,"fearow":22,"pikachu":25,"raichu":26,"vulpix":37,"ninetales":38,"mankey":56,"primeape":57,"abra":63,"kadabra":64,"alakazam":65,"geodude":74,"graveler":75,"golem":76,"slowpoke":79,"slowbro":80,"gastly":92,"haunter":93,"gengar":94,"cubone":104,"marowak":105,"mareep":179,"flaaffy":180,"ampharos":181,"slowking":199,"girafarig":203,"riolu":447,"lucario":448,"drilbur":529,"excadrill":530,"pawniard":624,"bisharp":625,"mimikyu":778,"rookidee":821,"corvisquire":822,"corviknight":823,"maschiff":942,"mabosstiff":943,"tinkatink":957,"tinkatuff":958,"tinkaton":959,"larvitar":246,"pupitar":247,"tyranitar":248,"munchlax":446,"snorlax":143,"buneary":427,"lopunny":428,"joltik":595,"galvantula":596,"farigiraf":981,"heracross":214,"hawlucha":701,"relicanth":369,"lapras":131,"cranidos":408,"rampardos":409,"fomantis":753,"lurantis":754,"kingambit":983,"toxel":848,"meowth":52,"persian":53,"rockruff":744,"lycanroc-midnight":10126,"lycanroc-dusk":10152,"wimpod":767,"starly":396,"staravia":397,"staraptor":398,"larvesta":636,"volcarona":637,"inkay":686,"malamar":687,"golisopod":768,"mareanie":747,"greavard":971,"houndstone":972,"ferroseed":597,"ferrothorn":598,"wingull":278,"pelipper":279,"magnemite":81,"magneton":82,"magnezone":462,"shroomish":285,"breloom":286,"morelull":755,"shiinotic":756,"darumaka":554,"darmanitan":555,"turtonator":776,"milcery":868,"alcremie":869,"toxapex":748,"lycanroc":745,"toxtricity":849,"butterfree-gmax":10198,"charizard-gmax":10196,"toxtricity-lowkey":10184,"mimikyu-busted":10143}; // identificador de especie/forma -> nº de Pokédex (o id de forma de PokeAPI)
         const SPR_FORM_BASE = {"10248": 902, "10184": 849, "10126": 745, "10152": 745, "10143": 778, "10198": 12}; // si un id de forma no carga, se usa el sprite de la especie base
         function pokeSpriteUrl(slug, kind) { // kind: 'front' | 'back' | 'shiny' | 'backshiny'
             const id = SPR_DEX[slug]; if (!id) return SPR_GENV + slug + '.gif';
@@ -7751,6 +7856,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             larvitar: { hp: 50, attack: 64, defense: 50, spAttack: 45, spDefense: 50, speed: 41, type: 'rock', type2: 'ground' },
             archen: { hp: 55, attack: 112, defense: 45, spAttack: 74, spDefense: 45, speed: 70, type: 'rock', type2: 'flying' },
             amaura: { hp: 77, attack: 59, defense: 50, spAttack: 67, spDefense: 63, speed: 46, type: 'rock', type2: 'ice' },
+            sneasel: { hp: 55, attack: 95, defense: 55, spAttack: 35, spDefense: 75, speed: 115, type: 'dark', type2: 'ice' },
+            grubbin: { hp: 47, attack: 62, defense: 45, spAttack: 55, spDefense: 45, speed: 46, type: 'bug' },
+            skarmory: { hp: 65, attack: 80, defense: 140, spAttack: 40, spDefense: 70, speed: 70, type: 'steel', type2: 'flying' },
+            honedge: { hp: 45, attack: 80, defense: 100, spAttack: 35, spDefense: 37, speed: 28, type: 'steel', type2: 'ghost' },
             munchlax: { hp: 135, attack: 85, defense: 40, spAttack: 40, spDefense: 85, speed: 5, type: 'normal' },
             miltank: { hp: 95, attack: 80, defense: 105, spAttack: 40, spDefense: 70, speed: 100, type: 'normal' },
             joltik:   { hp: 50, attack: 47, defense: 50, spAttack: 57, spDefense: 50, speed: 65, type: 'bug', type2: 'electric' },
@@ -7973,6 +8082,16 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // Hiperrayo (Hyper Beam): potencia 150 y precisión 90 oficiales. Especial, a distancia. En los juegos obliga a descansar el turno
             // siguiente: aquí se traduce en un cooldownMs propio (barra roja) antes de poder volver a atacar.
             'hiperrayo':   { name: 'Hiperrayo',     type: 'normal',   power: 150, accuracy: 90,  hits: 1, ranged: true,  visual: 'icebeam',      category: 'special', cooldownMs: 1500 },
+            // Chuzos (Icicle Spear): potencia 25 y precisión 100 oficiales; golpea de 2 a 5 veces (como Recurrente). Hielo, físico, a distancia (Sneasel).
+            'chuzos':      { name: 'Chuzos',        type: 'ice',      power: 25,  accuracy: 100, hits: 5, minHits: 2, avgHits: 3.5, ranged: true, visual: 'seeds', iceSpike: true, category: 'physical' },
+            // Plancha (Lunge): potencia 80 y precisión 100 oficiales. Bicho, físico, contacto; SIEMPRE baja 1 nivel el Ataque del objetivo
+            // (targetAttackDropChance 1: ver applyMoveAttackDrop). Charjabug.
+            'plancha':     { name: 'Plancha',       type: 'bug',      power: 80,  accuracy: 100, hits: 1, ranged: false, visual: 'melee', category: 'physical', targetAttackDropChance: 1 },
+            // Ala de Acero (Steel Wing): potencia 70 y precisión 90 oficiales. Acero, físico, contacto (Skarmory). (El 10% de subir la Defensa propia no está implementado.)
+            'alaacero':    { name: 'Ala de Acero',  type: 'steel',    power: 70,  accuracy: 90,  hits: 1, ranged: false, visual: 'melee',        category: 'physical', slash: 'blade' },
+            // Metaláser (Steel Beam): potencia 140 y precisión 95 oficiales. Acero, especial, a distancia. El usuario pierde el 10% de sus PS máximos (pedido; el oficial es 50%)
+            // al usarlo (selfCostPercent 0.1, también si falla; ver resolveSingleHit). Aegislash.
+            'metalaser':   { name: 'Metaláser',     type: 'steel',    power: 140, accuracy: 95,  hits: 1, ranged: true,  visual: 'icebeam',      category: 'special', selfCostPercent: 0.1 },
             'rayohielo':   { name: 'Rayo Hielo',    type: 'ice',      power: 90,  accuracy: 100, hits: 1, ranged: true,  visual: 'icebeam',      category: 'special', freezeChance: 0.10 },
             // Avalancha (Rock Slide): potencia 75 y precisión 90 oficiales. Roca, físico, a distancia (Cranidos).
             'avalancha':   { name: 'Avalancha',     type: 'rock',     power: 75,  accuracy: 90,  hits: 1, ranged: true,  visual: 'rock',         category: 'physical' },
@@ -8486,6 +8605,36 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 durationMs: 20000,
                 iceDefMultiplier: 1.5
             },
+            // Batería (Battery, Charjabug): sube un 30% el Ataque Especial de sus ALIADOS (no el propio): mismo jugador en PvP / Liga / arena
+            // multijugador (ver getBatteryAllyMultiplier). En la arena de todos contra todos no hay aliados, así que no tiene efecto.
+            bateria: {
+                name: 'Batería',
+                batteryAlly: true,
+                allyMultiplier: 1.3
+            },
+            // Armadura Frágil (Weak Armor, Skarmory/Vullaby/Mandibuzz): al recibir un golpe FÍSICO que le hace daño, baja 1 nivel su Defensa
+            // (-10% acumulable, mismo sistema que A Bocajarro: defenseDropStacks, tope -50%) y SUBE 2 niveles su Velocidad (speedStage, tope +6).
+            armadurafragil: {
+                name: 'Armadura Frágil',
+                weakArmor: true,
+                maxDefStacks: 5,
+                speedStages: 2,
+                maxSpeedStage: 6
+            },
+            // Indefenso (No Guard, Honedge/Doublade): SUS PROPIOS ataques nunca fallan (se salta la tirada de precisión). Los rivales aún pueden fallarle (versión pedida).
+            indefenso: {
+                name: 'Indefenso',
+                noGuardAttack: true
+            },
+            // Cambio Táctico (Stance Change, Aegislash): al atacar adopta la Forma Filo (Ataque y At. Esp. x2,8; Defensa y Def. Esp. x0,357 = 140/50) durante 4 s;
+            // pasado ese tiempo sin atacar vuelve a la Forma Escudo (stats base). (Sin Escudo Real: el escudo es el estado por defecto.)
+            cambiotactico: {
+                name: 'Cambio Táctico',
+                stanceChange: true,
+                bladeMs: 4000,
+                bladeOffMult: 2.8,
+                bladeDefMult: 50 / 140
+            },
             puntaacero: {
                 name: 'Punta Acero',
                 contactDamageRatio: 1 / 8
@@ -8632,6 +8781,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             flaqueza:     'Con la mitad o menos de sus PS, su Ataque y Ataque Especial se reducen a la mitad.',
             pielhelada:   'Sus movimientos de tipo Normal pasan a ser de tipo Hielo y ganan un 20% de potencia.',
             nevada:       'Al entrar en la arena invoca nieve: los de tipo Hielo ganan +50% de Defensa.',
+            bateria:      'Sube un 30% el Ataque Especial de sus aliados.',
+            armadurafragil: 'Al recibir un golpe físico baja su Defensa pero sube mucho su Velocidad.',
+            indefenso:    'Sus ataques nunca fallan.',
+            cambiotactico:'Al atacar adopta la Forma Filo (ataca más, defiende menos); luego vuelve a la Forma Escudo.',
             puntaacero:   'Quien lo golpea con un ataque de contacto pierde 1/8 de sus PS máximos.',
             absorbeagua:  'Los ataques de Agua no le dañan: los absorbe y recupera 1/4 de sus PS.',
             impetuarena:  'Con tormenta de arena su Velocidad se duplica y no sufre su daño.',
@@ -8702,6 +8855,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             flaqueza:     { text: '¡Pierde el ánimo! Ataque a la mitad', color: '#a78bfa' },
             pielhelada:   { text: '¡Su ataque se vuelve Hielo!', color: '#a5f3fc' },
             nevada:       { text: '¡Empieza a nevar!', color: '#e0f2fe' },
+            bateria:      { text: '¡Ataque Esp. de aliados +30%!', color: '#fde047' },
+            armadurafragil: { text: '¡Armadura rota! Defensa baja, Velocidad sube', color: '#fca5a5' },
+            indefenso:    { text: '¡Sus ataques no fallan!', color: '#fde68a' },
+            cambiotactico:{ text: '¡Forma Filo!', color: '#93c5fd' },
             puntaacero:   { text: '¡Las púas hieren al atacante!', color: '#94a3b8' },
             absorbeagua:  { text: '¡Absorbió el agua!', color: '#38bdf8' },
             impetuarena:  { text: '¡Velocidad x2 con la arena!', color: '#d6a45a' },
@@ -8851,6 +9008,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 case 'nightKillOnType':        return `Debilitó a ${plural(n, 'un pokémon', n + ' pokémon')} de tipo ${typeEs(trigger.targetType)} de noche`;
                 case 'statChanges':            return `Sufrió ${n} ${n === 1 ? 'cambio' : 'cambios'} de estadísticas`;
                 case 'dodges':                 return `Esquivó ${n} ataques`;
+                case 'dodgeLowHp':             return `Esquivó un ataque con menos del ${Math.round(trigger.hpBelow * 100)} % de vida`;
                 case 'phaseDodge':             return `Esquivó ${plural(n, 'un ataque', n + ' ataques')}${trigger.phase === 'night' ? ' de noche' : trigger.phase === 'day' ? ' de día' : ' al atardecer'}`;
                 case 'attackThenImmune':       return 'Recibió un ataque al que es inmune justo después de atacar';
                 case 'immuneHits':             return `Recibió ${n} ataques a los que es inmune`;
@@ -9224,6 +9382,19 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // (si tiene una y se cumplen sus condiciones para este movimiento). Devuelve
         // 1 si no hay habilidad, no aplica a este tipo de movimiento, o su condición
         // de PS no se cumple todavía.
+        // Batería: si hay un ALIADO vivo (mismo jugador / mismo bando: !isHostile) con esta habilidad, los movimientos ESPECIALES de "att" ganan +30%.
+        function getBatteryAllyMultiplier(att, move) {
+            if (!att || !move || move.category !== 'special') return 1;
+            for (let i = 0; i < combatants.length; i++) {
+                const c = combatants[i];
+                if (c === att || c.fainted || c.hp <= 0 || c.isSpawning || !c.ability) continue;
+                const ab = abilitiesData[c.ability];
+                if (!ab || !ab.batteryAlly || isHostile(att, c)) continue;
+                try { showAbilityNotification(c, c.ability); } catch (e) {}
+                return ab.allyMultiplier;
+            }
+            return 1;
+        }
         function getAbilityMultiplier(attacker, move) {
             const ability = attacker.ability && abilitiesData[attacker.ability];
             if (ability && ability.stabMultiplier) { // Adaptable: STAB x2 en vez de x1.5 (solo si el movimiento es de su tipo)
@@ -9526,7 +9697,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 stats: { hp: 110, attack: 65, defense: 105, spAttack: 55, spDefense: 95, speed: 80, type: 'dark', type2: 'flying' },
                 sizeClass: 'size-mb', // 1,2 m
                 attackKey: 'desahogo',
-                ability: 'funda'
+                abilities: ['funda', 'armadurafragil']
             }],
             // Basculin (Cascada, Adaptable) evoluciona a Basculegion tras ESQUIVAR un ataque DE NOCHE (disparador 'phaseDodge': ver
             // registerDodge). La forma depende del género del individuo: macho (902) o hembra (10248, spriteF). Usa Surf, mantiene Adaptable.
@@ -9687,6 +9858,67 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     sizeClass: 'size-lg', // 2,7 m
                     attackKey: 'hiperrayo',
                     abilities: ['pielhelada', 'nevada']
+                }
+            ],
+            // Sneasel (Foco Interno; Chuzos) evoluciona a Weavile al DEBILITAR a un rival con un golpe CRÍTICO SÚPER EFECTIVO (disparador
+            // 'critKillEffectiveness' con effect 'super'). Weavile conserva Foco Interno y cambia Chuzos por Tajo Umbrío.
+            sneasel: [{
+                name: 'Weavile',
+                trigger: { type: 'critKillEffectiveness', effect: 'super' },
+                sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/461.gif',
+                sound: document.getElementById('snd-weavile'),
+                stats: { hp: 70, attack: 120, defense: 65, spAttack: 45, spDefense: 85, speed: 125, type: 'dark', type2: 'ice' },
+                sizeClass: 'size-mb', // 1,1 m
+                attackKey: 'tajoumbrio',
+                ability: 'focointerno'
+            }],
+            // Honedge (Indefenso; Cabeza de Hierro) evoluciona a Doublade al DEBILITAR a un rival de UN SOLO golpe (disparador 'oneHitKOs').
+            // Doublade (Indefenso; Garra Umbría) evoluciona a Aegislash al ESQUIVAR un ataque con menos del 50% de PS (disparador 'dodgeLowHp').
+            // Aegislash (Cambio Táctico; Metaláser): stats de Forma Escudo; al atacar adopta la Forma Filo temporalmente.
+            honedge: [
+                {
+                    name: 'Doublade',
+                    trigger: { type: 'oneHitKOs', count: 1 },
+                    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/680.gif',
+                    sound: document.getElementById('snd-doublade'),
+                    stats: { hp: 59, attack: 110, defense: 150, spAttack: 45, spDefense: 49, speed: 35, type: 'steel', type2: 'ghost' },
+                    sizeClass: 'size-sm', // 0,8 m
+                    attackKey: 'garraumbria',
+                    ability: 'indefenso'
+                },
+                {
+                    name: 'Aegislash',
+                    trigger: { type: 'dodgeLowHp', hpBelow: 0.5 },
+                    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/681.gif',
+                    sound: document.getElementById('snd-aegislash'),
+                    stats: { hp: 60, attack: 50, defense: 140, spAttack: 50, spDefense: 140, speed: 60, type: 'steel', type2: 'ghost' },
+                    sizeClass: 'size-md', // 1,7 m
+                    attackKey: 'metalaser',
+                    ability: 'cambiotactico'
+                }
+            ],
+            // Grubbin (Enjambre; Tijera X) evoluciona a Charjabug tras RECIBIR 1 golpe CRÍTICO de tipo ELÉCTRICO (disparador 'critReceivedOfType').
+            // Charjabug (Batería; Plancha) evoluciona a Vikavolt tras ESQUIVAR 2 ataques (disparador 'dodges'). Vikavolt (Levitación) usa Rayo.
+            grubbin: [
+                {
+                    name: 'Charjabug',
+                    trigger: { type: 'critReceivedOfType', hitType: 'electric' },
+                    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/737.gif',
+                    sound: document.getElementById('snd-charjabug'),
+                    stats: { hp: 57, attack: 82, defense: 95, spAttack: 55, spDefense: 75, speed: 36, type: 'bug', type2: 'electric' },
+                    sizeClass: 'size-sm', // 0,5 m
+                    attackKey: 'plancha',
+                    ability: 'bateria'
+                },
+                {
+                    name: 'Vikavolt',
+                    trigger: { type: 'dodges', count: 2 },
+                    sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/738.gif',
+                    sound: document.getElementById('snd-vikavolt'),
+                    stats: { hp: 77, attack: 70, defense: 90, spAttack: 145, spDefense: 75, speed: 43, type: 'bug', type2: 'electric' },
+                    sizeClass: 'size-mb', // 1,5 m
+                    attackKey: 'rayo',
+                    ability: 'levitacion'
                 }
             ],
             tynamo: [
@@ -10515,7 +10747,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             { id: 'riolu', name: 'Riolu', sound: document.getElementById('snd-riolu'), attackKey: 'golperoca' },
             { id: 'mimikyu', name: 'Mimikyu', sound: document.getElementById('snd-mimikyu'), attackKey: 'garraumbria', ability: 'disfraz' },
             { id: 'drilbur', name: 'Drilbur', sound: document.getElementById('snd-drilbur'), attackKey: 'excavar', ability: 'impetuarena' },
-            { id: 'vullaby', name: 'Vullaby', sound: document.getElementById('snd-vullaby'), attackKey: 'alabis', ability: 'funda' },
+            { id: 'vullaby', name: 'Vullaby', sound: document.getElementById('snd-vullaby'), attackKey: 'alabis', abilities: ['funda', 'armadurafragil'] },
             { id: 'basculin', name: 'Basculin', sound: document.getElementById('snd-basculin'), attackKey: 'cascada', abilities: ['adaptable', 'nadorapido'] },
             { id: 'murkrow', name: 'Murkrow', sound: document.getElementById('snd-murkrow'), attackKey: 'buenabaza', abilities: ['afortunado', 'insomnio'] },
             { id: 'trapinch', name: 'Trapinch', sound: document.getElementById('snd-trapinch'), attackKey: 'excavar', ability: 'cortefuerte' },
@@ -10536,6 +10768,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             { id: 'munchlax', name: 'Munchlax', sound: document.getElementById('snd-munchlax'), attackKey: 'golpecuerpo' },
             { id: 'archen', name: 'Archen', sound: document.getElementById('snd-archen'), attackKey: 'avalancha', ability: 'flaqueza' },
             { id: 'amaura', name: 'Amaura', sound: document.getElementById('snd-amaura'), attackKey: 'rayohielo', abilities: ['pielhelada', 'nevada'] },
+            { id: 'sneasel', name: 'Sneasel', sound: document.getElementById('snd-sneasel'), attackKey: 'chuzos', ability: 'focointerno' },
+            { id: 'grubbin', name: 'Grubbin', sound: document.getElementById('snd-grubbin'), attackKey: 'tijerax', ability: 'enjambre' },
+            { id: 'skarmory', name: 'Skarmory', sound: document.getElementById('snd-skarmory'), attackKey: 'alaacero', abilities: ['robustez', 'armadurafragil'] },
+            { id: 'honedge', name: 'Honedge', sound: document.getElementById('snd-honedge'), attackKey: 'cabezahierro', ability: 'indefenso' },
             { id: 'larvitar', name: 'Larvitar', sound: document.getElementById('snd-larvitar'), attackKey: 'lanzarrocas', abilities: ['agallas', 'veloarena'] },
             { id: 'fomantis', name: 'Fomantis', sound: document.getElementById('snd-fomantis'), attackKey: 'cortefuria' },
             { id: 'cranidos', name: 'Cranidos', sound: document.getElementById('snd-cranidos'), attackKey: 'avalancha' },
@@ -13403,6 +13639,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const qf = c.ability && abilitiesData[c.ability] && abilitiesData[c.ability].statusSpeedMultiplier;
             const qfOn = !!(qf && (c.burn || c.poison || c.paralysis || c.sleep || c.freeze)); // Pies Rápidos
             let spd = c.stats.speed * (c.paralysis && !qfOn ? PARALYSIS_SPEED_MULT : 1) * (qfOn ? qf : 1);
+            if (c.speedStage) spd *= (2 + c.speedStage) / 2; // Armadura Frágil: +2 niveles por golpe físico (x2, x3... tope +6 = x4)
             // Ímpetu Arena: Velocidad x2 mientras dura la tormenta de arena.
             const ab = c.ability && abilitiesData[c.ability];
             if (ab && ab.sandSpeedMultiplier && weatherState && weatherState.type === 'sand') spd *= ab.sandSpeedMultiplier;
@@ -13475,7 +13712,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function isDefeatist(c) {
             return !!(c && c.ability === 'flaqueza' && c.maxHp > 0 && c.hp <= c.maxHp * abilitiesData.flaqueza.hpThresholdRatio);
         }
+        function isBladeStance(c) { return !!(c && c.stanceUntil && c.stanceUntil > performance.now()); }
         function getEffectiveAttackerStats(c) {
+            const st = getEffectiveAttackerStatsBase(c);
+            if (!isBladeStance(c)) return st;
+            const m = abilitiesData.cambiotactico.bladeOffMult;
+            return { ...st, attack: st.attack * m, spAttack: st.spAttack * m };
+        }
+        function getEffectiveAttackerStatsBase(c) {
             const df = isDefeatist(c);
             if (!df && !c.attackStage && !c.intimidateStacks && !c.atkDropStages) return c.stats;
             let atk = c.stats.attack;
@@ -14190,6 +14434,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // muta c.stats: ese objeto puede compartirse entre reincorporaciones de la
         // misma especie, así que se devuelve una copia superficial cuando hace falta.
         function getEffectiveDefenderStats(c) {
+            const st = getEffectiveDefenderStatsBase(c);
+            if (!isBladeStance(c)) return st;
+            const m = abilitiesData.cambiotactico.bladeDefMult;
+            return { ...st, defense: st.defense * m, spDefense: st.spDefense * m };
+        }
+        function getEffectiveDefenderStatsBase(c) {
             let st = c.stats;
             if (c.defenseDropStacks) {
                 const modifier = 1 - Math.min(0.5, c.defenseDropStacks * 0.10);
@@ -15612,7 +15862,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             basculin: 25, basculegion: 25, gligar: 60, gliscor: 30, tynamo: 190, teddiursa: 120, ursaring: 60, ursaluna: 10, horsea: 225, seadra: 75, kingdra: 45, gible: 45, gabite: 45, garchomp: 45, sandile: 180, krokorok: 90, krookodile: 45, eelektrik: 60, eelektross: 30, vullaby: 190, mandibuzz: 60, murkrow: 30, honchkrow: 30, trapinch: 255, vibrava: 120, flygon: 45, abra: 200, kadabra: 100, alakazam: 50, riolu: 75, lucario: 45, mimikyu: 45, drilbur: 120, excadrill: 60,
             pawniard: 120, bisharp: 45, kingambit: 25, mankey: 190, primeape: 75, spearow: 255, fearow: 90,
             tinkatink: 190, tinkatuff: 90, tinkaton: 45, girafarig: 60, farigiraf: 60, joltik: 190, galvantula: 75,
-            buneary: 190, lopunny: 60, munchlax: 50, snorlax: 25, miltank: 60, archen: 60, amaura: 55, aurorus: 28, archeops: 30, larvitar: 45, pupitar: 45, tyranitar: 45, fomantis: 190, lurantis: 75,
+            buneary: 190, lopunny: 60, munchlax: 50, snorlax: 25, miltank: 60, archen: 60, amaura: 55, sneasel: 60, grubbin: 90, skarmory: 55, honedge: 90, doublade: 45, aegislash: 22, charjabug: 45, vikavolt: 22, weavile: 30, aurorus: 28, archeops: 30, larvitar: 45, pupitar: 45, tyranitar: 45, fomantis: 190, lurantis: 75,
             cranidos: 45, rampardos: 45, lapras: 45, relicanth: 25, hawlucha: 100, heracross: 45, meowth: 255, persian: 90,
             toxel: 75, toxtricity: 45, rockruff: 190, lycanroc: 90, wimpod: 90, golisopod: 45, inkay: 190, malamar: 80,
             larvesta: 45, volcarona: 15, starly: 255, staravia: 120, staraptor: 45, scraggy: 180, scrafty: 90, mareanie: 190, toxapex: 75,
@@ -16290,6 +16540,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             else if (stage.trigger.type === 'arenaFaints') progress = (c.arenaFaintCount || 0) / stage.trigger.count;
             else if (stage.trigger.type === 'phaseDodge') progress = (c.phaseDodgeCount || 0) / stage.trigger.count;
             else if (stage.trigger.type === 'dodges') progress = (c.dodgeCount || 0) / stage.trigger.count;
+            else if (stage.trigger.type === 'dodgeLowHp') progress = (c.hp / c.maxHp < stage.trigger.hpBelow) ? 0.5 : 0;
             else if (stage.trigger.type === 'statChanges') progress = Math.min(1, (c.statChangeCount || 0) / stage.trigger.count);
             else if (stage.trigger.type === 'immuneHits') progress = (c.immuneHitCount || 0) / stage.trigger.count;
             else if (stage.trigger.type === 'dodgeOrImmune') progress = (c.dodgeImmuneCount || 0) / stage.trigger.count;
@@ -16591,6 +16842,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 return;
             }
             if (stage && stage.trigger.type === 'dodgeOrImmune' && !defender.fainted && !defender.isEvolving) { registerDodgeOrImmune(defender, 'esquivó un ataque'); return; }
+            if (stage && stage.trigger.type === 'dodgeLowHp' && !defender.fainted && !defender.isEvolving) { // Doublade: esquivar con menos de la mitad de PS
+                if (defender.hp / defender.maxHp < stage.trigger.hpBelow) { logMessage(`¡${defender.name} esquivó un ataque con pocos PS!`, 'info'); evolveCombatant(defender, stage); }
+                return;
+            }
             if (!stage || stage.trigger.type !== 'dodges' || defender.fainted || defender.isEvolving) return;
             defender.dodgeCount = (defender.dodgeCount || 0) + 1;
             updateXPBar(defender);
@@ -17245,6 +17500,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             c.noAttackedMs = 0;
             c.defenseDropStacks = 0;
             c.attackStage = 0;
+            c.speedStage = 0;
             updateAttackBoostBadge(c);
             updateDefenseDebuffBadge(c); // retira la insignia de Defensa reducida: la nueva forma empieza fresca
             c.intimidateStacks = 0;      // igual con el Ataque reducido por Intimidación
@@ -17335,6 +17591,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (gameOver) return; // combate terminado: ningún golpe en vuelo hace efecto
             if (defender.fainted) return false;
             if (attacker && attacker !== defender && attacker.owner && attacker.owner === defender.owner) return false; // multijugador: fuego amigo imposible (rayo del jefe, ondas, nubes...)
+            { const ca = attacker && attacker.ability && abilitiesData[attacker.ability]; // Cambio Táctico: atacar = Forma Filo
+              if (ca && ca.stanceChange) { const wasBlade = isBladeStance(attacker); attacker.stanceUntil = performance.now() + ca.bladeMs; if (!wasBlade) { try { showAbilityNotification(attacker, attacker.ability); } catch (e) {} logMessage(`¡${attacker.name} adopta la Forma Filo!`, 'ability'); } } }
+            if (move.selfCostPercent && attacker && !attacker.fainted && attacker.hp > 0) { // Metaláser: el usuario pierde la mitad de sus PS máximos
+                const sc = Math.max(1, Math.floor(attacker.maxHp * move.selfCostPercent));
+                attacker.hp -= sc; updateCombatantHP(attacker); spawnDamagePopup(attacker, sc, 1, false);
+                logMessage(`¡${attacker.name} pierde ${sc} PS al usar ${move.name}!`, 'hit');
+                checkFaint(attacker, null);
+            }
             defender.noAttackedMs = 0; // le han lanzado un ataque (acierte o no): reinicia la espera de Munchlax
             { const pa = attacker && attacker.ability && abilitiesData[attacker.ability]; // Piel Feérica: Normal -> Hada, +20% de potencia
               if (pa && pa.refrigerate && move.type === 'normal') { move = { ...move, type: 'ice', power: Math.round(move.power * 1.2) }; try { showAbilityNotification(attacker, attacker.ability); } catch (e) {} }
@@ -17399,7 +17663,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 protectedHit = true;
             }
 
-            if (!(move.poisonUserNeverMisses && (attacker.stats.type === 'poison' || attacker.stats.type2 === 'poison')) && !checkAccuracy(move.accuracy * sandVeilMult(defender))) {
+            if (!(attacker && attacker.ability && abilitiesData[attacker.ability] && abilitiesData[attacker.ability].noGuardAttack) && !(move.poisonUserNeverMisses && (attacker.stats.type === 'poison' || attacker.stats.type2 === 'poison')) && !checkAccuracy(move.accuracy * sandVeilMult(defender))) {
                 attacker.furyStreak = 0; // Cortefuria: un fallo reinicia la racha
                 if (attacker.critStreak) { attacker.critStreak = 0; updateXPBar(attacker); } // Inkay: un fallo rompe la racha de críticos
                 spawnDodgePopup(defender); // el golpe no llega al objetivo: "Esquivado" sobre su sprite
@@ -17464,7 +17728,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (move.slash) spawnSlashFx(targetX, targetY, move, attacker, false); // animación de corte
 
             const defenderAbilityMult = getDefenderAbilityDamageMultiplier(defender, move);
-            const abilityMultiplier = getAbilityMultiplier(attacker, move) * defenderAbilityMult * getBurnDamageMultiplier(attacker, move); // Quemadura: x0.5 a los físicos del quemado
+            const abilityMultiplier = getAbilityMultiplier(attacker, move) * getBatteryAllyMultiplier(attacker, move) * defenderAbilityMult * getBurnDamageMultiplier(attacker, move); // Quemadura: x0.5 a los físicos del quemado
             // Cortefuria: la potencia se duplica por cada golpe acertado consecutivo (x1, x2, x4).
             let dmgMove = move.furyCutter ? { ...move, power: move.power * (1 << Math.min(2, attacker.furyStreak || 0)) } : move;
             // Infortunio (hex): potencia x2 si el objetivo sufre un problema de estado.
@@ -17598,6 +17862,13 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             registerCritStreak(attacker, isCritical);
             registerNotVeryEffectiveReceived(defender, effectiveness);
             registerAreaHitReceived(defender, move, damage);
+            { const wa = defender.ability && abilitiesData[defender.ability]; // Armadura Frágil
+              if (wa && wa.weakArmor && move.category === 'physical' && damage > 0 && !defender.fainted && defender.hp > 0) {
+                  if ((defender.defenseDropStacks || 0) < wa.maxDefStacks) { defender.defenseDropStacks = (defender.defenseDropStacks || 0) + 1; updateDefenseDebuffBadge(defender); spawnStatDropPopup(defender, 10); }
+                  defender.speedStage = Math.min(wa.maxSpeedStage, (defender.speedStage || 0) + wa.speedStages);
+                  logMessage(`¡Armadura Frágil de ${defender.name}! Su Defensa baja y su Velocidad sube (+${defender.speedStage})`, 'ability');
+                  try { showAbilityNotification(defender, defender.ability); } catch (e) {}
+              } }
             registerFirstStrikeHit(attacker, defender);
             registerAttackFrozen(attacker, defender, _wasFrozen);
 
@@ -19757,14 +20028,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                         const sx = startX + px * off * 0.4, sy = startY + py * off * 0.4;
                         const ex = targetX + px * off, ey = targetY + py * off;
                         const el = fxProjGet('projectile');
-                        el.className = 'projectile seed-particle';
+                        el.className = 'projectile seed-particle' + (move.iceSpike ? ' ice-spike' : ''); if (move.iceSpike) el.style.transform = 'rotate(' + (Math.atan2(ey - sy, ex - sx) * 180 / Math.PI + 90).toFixed(0) + 'deg)';
                         container.appendChild(el);
                         el.style.left = sx + 'px';
                         el.style.top = sy + 'px';
                         let bx = sx, by = sy, steps = 0;
                         const vx = (ex - sx) / 13, vy = (ey - sy) / 13;
-                        spawnSparks(sx, sy, '#bef264', 2);
-                        const P = projRegister({ kind: 'ball', move, attacker, defender, x: sx, y: sy, r: 5, el, hitSound, color: '#84cc16', spark: '#bef264' });
+                        spawnSparks(sx, sy, move.iceSpike ? '#bae6fd' : '#bef264', 2);
+                        const P = projRegister({ kind: 'ball', move, attacker, defender, x: sx, y: sy, r: 5, el, hitSound, color: move.iceSpike ? '#7dd3fc' : '#84cc16', spark: move.iceSpike ? '#e0f2fe' : '#bef264' });
                         const interval = setInterval(() => {
                             if (!gameRunning) { clearInterval(interval); el.remove(); return; }
                             bx += vx; by += vy;
@@ -19773,11 +20044,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                             el.style.left = bx + 'px';
                             el.style.top = by + 'px';
                             steps++;
-                            if (steps % 3 === 0) spawnTrail(bx + 3, by + 3, 'rgba(132,204,22,0.5)', 4);
+                            if (steps % 3 === 0) spawnTrail(bx + 3, by + 3, move.iceSpike ? 'rgba(125,211,252,0.55)' : 'rgba(132,204,22,0.5)', 4);
                             if (steps >= 13) {
                                 clearInterval(interval);
                                 el.remove();
-                                if (!defender.fainted) resolveSingleHit(move, attacker, defender, ex, ey, hitSound, '#84cc16', '#bef264', 'semilla ' + (i + 1) + '/' + nSeeds);
+                                if (!defender.fainted) resolveSingleHit(move, attacker, defender, ex, ey, hitSound, move.iceSpike ? '#7dd3fc' : '#84cc16', move.iceSpike ? '#e0f2fe' : '#bef264', (move.iceSpike ? 'chuzo ' : 'semilla ') + (i + 1) + '/' + nSeeds);
                             }
                         }, 20 / gameSpeed);
                         activeTimers.push(interval);
@@ -19999,7 +20270,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // ('Toxtricity Amped' / 'Toxtricity Low Key') para que Pokédex y Caja las distingan; al MOSTRAR un
         // nombre se quita la forma.
         function dispName(n) { return String(n == null ? '' : n).replace(/ (Amped|Low Key)$/, ''); }
-        const BODY_DATA = {"Amaura":[1.3,25.2,87.5],"Aurorus":[2.7,225,87.5],"Archen":[0.5,9.5,87.5],"Archeops":[1.4,32,87.5],"Miltank":[1.2,75.5,0],"Gible":[0.7,20.5,50],"Gabite":[1.4,56,50],"Garchomp":[1.9,95,50],"Teddiursa":[0.6,8.8,50],"Ursaring":[1.8,125.8,50],"Ursaluna":[2.4,290,50],"Horsea":[0.4,8,50],"Seadra":[1.2,25,50],"Kingdra":[1.8,152,50],"Sandile":[0.7,15.2,50],"Krokorok":[1,33.4,50],"Krookodile":[1.5,96.3,50],"Tynamo":[0.2,0.3,50],"Eelektrik":[1.2,22,50],"Eelektross":[2.1,80.5,50],"Gligar":[1.1,64.8,50],"Gliscor":[2,42.5,50],"Vullaby":[0.5,9,0],"Mandibuzz":[1.2,39.5,0],"Basculin":[1,18,50],"Basculegion":[3,110,50],"Murkrow":[0.5,2.1,50],"Honchkrow":[0.9,27.3,50],"Trapinch":[0.7,15,50],"Vibrava":[1.1,15.3,50],"Flygon":[2,82,50],"Pikachu":[0.4,6,50],"Raichu":[0.8,30,50],"Squirtle":[0.5,9,87.5],"Wartortle":[1,22.5,87.5],"Blastoise":[1.6,85.5,87.5],"Weedle":[0.3,3.2,50],"Kakuna":[0.6,10,50],"Beedrill":[1,29.5,50],"Caterpie":[0.3,2.9,50],"Metapod":[0.7,9.9,50],"Butterfree":[1.1,32,50],"Mareep":[0.6,7.8,50],"Flaaffy":[0.8,13.3,50],"Ampharos":[1.4,61.5,50],"Maschiff":[0.5,16,50],"Mabosstiff":[1.1,61,50],"Snubbull":[0.6,7.8,50],"Granbull":[1.4,48.7,50],"Rookidee":[0.2,1.8,50],"Corvisquire":[0.8,16,50],"Corviknight":[2.2,75,50],"Slowpoke":[1.2,36,50],"Slowbro":[1.6,78.5,50],"Slowking":[2,79.5,50],"Vulpix":[0.6,9.9,25],"Ninetales":[1.1,19.9,25],"Charmander":[0.6,8.5,87.5],"Charmeleon":[1.1,19,87.5],"Charizard":[1.7,90.5,87.5],"Bulbasaur":[0.7,6.9,87.5],"Ivysaur":[1,13,87.5],"Venusaur":[2,100,87.5],"Gastly":[1.3,0.1,50],"Haunter":[1.6,0.1,50],"Gengar":[1.5,40.5,50],"Cubone":[0.4,6.5,50],"Marowak":[1,45,50],"Geodude":[0.4,20,50],"Graveler":[1,105,50],"Golem":[1.4,300,50],"Abra":[0.9,19.5,75],"Kadabra":[1.3,56.5,75],"Alakazam":[1.5,48,75],"Riolu":[0.7,20.2,87.5],"Lucario":[1.2,54,87.5],"Mimikyu":[0.2,0.7,50],"Drilbur":[0.3,8.5,50],"Excadrill":[0.7,40.4,50],"Pawniard":[0.5,10.2,50],"Bisharp":[1.6,70,50],"Kingambit":[2,120,50],"Mankey":[0.5,28,50],"Primeape":[1,32,50],"Spearow":[0.3,2,50],"Fearow":[1.2,38,50],"Tinkatink":[0.4,8.9,0],"Tinkatuff":[0.7,59.1,0],"Tinkaton":[0.7,112.8,0],"Girafarig":[1.5,41.5,50],"Farigiraf":[3.2,160,50],"Larvitar":[0.6,72,50],"Pupitar":[1.2,152,50],"Tyranitar":[2,202,50],"Munchlax":[0.6,105,87.5],"Snorlax":[2.1,460,87.5],"Joltik":[0.1,0.6,50],"Galvantula":[0.8,14.3,50],"Buneary":[0.4,5.5,50],"Lopunny":[1.2,33.3,50],"Fomantis":[0.3,1.5,50],"Lurantis":[0.9,18.5,50],"Cranidos":[0.9,31.5,87.5],"Rampardos":[1.6,102.5,87.5],"Lapras":[2.5,220,50],"Relicanth":[1,23.4,87.5],"Hawlucha":[0.8,21.5,50],"Heracross":[1.5,54,50],"Meowth":[0.4,4.2,50],"Toxel":[0.4,11,50],"Toxtricity":[1.6,40,50],"Toxtricity Amped":[1.6,40,50],"Toxtricity Low Key":[1.6,40,50],"Persian":[1,32,50],"Rockruff":[0.5,9.2,50],"Lycanroc Midday":[0.8,25,50],"Lycanroc Midnight":[1.1,25,50],"Lycanroc Dusk":[0.8,25,50],"Wimpod":[0.5,12,50],"Golisopod":[2,108,50],"Inkay":[0.4,3.5,50],"Malamar":[1.5,47,50],"Larvesta":[0.1,28.8,50],"Volcarona":[1.6,46,50],"Scraggy":[0.6,11.8,50],"Scrafty":[1.1,30,50],"Starly":[0.3,2,50],"Staravia":[0.6,15.5,50],"Staraptor":[1.2,24.9,50],"Mareanie":[0.4,8,50],"Toxapex":[0.7,14.5,50],"Magnemite":[0.3,6,-1],"Magneton":[1,60,-1],"Magnezone":[1.2,180,-1],"Greavard":[0.6,6,50],"Houndstone":[2,15,50],"Ferroseed":[0.6,18.8,50],"Ferrothorn":[1,110,50],"Wingull":[0.6,9.5,50],"Pelipper":[1.2,28,50],"Shroomish":[0.4,4.5,50],"Breloom":[1.2,39.2,50],"Morelull":[0.2,1.5,50],"Shiinotic":[1,11.5,50],"Darumaka":[0.6,37.5,50],"Darmanitan":[1.3,92.9,50],"Turtonator":[2,212,50],"Milcery":[0.2,0.3,0],"Alcremie":[0.3,0.5,0],"Drifloon":[0.4,1.2,50],"Drifblim":[1.2,15,50],"Eevee":[0.3,6.5,87.5],"Vaporeon":[1,29,87.5],"Jolteon":[0.8,24.5,87.5],"Flareon":[0.9,25,87.5],"Espeon":[0.9,26.5,87.5],"Umbreon":[1,27,87.5],"Leafeon":[1,25.5,87.5],"Glaceon":[0.8,25.9,87.5],"Sylveon":[1,23.5,87.5]};
+        const BODY_DATA = {"Honedge":[0.8,2,50],"Doublade":[0.8,4.5,50],"Aegislash":[1.7,53,50],"Skarmory":[1.7,50.5,50],"Grubbin":[0.4,4.4,50],"Charjabug":[0.5,10.5,50],"Vikavolt":[1.5,45,50],"Sneasel":[0.9,28,50],"Weavile":[1.1,34,50],"Amaura":[1.3,25.2,87.5],"Aurorus":[2.7,225,87.5],"Archen":[0.5,9.5,87.5],"Archeops":[1.4,32,87.5],"Miltank":[1.2,75.5,0],"Gible":[0.7,20.5,50],"Gabite":[1.4,56,50],"Garchomp":[1.9,95,50],"Teddiursa":[0.6,8.8,50],"Ursaring":[1.8,125.8,50],"Ursaluna":[2.4,290,50],"Horsea":[0.4,8,50],"Seadra":[1.2,25,50],"Kingdra":[1.8,152,50],"Sandile":[0.7,15.2,50],"Krokorok":[1,33.4,50],"Krookodile":[1.5,96.3,50],"Tynamo":[0.2,0.3,50],"Eelektrik":[1.2,22,50],"Eelektross":[2.1,80.5,50],"Gligar":[1.1,64.8,50],"Gliscor":[2,42.5,50],"Vullaby":[0.5,9,0],"Mandibuzz":[1.2,39.5,0],"Basculin":[1,18,50],"Basculegion":[3,110,50],"Murkrow":[0.5,2.1,50],"Honchkrow":[0.9,27.3,50],"Trapinch":[0.7,15,50],"Vibrava":[1.1,15.3,50],"Flygon":[2,82,50],"Pikachu":[0.4,6,50],"Raichu":[0.8,30,50],"Squirtle":[0.5,9,87.5],"Wartortle":[1,22.5,87.5],"Blastoise":[1.6,85.5,87.5],"Weedle":[0.3,3.2,50],"Kakuna":[0.6,10,50],"Beedrill":[1,29.5,50],"Caterpie":[0.3,2.9,50],"Metapod":[0.7,9.9,50],"Butterfree":[1.1,32,50],"Mareep":[0.6,7.8,50],"Flaaffy":[0.8,13.3,50],"Ampharos":[1.4,61.5,50],"Maschiff":[0.5,16,50],"Mabosstiff":[1.1,61,50],"Snubbull":[0.6,7.8,50],"Granbull":[1.4,48.7,50],"Rookidee":[0.2,1.8,50],"Corvisquire":[0.8,16,50],"Corviknight":[2.2,75,50],"Slowpoke":[1.2,36,50],"Slowbro":[1.6,78.5,50],"Slowking":[2,79.5,50],"Vulpix":[0.6,9.9,25],"Ninetales":[1.1,19.9,25],"Charmander":[0.6,8.5,87.5],"Charmeleon":[1.1,19,87.5],"Charizard":[1.7,90.5,87.5],"Bulbasaur":[0.7,6.9,87.5],"Ivysaur":[1,13,87.5],"Venusaur":[2,100,87.5],"Gastly":[1.3,0.1,50],"Haunter":[1.6,0.1,50],"Gengar":[1.5,40.5,50],"Cubone":[0.4,6.5,50],"Marowak":[1,45,50],"Geodude":[0.4,20,50],"Graveler":[1,105,50],"Golem":[1.4,300,50],"Abra":[0.9,19.5,75],"Kadabra":[1.3,56.5,75],"Alakazam":[1.5,48,75],"Riolu":[0.7,20.2,87.5],"Lucario":[1.2,54,87.5],"Mimikyu":[0.2,0.7,50],"Drilbur":[0.3,8.5,50],"Excadrill":[0.7,40.4,50],"Pawniard":[0.5,10.2,50],"Bisharp":[1.6,70,50],"Kingambit":[2,120,50],"Mankey":[0.5,28,50],"Primeape":[1,32,50],"Spearow":[0.3,2,50],"Fearow":[1.2,38,50],"Tinkatink":[0.4,8.9,0],"Tinkatuff":[0.7,59.1,0],"Tinkaton":[0.7,112.8,0],"Girafarig":[1.5,41.5,50],"Farigiraf":[3.2,160,50],"Larvitar":[0.6,72,50],"Pupitar":[1.2,152,50],"Tyranitar":[2,202,50],"Munchlax":[0.6,105,87.5],"Snorlax":[2.1,460,87.5],"Joltik":[0.1,0.6,50],"Galvantula":[0.8,14.3,50],"Buneary":[0.4,5.5,50],"Lopunny":[1.2,33.3,50],"Fomantis":[0.3,1.5,50],"Lurantis":[0.9,18.5,50],"Cranidos":[0.9,31.5,87.5],"Rampardos":[1.6,102.5,87.5],"Lapras":[2.5,220,50],"Relicanth":[1,23.4,87.5],"Hawlucha":[0.8,21.5,50],"Heracross":[1.5,54,50],"Meowth":[0.4,4.2,50],"Toxel":[0.4,11,50],"Toxtricity":[1.6,40,50],"Toxtricity Amped":[1.6,40,50],"Toxtricity Low Key":[1.6,40,50],"Persian":[1,32,50],"Rockruff":[0.5,9.2,50],"Lycanroc Midday":[0.8,25,50],"Lycanroc Midnight":[1.1,25,50],"Lycanroc Dusk":[0.8,25,50],"Wimpod":[0.5,12,50],"Golisopod":[2,108,50],"Inkay":[0.4,3.5,50],"Malamar":[1.5,47,50],"Larvesta":[0.1,28.8,50],"Volcarona":[1.6,46,50],"Scraggy":[0.6,11.8,50],"Scrafty":[1.1,30,50],"Starly":[0.3,2,50],"Staravia":[0.6,15.5,50],"Staraptor":[1.2,24.9,50],"Mareanie":[0.4,8,50],"Toxapex":[0.7,14.5,50],"Magnemite":[0.3,6,-1],"Magneton":[1,60,-1],"Magnezone":[1.2,180,-1],"Greavard":[0.6,6,50],"Houndstone":[2,15,50],"Ferroseed":[0.6,18.8,50],"Ferrothorn":[1,110,50],"Wingull":[0.6,9.5,50],"Pelipper":[1.2,28,50],"Shroomish":[0.4,4.5,50],"Breloom":[1.2,39.2,50],"Morelull":[0.2,1.5,50],"Shiinotic":[1,11.5,50],"Darumaka":[0.6,37.5,50],"Darmanitan":[1.3,92.9,50],"Turtonator":[2,212,50],"Milcery":[0.2,0.3,0],"Alcremie":[0.3,0.5,0],"Drifloon":[0.4,1.2,50],"Drifblim":[1.2,15,50],"Eevee":[0.3,6.5,87.5],"Vaporeon":[1,29,87.5],"Jolteon":[0.8,24.5,87.5],"Flareon":[0.9,25,87.5],"Espeon":[0.9,26.5,87.5],"Umbreon":[1,27,87.5],"Leafeon":[1,25.5,87.5],"Glaceon":[0.8,25.9,87.5],"Sylveon":[1,23.5,87.5]};
         const BODY_H_RANGE = [0.75, 1.25], BODY_W_RANGE = [0.6, 1.5];
         const SIZE_LEVELS = [['xxs', 20], ['xs', 25], ['sm', 30], ['ms', 35], ['md', 41], ['mb', 47], ['lg', 53], ['xl', 60], ['xxl', 70]];
         const SIZE_KEYS = SIZE_LEVELS.map(l => l[0]);
@@ -20641,7 +20912,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             'pawniard': 10.2, 'bisharp': 70.7, 'kingambit': 120, 'mankey': 28, 'primeape': 32,
             'spearow': 2, 'fearow': 38, 'tinkatink': 8.9, 'tinkatuff': 59.1, 'tinkaton': 112.8,
             'girafarig': 41.5, 'farigiraf': 160, 'joltik': 0.6, 'galvantula': 14.3, 'buneary': 5.5, 'lopunny': 33.3,
-            'munchlax': 105, 'snorlax': 460, 'miltank': 75.5, 'archen': 9.5, 'amaura': 25.2, 'aurorus': 225, 'archeops': 32, 'larvitar': 72, 'pupitar': 152, 'tyranitar': 202,
+            'munchlax': 105, 'snorlax': 460, 'miltank': 75.5, 'archen': 9.5, 'amaura': 25.2, 'sneasel': 28, 'grubbin': 4.4, 'skarmory': 50.5, 'honedge': 2, 'doublade': 4.5, 'aegislash': 53, 'charjabug': 10.5, 'vikavolt': 45, 'weavile': 34, 'aurorus': 225, 'archeops': 32, 'larvitar': 72, 'pupitar': 152, 'tyranitar': 202,
             'fomantis': 1.5, 'lurantis': 18.5, 'cranidos': 31.5, 'rampardos': 102.5, 'lapras': 220,
             'relicanth': 23.4, 'hawlucha': 21.5, 'heracross': 54, 'meowth': 4.2, 'persian': 32, 'toxel': 11,
             'rockruff': 9.2, 'lycanroc': 25, 'lycanroc midday': 25, 'lycanroc dusk': 25, 'lycanroc midnight': 25, 'wimpod': 12, 'golisopod': 108, 'inkay': 3.5, 'malamar': 47, 'larvesta': 28.8, 'volcarona': 46, 'scraggy': 11.8, 'scrafty': 30, 'starly': 2, 'staravia': 15.5, 'staraptor': 24.9,
@@ -26579,7 +26850,7 @@ function fitDetailSprite(img) {
 window.addEventListener('resize', () => ['pd-img', 'dx-img'].forEach(id => { const im = capEl(id); if (im && im.offsetParent) fitDetailSprite(im); }));
 if (window.ResizeObserver) ['pd-img', 'dx-img'].forEach(id => { const im = capEl(id); if (im) new ResizeObserver(() => { if (im.offsetParent) fitDetailSprite(im); }).observe(im.parentElement); });
 // ---- Panel Pokédex / Caja (menú principal) ----
-const DEX_INFO = {"Amaura": [698, "Fue descubierto en un bloque de hielo de la Antártida hace poco. Su cuerpo desprende un frío que congela el aire a su alrededor."], "Aurorus": [699, "Crea auroras boreales con el aire helado que expulsa. Dicen que vive en zonas muy frías y que se enfurece si lo molestan."], "Archen": [566, "Se cree que es el ancestro de todos los pokémon pájaro. Aún no sabe volar bien: planea desde las ramas más altas saltando con sus alas."], "Archeops": [567, "Vuela con gran agilidad cazando a su presa. Sin embargo, al sentirse acorralado pierde la confianza y su fuerza decae."], "Miltank": [241, "Su leche es muy nutritiva. Los niños que la beben crecen sanos y fuertes. Quienes no toleran la leche la toman fermentada en forma de yogur."], "Gible": [443, "Vive en cuevas cálidas y excavadas por él mismo. Cuando se siente amenazado, abre su enorme boca y muerde con todas sus fuerzas."], "Gabite": [444, "Colecciona en su nido fragmentos brillantes de piedras preciosas. Por eso muchos coleccionistas lo buscan sin descanso."], "Garchomp": [445, "Al plegar las alas, su cuerpo se vuelve aerodinámico y vuela más rápido que un avión a reacción. Si se enfurece, arrasa todo a su paso."], "Teddiursa": [216, "Le encanta chupar sus patas llenas de miel; con la miel que acumula marca su territorio en el bosque."], "Ursaring": [217, "Aunque es corpulento, se mueve con sigilo por el bosque; con sus garras rastrea la miel y arrasa los árboles."], "Ursaluna": [901, "Un Ursaring que ha vivido en el barro; su enorme fuerza física le permite aguantar los golpes más duros."], "Horsea": [116, "Si se siente amenazado, lanza una nube de tinta y huye; se enrosca en el coral con la cola para no ser arrastrado."], "Seadra": [117, "Sus púas son venenosas; crea remolinos al nadar y es capaz de disparar agua con gran precisión."], "Kingdra": [230, "Duerme en lo más profundo del mar; se dice que al despertar bosteza y se forman grandes remolinos."], "Sandile": [551, "Se entierra en la arena y deja solo los ojos fuera; con sus gafas naturales ve a través de la arena y vigila el desierto."], "Krokorok": [552, "Sus ojos están protegidos por una membrana que le permite ver en las tormentas de arena; patrulla en grupo su territorio."], "Krookodile": [553, "Su fuerte mandíbula puede destrozar un coche; es muy agresivo y no pierde de vista a nadie que entre en su territorio."], "Tynamo": [602, "Vive en grupo y se reúne en cascadas y ríos; al juntar sus descargas puede producir un gran voltaje."], "Eelektrik": [603, "Sale del agua a los lugares secos para cazar; se enrosca en la presa y la electrocuta con sus descargas."], "Eelektross": [604, "Usa sus brazos para sacar presas del agua y las electrocuta con sus colmillos y su cuerpo; es capaz de dejar inconsciente a su rival de un solo golpe."], "Gligar": [207, "Planea en silencio por el aire y se agarra a la cara de su presa con sus pinzas; inyecta veneno con el aguijón de la cola."], "Gliscor": [472, "Se deja caer sin hacer ruido desde el cielo, aferrándose con sus garras; el veneno de su aguijón le sienta bien."], "Vullaby": [629, "Lleva un hueso en la cabeza para protegerse. Espera a que otros Pokémon se debiliten para alimentarse."], "Mandibuzz": [630, "Vuela en círculos sobre su presa hasta que la ve agotada. Usa los huesos que recoge como arma."], "Basculin": [550, "Vive en grandes bancos en ríos y lagos. Es muy agresivo y ataca a cualquiera que se acerque."], "Basculegion": [902, "Se cree que es la reencarnación de los Basculin que murieron remontando ríos. Surca el agua con una velocidad extraordinaria."], "Murkrow": [198, "Se le considera un presagio de mala suerte. Ataca por la noche a los viajeros para robarles objetos brillantes."], "Honchkrow": [430, "Dirige a las bandadas de Murkrow durante la noche. Con un graznido atrae a sus súbditos para que cumplan sus órdenes."], "Trapinch": [328, "Excava un pozo en forma de cono en el desierto y espera pacientemente en el fondo a que una presa resbale hasta sus enormes mandíbulas."], "Vibrava": [329, "Todavía no domina el vuelo: al batir sus alas atrofiadas produce un zumbido ultrasónico que aturde a quien lo escucha."], "Flygon": [330, "Se le conoce como el espíritu del desierto: el batir de sus alas levanta tormentas de arena que lo ocultan por completo."], "Snubbull": [209, "Pese a su cara feroz es dócil y cariñoso, y se entristece cuando los más pequeños salen corriendo al verlo."], "Granbull": [210, "Sus enormes colmillos le pesan tanto que ladea la cabeza; en el fondo es timorato y se asusta con facilidad."], "Bulbasaur": [1, "Lleva una semilla en el lomo desde que nace y crece junto a él aprovechando la luz del sol."], "Ivysaur": [2, "El bulbo de su espalda florece poco a poco; para sostener su peso se vuelve más fuerte de patas."], "Venusaur": [3, "Una gran flor sobre su lomo absorbe la luz solar y la convierte en energía."], "Charmander": [4, "La llama de su cola indica su vitalidad: arde con fuerza cuando está sano y enérgico."], "Charmeleon": [5, "Es agresivo y le encanta combatir; agita su cola en llamas para intimidar a sus rivales."], "Charizard": [6, "Vuela por el cielo en busca de rivales poderosos y escupe fuego muy caliente."], "Squirtle": [7, "Se esconde en su caparazón cuando peligra y responde con chorros de agua a presión."], "Wartortle": [8, "Sus orejas y su cola peluda son señal de longevidad; nada con enorme agilidad."], "Blastoise": [9, "Dispara agua a gran presión desde los cañones de su caparazón."], "Caterpie": [10, "Se alimenta de hojas sin parar y desprende un olor fuerte por sus antenas para ahuyentar enemigos."], "Metapod": [11, "Permanece inmóvil dentro de su duro caparazón mientras su cuerpo se transforma por dentro."], "Butterfree": [12, "Vuela con sus alas cubiertas de un polvillo repelente al agua y busca flores para alimentarse."], "Weedle": [13, "Tiene un aguijón venenoso en la cabeza y vive escondido entre el follaje de bosques y praderas."], "Kakuna": [14, "Casi no se mueve mientras evoluciona, protegido por una coraza rígida."], "Beedrill": [15, "Ataca en grupo con sus aguijones venenosos y defiende con fiereza su territorio."], "Spearow": [21, "Pequeño pero muy activo: agita las alas a toda velocidad y es muy territorial."], "Fearow": [22, "Su largo pico y sus grandes alas le permiten volar largas distancias sin descansar."], "Pikachu": [25, "Almacena electricidad en las mejillas y la descarga cuando se siente amenazado."], "Raichu": [26, "Acumula tanta carga eléctrica que necesita descargarla a menudo para no incomodarse."], "Vulpix": [37, "Nace con una sola cola que se divide en seis con el tiempo; su cuerpo es cálido."], "Ninetales": [38, "Sus nueve colas de pelaje dorado reflejan su larga vida y su gran inteligencia."], "Mankey": [56, "Se enfurece con muchísima facilidad y ataca sin pensar, incluso a rivales más grandes."], "Primeape": [57, "Su ira no tiene límite: cuanto más se enfada, más fuerte y veloz se vuelve."], "Abra": [63, "Duerme casi todo el día y usa sus poderes psíquicos para teletransportarse si se siente en peligro."], "Kadabra": [64, "Emite ondas psíquicas y sostiene una cuchara que potencia sus poderes."], "Alakazam": [65, "Tiene una inteligencia enorme y puede recordar todo lo que ha vivido."], "Geodude": [74, "Se parece a una roca del camino y a veces la gente tropieza con él sin verlo."], "Graveler": [75, "Rueda cuesta abajo a gran velocidad y aplasta todo lo que encuentra a su paso."], "Golem": [76, "Su caparazón rocoso es tan duro que resiste explosiones; vive en las montañas."], "Slowpoke": [79, "Es tan lento que tarda en notar lo que le pasa; suele estar distraído junto al agua."], "Slowbro": [80, "Un Shellder se aferra a su cola y le da fuerza, aunque él parece no darse cuenta."], "Gastly": [92, "Está formado casi por completo de gas y puede envolver a sus presas en silencio."], "Haunter": [93, "Acecha en la oscuridad y se desliza por las paredes para acercarse a su víctima."], "Gengar": [94, "Se esconde en las sombras y baja la temperatura de la habitación cuando aparece."], "Cubone": [104, "Lleva puesto el cráneo de su madre y llora en silencio cuando se acuerda de ella."], "Marowak": [105, "Blande un hueso como arma con gran habilidad y es más fiero que su forma anterior."], "Mareep": [179, "Su suave lana acumula electricidad estática y brilla en la oscuridad."], "Flaaffy": [180, "Al crecer, su lana se reduce y su cuerpo se llena de electricidad, cosa que a veces le hace daño."], "Ampharos": [181, "La luz de su cola se ve desde muy lejos y sirve de guía para los navegantes."], "Slowking": [199, "Tiene una inteligencia notable y se le atribuye una gran sabiduría."], "Girafarig": [203, "Su cola tiene cerebro propio y ataca a cualquiera que se acerque por detrás."], "Riolu": [447, "Percibe emociones y sentimientos a través de una energía invisible que emite."], "Lucario": [448, "Domina el aura y puede percibir la presencia de rivales aun sin verlos."], "Drilbur": [529, "Cava túneles a toda velocidad y sus garras giran como una taladradora."], "Excadrill": [530, "Perfora el suelo con sus garras de acero y abre galerías enormes."], "Pawniard": [624, "Actúa siguiendo órdenes de su jefe y lucha en grupo con las cuchillas de su cuerpo."], "Bisharp": [625, "Lidera a otros Pawniard y solo se detiene cuando su rival cae."], "Mimikyu": [778, "Se cubre con una tela para parecerse a Pikachu porque desea que lo quieran."], "Rookidee": [821, "Pequeño pájaro que vuela en busca de rivales fuertes sin importar su tamaño."], "Corvisquire": [822, "Muy inteligente y coordinado, planea sus ataques con precisión."], "Corviknight": [823, "Su cuerpo blindado lo protege durante el vuelo; patrulla los cielos con frecuencia."], "Maschiff": [942, "Aunque su cara asusta, en realidad es tímido, y usa la mirada fija para intimidar."], "Mabosstiff": [943, "Su enorme mandíbula impone respeto y mantiene a raya a otros Pokémon."], "Tinkatink": [957, "Recoge trozos de metal y los usa para fabricar un pequeño martillo."], "Tinkatuff": [958, "Es un herrero en potencia: forja martillos más grandes con lo que encuentra."], "Tinkaton": [959, "Maneja un enorme martillo con gran destreza y se le da muy bien trabajar el metal."], "Larvitar": [246, "Nacido en las profundidades subterráneas, este Pokémon se convierte en pupa al comer la cantidad de tierra equivalente a una montaña."], "Pupitar": [247, "Esta pupa vuela propulsándose con los gases sometidos a altas presiones que encierra en el interior de su cuerpo."], "Tyranitar": [248, "Tiene tanta fuerza que puede cambiar el paisaje. Su naturaleza insolente le hace ser muy egoísta."], "Munchlax": [446, "Necesita ingerir cada día el equivalente a su peso corporal en comida."], "Snorlax": [143, "Este Pokémon es un glotón que lo único que hace aparte de comer es dormir."], "Buneary": [427, "Tiene las orejas enrolladas como si fueran muelles y las suelta de golpe para pegar al rival. Con el entrenamiento, cada golpe sale con más fuerza."], "Lopunny": [428, "Nunca baja la guardia y vigila todo lo que ocurre a su alrededor. Si percibe una amenaza, se defiende con patadas de una potencia devastadora."], "Joltik": [595, "No puede generar electricidad por sí mismo, así que se encarama a Pokémon grandes y absorbe su energía estática."], "Galvantula": [596, "Cuando un enemigo lo ataca, expulsa por la boca hilos electrificados para crear una barrera eléctrica."], "Farigiraf": [981, "Sus dos cerebros trabajan a la vez y le dan poderes psíquicos aún más potentes."], "Heracross": [214, "Este fuerte Pokémon clava su preciado cuerno en la tripa del enemigo, lo eleva y luego lo arroja."], "Hawlucha": [701, "Es un luchador que domina el aire. Se lanza desde las alturas y remata con una llave espectacular."], "Relicanth": [369, "Apenas ha cambiado desde hace cien millones de años. Vive en las profundidades del mar, donde la presión es enorme."], "Lapras": [131, "Cruza los mares llevando a las personas sobre su lomo. Es muy inteligente y entiende el lenguaje humano."], "Cranidos": [408, "Su cráneo es tan duro que se estrella de cabeza contra cualquier cosa. Se cree que vivió hace unos cien millones de años."], "Rampardos": [409, "Su cráneo es tan fuerte que puede romper rocas de un cabezazo, pero el golpe le deja medio aturdido."], "Fomantis": [753, "Absorbe la luz del sol con las hojas de su cuerpo. De noche se esconde entre la hierba para dormir."], "Lurantis": [754, "Sus hojas brillan como cuchillas al sol. Es tan presumido que se pasa el día limpiándose el cuerpo."], "Kingambit": [983, "Manda sobre un gran ejército de Bisharp y es implacable y muy astuto."], "Toxel": [848, "Guarda veneno y electricidad en su cuerpo. Cuando se asusta o se emociona, suelta chispas y un líquido tóxico."], "Toxtricity Amped": [849, "Su corazón late a un ritmo frenético y descarga electricidad por todo el cuerpo. Toca una música rápida y explosiva."], "Toxtricity Low Key": [849, "Su ritmo es más pausado y grave, y el veneno que segrega es mucho más espeso. Cada acorde suyo arrasa lo que tiene cerca."], "Meowth": [52, "Le fascinan las cosas que brillan. De noche recorre las calles buscando monedas y objetos relucientes."], "Persian": [53, "Elegante y orgulloso, se mueve con un sigilo perfecto. Cuando se enfada, saca las garras sin avisar."], "Rockruff": [744, "Es un cachorro leal y juguetón que no se separa de su entrenador. Le crece una roca en el cuello, y su forma final depende de la hora del día en que evoluciona."], "Lycanroc Midday": [745, "Es veloz y ágil: esquiva los ataques con facilidad y desgarra al rival con las rocas afiladas de su pelaje. Es muy fiel a su entrenador."], "Lycanroc Midnight": [745, "Es temperamental y se enfurece con facilidad. Ataca con un frenesí salvaje y no se detiene aunque esté herido."], "Lycanroc Dusk": [745, "Es sereno pero muy feroz. Con la luz del atardecer espera el momento justo y remata al rival con un golpe certero de sus rocas."], "Wimpod": [767, "Es muy cobarde: huye en cuanto se siente en peligro. Se alimenta de restos y escombros que encuentra por la costa."], "Scraggy": [559, "Su piel holgada le sirve de protección: cuando se siente amenazado se la sube hasta tapar la cara. Va en grupo y su cabezazo es muy temido."], "Scrafty": [560, "Es el jefe de su manada y planta cara a cualquiera que la amenace. Sus puñetazos y patadas son devastadores, aunque rara vez los usa sin motivo."], "Starly": [396, "Vive en grandes bandadas para protegerse. Cuando se queda solo, se siente inseguro y no deja de chillar, aunque con el tiempo se vuelve más valiente."], "Staravia": [397, "Al evolucionar se vuelve más fiero y deja la bandada para pelear. Es muy territorial y ataca sin dudar a quien invade sus dominios."], "Staraptor": [398, "Domina los cielos y no teme a rivales mucho más grandes. Se eleva a gran altura y se lanza en picado sobre su presa con una fuerza devastadora."], "Larvesta": [636, "Nace de un huevo que se incuba en volcanes. Sus patas le dan una gran agilidad y escupe fuego por la boca al sentirse en peligro."], "Volcarona": [637, "Sus alas esparcen un polvo ardiente que ilumina la oscuridad. En épocas antiguas, la gente lo veneraba como si fuera el sol."], "Inkay": [686, "Cuando agita su cuerpo brillante, desorienta a los rivales. Lo usa para pedir ayuda, y su luz es tan hipnótica que a veces confunde hasta a sus propios aliados."], "Malamar": [687, "Hipnotiza a sus rivales con sus ventosas y los controla a su antojo. Se dice que su voluntad es tan fuerte que domina a quienes lo miran."], "Golisopod": [768, "Vive en cuevas y no baja la guardia. Con sus afiladas pinzas ataca sin piedad y le chupa la vitalidad al rival."], "Mareanie": [747, "Hunde en su presa la púa venenosa de su cabeza. Cuando la presa se debilita, la remata con sus 10 tentáculos."], "Greavard": [971, "Dicen que un perro Pokémon que murió en la naturaleza sin haber tratado nunca con humanos renació como este Pokémon."], "Houndstone": [972, "Pasa la mayor parte del tiempo durmiendo en los cementerios."], "Ferroseed": [597, "Absorbe los componentes ferruginosos de las rocas al colgarse del techo de las cuevas. Dispara púas si se ve en peligro."], "Ferrothorn": [598, "Se agarra con sus raíces a los techos de las cuevas y azota a sus presas con sus tres látigos de espinas de acero."], "Wingull": [278, "Planea sobre el mar aprovechando las corrientes de aire y se lanza en picado para atrapar a sus presas."], "Pelipper": [279, "Cruza el océano llevando comida y crías dentro de su enorme pico, que usa como una bolsa."], "Magnemite": [81, "Emite ondas electromagnéticas que le permiten flotar en el aire."], "Magneton": [82, "Cuando tres Magnemite se unen, sus cerebros también se fusionan en uno solo."], "Magnezone": [462, "Usa un radar para vigilar su territorio."], "Shroomish": [285, "Vive en suelos húmedos y oscuros de los bosques. Cuando lo atacan, suelta esporas por la cabeza para defenderse."], "Breloom": [286, "Lanza puñetazos precisos con sus brazos elásticos y retrocede de un salto. Su cola de esporas le sirve de contrapeso al luchar."], "Morelull": [755, "Vive en los bosques oscuros y húmedos. Brilla con una luz tenue que atrae a los pokémon, a los que duerme con esporas."], "Shiinotic": [756, "Su luz hipnótica atrae a quien se pierde en el bosque y lo duerme con esporas para absorberle la energía."], "Darumaka": [554, "Duerme con la cabeza hundida en el cuerpo y las llamas en su interior se avivan al despertar. Su cuerpo arde a más de 1.400 °C."], "Darmanitan": [555, "Es tan fuerte que lanza puñetazos capaces de partir un camión. Cuando se enfurece, el fuego de su cuerpo arde con más intensidad."], "Turtonator": [776, "Su caparazón contiene explosivos. Si lo golpean con fuerza, estalla y lanza una gran llamarada; luego se recompone con el tiempo."], "Milcery": [868, "Se dice que su gran sensibilidad le permite notar cuándo la nata está en su punto. Cuando se siente feliz, la dulzura que desprende se vuelve más intensa."], "Eevee": [133, "Su código genético es inestable, por lo que puede evolucionar de formas muy distintas según el entorno y los golpes que recibe."], "Vaporeon": [134, "Su cuerpo se funde con el agua, lo que lo hace casi invisible cuando se sumerge. Domina el agua a voluntad."], "Jolteon": [135, "Acumula electricidad en el pelaje y puede erizarlo como agujas. Cuando se enfada, lanza descargas por todo el cuerpo."], "Flareon": [136, "Almacena fuego en su cuerpo, que alcanza los 900 °C. Cuando se prepara para el combate, su temperatura aumenta."], "Espeon": [196, "Sus finos pelos captan las corrientes de aire y le permiten predecir el clima y los movimientos del rival. Su gema se activa con la luz del sol."], "Leafeon": [470, "Vive bajo la luz del sol del bosque. Sus células hacen la fotosíntesis y su cuerpo desprende un aroma fresco."], "Glaceon": [471, "Controla el aire helado: puede congelar su propio pelaje y lanzar agujas de hielo que brillan como diamantes."], "Sylveon": [700, "Enreda con sus cintas a su entrenador y emite ondas que calman la hostilidad de cualquiera que se acerque."], "Umbreon": [197, "Evolucionó tras bañarse en ondas lunares. Los anillos de su pelaje brillan en la oscuridad cuando está en guardia."], "Drifloon": [425, "Se dice que es un Pokémon formado por las almas de personas y Pokémon. Le gusta llevarse a los niños, pero estos acaban muy pesados para él."], "Drifblim": [426, "Transporta a las personas y a los Pokémon por el aire, pero no se sabe adónde los lleva. Va a la deriva con el viento."], "Alcremie": [869, "Cuando está contento, adorna su cuerpo de nata con bayas y frutas. Con su brillo hechizante deslumbra a quien se le acerca."], "Toxapex": [748, "Avanza por el fondo del mar sobre sus 12 patas. Quien sufre su veneno siente un dolor intenso durante tres días y tres noches."]};
+const DEX_INFO = {"Honedge": [679, "Una espada que posee a quien la empuña y absorbe su energía vital. Se enrolla con su paño para atacar."], "Doublade": [680, "Dos espadas que actúan en perfecta sincronía. Rodean al rival y lo atacan sin descanso, golpeando desde ambos lados."], "Aegislash": [681, "Cambia de forma según la situación: protege con el escudo y ataca con el filo. Puede percibir las auras de los líderes."], "Skarmory": [227, "Sus alas de acero se renuevan cada año. Las plumas caídas se usan para forjar espadas. Vuela a gran velocidad y ataca con sus alas afiladas."], "Grubbin": [736, "Usa sus fuertes mandíbulas para excavar túneles bajo tierra. Al evolucionar se alimenta de la electricidad de los cables."], "Charjabug": [737, "Almacena electricidad en su caparazón de ámbar. Si se frota contra otro pokémon puede cargarlo, y su cuerpo sirve como batería."], "Vikavolt": [738, "Vuela a gran velocidad y lanza descargas por sus mandíbulas. Su cuerpo electrizante ilumina la noche."], "Sneasel": [215, "Con sus garras afiladas trepa a los árboles para atacar los nidos. Es sigiloso y rápido: ataca de sorpresa y desaparece antes de que lo vean."], "Weavile": [461, "Vive en manadas muy organizadas. Marca sus rastros con garabatos de hielo y coordina los ataques con una astucia temible."], "Amaura": [698, "Fue descubierto en un bloque de hielo de la Antártida hace poco. Su cuerpo desprende un frío que congela el aire a su alrededor."], "Aurorus": [699, "Crea auroras boreales con el aire helado que expulsa. Dicen que vive en zonas muy frías y que se enfurece si lo molestan."], "Archen": [566, "Se cree que es el ancestro de todos los pokémon pájaro. Aún no sabe volar bien: planea desde las ramas más altas saltando con sus alas."], "Archeops": [567, "Vuela con gran agilidad cazando a su presa. Sin embargo, al sentirse acorralado pierde la confianza y su fuerza decae."], "Miltank": [241, "Su leche es muy nutritiva. Los niños que la beben crecen sanos y fuertes. Quienes no toleran la leche la toman fermentada en forma de yogur."], "Gible": [443, "Vive en cuevas cálidas y excavadas por él mismo. Cuando se siente amenazado, abre su enorme boca y muerde con todas sus fuerzas."], "Gabite": [444, "Colecciona en su nido fragmentos brillantes de piedras preciosas. Por eso muchos coleccionistas lo buscan sin descanso."], "Garchomp": [445, "Al plegar las alas, su cuerpo se vuelve aerodinámico y vuela más rápido que un avión a reacción. Si se enfurece, arrasa todo a su paso."], "Teddiursa": [216, "Le encanta chupar sus patas llenas de miel; con la miel que acumula marca su territorio en el bosque."], "Ursaring": [217, "Aunque es corpulento, se mueve con sigilo por el bosque; con sus garras rastrea la miel y arrasa los árboles."], "Ursaluna": [901, "Un Ursaring que ha vivido en el barro; su enorme fuerza física le permite aguantar los golpes más duros."], "Horsea": [116, "Si se siente amenazado, lanza una nube de tinta y huye; se enrosca en el coral con la cola para no ser arrastrado."], "Seadra": [117, "Sus púas son venenosas; crea remolinos al nadar y es capaz de disparar agua con gran precisión."], "Kingdra": [230, "Duerme en lo más profundo del mar; se dice que al despertar bosteza y se forman grandes remolinos."], "Sandile": [551, "Se entierra en la arena y deja solo los ojos fuera; con sus gafas naturales ve a través de la arena y vigila el desierto."], "Krokorok": [552, "Sus ojos están protegidos por una membrana que le permite ver en las tormentas de arena; patrulla en grupo su territorio."], "Krookodile": [553, "Su fuerte mandíbula puede destrozar un coche; es muy agresivo y no pierde de vista a nadie que entre en su territorio."], "Tynamo": [602, "Vive en grupo y se reúne en cascadas y ríos; al juntar sus descargas puede producir un gran voltaje."], "Eelektrik": [603, "Sale del agua a los lugares secos para cazar; se enrosca en la presa y la electrocuta con sus descargas."], "Eelektross": [604, "Usa sus brazos para sacar presas del agua y las electrocuta con sus colmillos y su cuerpo; es capaz de dejar inconsciente a su rival de un solo golpe."], "Gligar": [207, "Planea en silencio por el aire y se agarra a la cara de su presa con sus pinzas; inyecta veneno con el aguijón de la cola."], "Gliscor": [472, "Se deja caer sin hacer ruido desde el cielo, aferrándose con sus garras; el veneno de su aguijón le sienta bien."], "Vullaby": [629, "Lleva un hueso en la cabeza para protegerse. Espera a que otros Pokémon se debiliten para alimentarse."], "Mandibuzz": [630, "Vuela en círculos sobre su presa hasta que la ve agotada. Usa los huesos que recoge como arma."], "Basculin": [550, "Vive en grandes bancos en ríos y lagos. Es muy agresivo y ataca a cualquiera que se acerque."], "Basculegion": [902, "Se cree que es la reencarnación de los Basculin que murieron remontando ríos. Surca el agua con una velocidad extraordinaria."], "Murkrow": [198, "Se le considera un presagio de mala suerte. Ataca por la noche a los viajeros para robarles objetos brillantes."], "Honchkrow": [430, "Dirige a las bandadas de Murkrow durante la noche. Con un graznido atrae a sus súbditos para que cumplan sus órdenes."], "Trapinch": [328, "Excava un pozo en forma de cono en el desierto y espera pacientemente en el fondo a que una presa resbale hasta sus enormes mandíbulas."], "Vibrava": [329, "Todavía no domina el vuelo: al batir sus alas atrofiadas produce un zumbido ultrasónico que aturde a quien lo escucha."], "Flygon": [330, "Se le conoce como el espíritu del desierto: el batir de sus alas levanta tormentas de arena que lo ocultan por completo."], "Snubbull": [209, "Pese a su cara feroz es dócil y cariñoso, y se entristece cuando los más pequeños salen corriendo al verlo."], "Granbull": [210, "Sus enormes colmillos le pesan tanto que ladea la cabeza; en el fondo es timorato y se asusta con facilidad."], "Bulbasaur": [1, "Lleva una semilla en el lomo desde que nace y crece junto a él aprovechando la luz del sol."], "Ivysaur": [2, "El bulbo de su espalda florece poco a poco; para sostener su peso se vuelve más fuerte de patas."], "Venusaur": [3, "Una gran flor sobre su lomo absorbe la luz solar y la convierte en energía."], "Charmander": [4, "La llama de su cola indica su vitalidad: arde con fuerza cuando está sano y enérgico."], "Charmeleon": [5, "Es agresivo y le encanta combatir; agita su cola en llamas para intimidar a sus rivales."], "Charizard": [6, "Vuela por el cielo en busca de rivales poderosos y escupe fuego muy caliente."], "Squirtle": [7, "Se esconde en su caparazón cuando peligra y responde con chorros de agua a presión."], "Wartortle": [8, "Sus orejas y su cola peluda son señal de longevidad; nada con enorme agilidad."], "Blastoise": [9, "Dispara agua a gran presión desde los cañones de su caparazón."], "Caterpie": [10, "Se alimenta de hojas sin parar y desprende un olor fuerte por sus antenas para ahuyentar enemigos."], "Metapod": [11, "Permanece inmóvil dentro de su duro caparazón mientras su cuerpo se transforma por dentro."], "Butterfree": [12, "Vuela con sus alas cubiertas de un polvillo repelente al agua y busca flores para alimentarse."], "Weedle": [13, "Tiene un aguijón venenoso en la cabeza y vive escondido entre el follaje de bosques y praderas."], "Kakuna": [14, "Casi no se mueve mientras evoluciona, protegido por una coraza rígida."], "Beedrill": [15, "Ataca en grupo con sus aguijones venenosos y defiende con fiereza su territorio."], "Spearow": [21, "Pequeño pero muy activo: agita las alas a toda velocidad y es muy territorial."], "Fearow": [22, "Su largo pico y sus grandes alas le permiten volar largas distancias sin descansar."], "Pikachu": [25, "Almacena electricidad en las mejillas y la descarga cuando se siente amenazado."], "Raichu": [26, "Acumula tanta carga eléctrica que necesita descargarla a menudo para no incomodarse."], "Vulpix": [37, "Nace con una sola cola que se divide en seis con el tiempo; su cuerpo es cálido."], "Ninetales": [38, "Sus nueve colas de pelaje dorado reflejan su larga vida y su gran inteligencia."], "Mankey": [56, "Se enfurece con muchísima facilidad y ataca sin pensar, incluso a rivales más grandes."], "Primeape": [57, "Su ira no tiene límite: cuanto más se enfada, más fuerte y veloz se vuelve."], "Abra": [63, "Duerme casi todo el día y usa sus poderes psíquicos para teletransportarse si se siente en peligro."], "Kadabra": [64, "Emite ondas psíquicas y sostiene una cuchara que potencia sus poderes."], "Alakazam": [65, "Tiene una inteligencia enorme y puede recordar todo lo que ha vivido."], "Geodude": [74, "Se parece a una roca del camino y a veces la gente tropieza con él sin verlo."], "Graveler": [75, "Rueda cuesta abajo a gran velocidad y aplasta todo lo que encuentra a su paso."], "Golem": [76, "Su caparazón rocoso es tan duro que resiste explosiones; vive en las montañas."], "Slowpoke": [79, "Es tan lento que tarda en notar lo que le pasa; suele estar distraído junto al agua."], "Slowbro": [80, "Un Shellder se aferra a su cola y le da fuerza, aunque él parece no darse cuenta."], "Gastly": [92, "Está formado casi por completo de gas y puede envolver a sus presas en silencio."], "Haunter": [93, "Acecha en la oscuridad y se desliza por las paredes para acercarse a su víctima."], "Gengar": [94, "Se esconde en las sombras y baja la temperatura de la habitación cuando aparece."], "Cubone": [104, "Lleva puesto el cráneo de su madre y llora en silencio cuando se acuerda de ella."], "Marowak": [105, "Blande un hueso como arma con gran habilidad y es más fiero que su forma anterior."], "Mareep": [179, "Su suave lana acumula electricidad estática y brilla en la oscuridad."], "Flaaffy": [180, "Al crecer, su lana se reduce y su cuerpo se llena de electricidad, cosa que a veces le hace daño."], "Ampharos": [181, "La luz de su cola se ve desde muy lejos y sirve de guía para los navegantes."], "Slowking": [199, "Tiene una inteligencia notable y se le atribuye una gran sabiduría."], "Girafarig": [203, "Su cola tiene cerebro propio y ataca a cualquiera que se acerque por detrás."], "Riolu": [447, "Percibe emociones y sentimientos a través de una energía invisible que emite."], "Lucario": [448, "Domina el aura y puede percibir la presencia de rivales aun sin verlos."], "Drilbur": [529, "Cava túneles a toda velocidad y sus garras giran como una taladradora."], "Excadrill": [530, "Perfora el suelo con sus garras de acero y abre galerías enormes."], "Pawniard": [624, "Actúa siguiendo órdenes de su jefe y lucha en grupo con las cuchillas de su cuerpo."], "Bisharp": [625, "Lidera a otros Pawniard y solo se detiene cuando su rival cae."], "Mimikyu": [778, "Se cubre con una tela para parecerse a Pikachu porque desea que lo quieran."], "Rookidee": [821, "Pequeño pájaro que vuela en busca de rivales fuertes sin importar su tamaño."], "Corvisquire": [822, "Muy inteligente y coordinado, planea sus ataques con precisión."], "Corviknight": [823, "Su cuerpo blindado lo protege durante el vuelo; patrulla los cielos con frecuencia."], "Maschiff": [942, "Aunque su cara asusta, en realidad es tímido, y usa la mirada fija para intimidar."], "Mabosstiff": [943, "Su enorme mandíbula impone respeto y mantiene a raya a otros Pokémon."], "Tinkatink": [957, "Recoge trozos de metal y los usa para fabricar un pequeño martillo."], "Tinkatuff": [958, "Es un herrero en potencia: forja martillos más grandes con lo que encuentra."], "Tinkaton": [959, "Maneja un enorme martillo con gran destreza y se le da muy bien trabajar el metal."], "Larvitar": [246, "Nacido en las profundidades subterráneas, este Pokémon se convierte en pupa al comer la cantidad de tierra equivalente a una montaña."], "Pupitar": [247, "Esta pupa vuela propulsándose con los gases sometidos a altas presiones que encierra en el interior de su cuerpo."], "Tyranitar": [248, "Tiene tanta fuerza que puede cambiar el paisaje. Su naturaleza insolente le hace ser muy egoísta."], "Munchlax": [446, "Necesita ingerir cada día el equivalente a su peso corporal en comida."], "Snorlax": [143, "Este Pokémon es un glotón que lo único que hace aparte de comer es dormir."], "Buneary": [427, "Tiene las orejas enrolladas como si fueran muelles y las suelta de golpe para pegar al rival. Con el entrenamiento, cada golpe sale con más fuerza."], "Lopunny": [428, "Nunca baja la guardia y vigila todo lo que ocurre a su alrededor. Si percibe una amenaza, se defiende con patadas de una potencia devastadora."], "Joltik": [595, "No puede generar electricidad por sí mismo, así que se encarama a Pokémon grandes y absorbe su energía estática."], "Galvantula": [596, "Cuando un enemigo lo ataca, expulsa por la boca hilos electrificados para crear una barrera eléctrica."], "Farigiraf": [981, "Sus dos cerebros trabajan a la vez y le dan poderes psíquicos aún más potentes."], "Heracross": [214, "Este fuerte Pokémon clava su preciado cuerno en la tripa del enemigo, lo eleva y luego lo arroja."], "Hawlucha": [701, "Es un luchador que domina el aire. Se lanza desde las alturas y remata con una llave espectacular."], "Relicanth": [369, "Apenas ha cambiado desde hace cien millones de años. Vive en las profundidades del mar, donde la presión es enorme."], "Lapras": [131, "Cruza los mares llevando a las personas sobre su lomo. Es muy inteligente y entiende el lenguaje humano."], "Cranidos": [408, "Su cráneo es tan duro que se estrella de cabeza contra cualquier cosa. Se cree que vivió hace unos cien millones de años."], "Rampardos": [409, "Su cráneo es tan fuerte que puede romper rocas de un cabezazo, pero el golpe le deja medio aturdido."], "Fomantis": [753, "Absorbe la luz del sol con las hojas de su cuerpo. De noche se esconde entre la hierba para dormir."], "Lurantis": [754, "Sus hojas brillan como cuchillas al sol. Es tan presumido que se pasa el día limpiándose el cuerpo."], "Kingambit": [983, "Manda sobre un gran ejército de Bisharp y es implacable y muy astuto."], "Toxel": [848, "Guarda veneno y electricidad en su cuerpo. Cuando se asusta o se emociona, suelta chispas y un líquido tóxico."], "Toxtricity Amped": [849, "Su corazón late a un ritmo frenético y descarga electricidad por todo el cuerpo. Toca una música rápida y explosiva."], "Toxtricity Low Key": [849, "Su ritmo es más pausado y grave, y el veneno que segrega es mucho más espeso. Cada acorde suyo arrasa lo que tiene cerca."], "Meowth": [52, "Le fascinan las cosas que brillan. De noche recorre las calles buscando monedas y objetos relucientes."], "Persian": [53, "Elegante y orgulloso, se mueve con un sigilo perfecto. Cuando se enfada, saca las garras sin avisar."], "Rockruff": [744, "Es un cachorro leal y juguetón que no se separa de su entrenador. Le crece una roca en el cuello, y su forma final depende de la hora del día en que evoluciona."], "Lycanroc Midday": [745, "Es veloz y ágil: esquiva los ataques con facilidad y desgarra al rival con las rocas afiladas de su pelaje. Es muy fiel a su entrenador."], "Lycanroc Midnight": [745, "Es temperamental y se enfurece con facilidad. Ataca con un frenesí salvaje y no se detiene aunque esté herido."], "Lycanroc Dusk": [745, "Es sereno pero muy feroz. Con la luz del atardecer espera el momento justo y remata al rival con un golpe certero de sus rocas."], "Wimpod": [767, "Es muy cobarde: huye en cuanto se siente en peligro. Se alimenta de restos y escombros que encuentra por la costa."], "Scraggy": [559, "Su piel holgada le sirve de protección: cuando se siente amenazado se la sube hasta tapar la cara. Va en grupo y su cabezazo es muy temido."], "Scrafty": [560, "Es el jefe de su manada y planta cara a cualquiera que la amenace. Sus puñetazos y patadas son devastadores, aunque rara vez los usa sin motivo."], "Starly": [396, "Vive en grandes bandadas para protegerse. Cuando se queda solo, se siente inseguro y no deja de chillar, aunque con el tiempo se vuelve más valiente."], "Staravia": [397, "Al evolucionar se vuelve más fiero y deja la bandada para pelear. Es muy territorial y ataca sin dudar a quien invade sus dominios."], "Staraptor": [398, "Domina los cielos y no teme a rivales mucho más grandes. Se eleva a gran altura y se lanza en picado sobre su presa con una fuerza devastadora."], "Larvesta": [636, "Nace de un huevo que se incuba en volcanes. Sus patas le dan una gran agilidad y escupe fuego por la boca al sentirse en peligro."], "Volcarona": [637, "Sus alas esparcen un polvo ardiente que ilumina la oscuridad. En épocas antiguas, la gente lo veneraba como si fuera el sol."], "Inkay": [686, "Cuando agita su cuerpo brillante, desorienta a los rivales. Lo usa para pedir ayuda, y su luz es tan hipnótica que a veces confunde hasta a sus propios aliados."], "Malamar": [687, "Hipnotiza a sus rivales con sus ventosas y los controla a su antojo. Se dice que su voluntad es tan fuerte que domina a quienes lo miran."], "Golisopod": [768, "Vive en cuevas y no baja la guardia. Con sus afiladas pinzas ataca sin piedad y le chupa la vitalidad al rival."], "Mareanie": [747, "Hunde en su presa la púa venenosa de su cabeza. Cuando la presa se debilita, la remata con sus 10 tentáculos."], "Greavard": [971, "Dicen que un perro Pokémon que murió en la naturaleza sin haber tratado nunca con humanos renació como este Pokémon."], "Houndstone": [972, "Pasa la mayor parte del tiempo durmiendo en los cementerios."], "Ferroseed": [597, "Absorbe los componentes ferruginosos de las rocas al colgarse del techo de las cuevas. Dispara púas si se ve en peligro."], "Ferrothorn": [598, "Se agarra con sus raíces a los techos de las cuevas y azota a sus presas con sus tres látigos de espinas de acero."], "Wingull": [278, "Planea sobre el mar aprovechando las corrientes de aire y se lanza en picado para atrapar a sus presas."], "Pelipper": [279, "Cruza el océano llevando comida y crías dentro de su enorme pico, que usa como una bolsa."], "Magnemite": [81, "Emite ondas electromagnéticas que le permiten flotar en el aire."], "Magneton": [82, "Cuando tres Magnemite se unen, sus cerebros también se fusionan en uno solo."], "Magnezone": [462, "Usa un radar para vigilar su territorio."], "Shroomish": [285, "Vive en suelos húmedos y oscuros de los bosques. Cuando lo atacan, suelta esporas por la cabeza para defenderse."], "Breloom": [286, "Lanza puñetazos precisos con sus brazos elásticos y retrocede de un salto. Su cola de esporas le sirve de contrapeso al luchar."], "Morelull": [755, "Vive en los bosques oscuros y húmedos. Brilla con una luz tenue que atrae a los pokémon, a los que duerme con esporas."], "Shiinotic": [756, "Su luz hipnótica atrae a quien se pierde en el bosque y lo duerme con esporas para absorberle la energía."], "Darumaka": [554, "Duerme con la cabeza hundida en el cuerpo y las llamas en su interior se avivan al despertar. Su cuerpo arde a más de 1.400 °C."], "Darmanitan": [555, "Es tan fuerte que lanza puñetazos capaces de partir un camión. Cuando se enfurece, el fuego de su cuerpo arde con más intensidad."], "Turtonator": [776, "Su caparazón contiene explosivos. Si lo golpean con fuerza, estalla y lanza una gran llamarada; luego se recompone con el tiempo."], "Milcery": [868, "Se dice que su gran sensibilidad le permite notar cuándo la nata está en su punto. Cuando se siente feliz, la dulzura que desprende se vuelve más intensa."], "Eevee": [133, "Su código genético es inestable, por lo que puede evolucionar de formas muy distintas según el entorno y los golpes que recibe."], "Vaporeon": [134, "Su cuerpo se funde con el agua, lo que lo hace casi invisible cuando se sumerge. Domina el agua a voluntad."], "Jolteon": [135, "Acumula electricidad en el pelaje y puede erizarlo como agujas. Cuando se enfada, lanza descargas por todo el cuerpo."], "Flareon": [136, "Almacena fuego en su cuerpo, que alcanza los 900 °C. Cuando se prepara para el combate, su temperatura aumenta."], "Espeon": [196, "Sus finos pelos captan las corrientes de aire y le permiten predecir el clima y los movimientos del rival. Su gema se activa con la luz del sol."], "Leafeon": [470, "Vive bajo la luz del sol del bosque. Sus células hacen la fotosíntesis y su cuerpo desprende un aroma fresco."], "Glaceon": [471, "Controla el aire helado: puede congelar su propio pelaje y lanzar agujas de hielo que brillan como diamantes."], "Sylveon": [700, "Enreda con sus cintas a su entrenador y emite ondas que calman la hostilidad de cualquiera que se acerque."], "Umbreon": [197, "Evolucionó tras bañarse en ondas lunares. Los anillos de su pelaje brillan en la oscuridad cuando está en guardia."], "Drifloon": [425, "Se dice que es un Pokémon formado por las almas de personas y Pokémon. Le gusta llevarse a los niños, pero estos acaban muy pesados para él."], "Drifblim": [426, "Transporta a las personas y a los Pokémon por el aire, pero no se sabe adónde los lleva. Va a la deriva con el viento."], "Alcremie": [869, "Cuando está contento, adorna su cuerpo de nata con bayas y frutas. Con su brillo hechizante deslumbra a quien se le acerca."], "Toxapex": [748, "Avanza por el fondo del mar sobre sus 12 patas. Quien sufre su veneno siente un dolor intenso durante tres días y tres noches."]};
 function dexList() {
     const out = [], seen = {};
     const add = (n, sp) => { if (n && sp && !seen[n]) { seen[n] = 1; out.push({ name: n, sprite: sp }); } };

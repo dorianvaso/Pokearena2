@@ -42,6 +42,7 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS chat_read (acc TEXT NOT NULL, peer TEXT NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (acc, peer))'),
     ]).then(() => db.prepare('DROP TABLE IF EXISTS g_species').run()) // el registro por especie ya no existe
       .then(() => db.prepare('CREATE TABLE IF NOT EXISTS save_codes (code TEXT PRIMARY KEY, h TEXT NOT NULL, slot INTEGER NOT NULL, ts INTEGER NOT NULL)').run()) // código único de cada partida -> cuenta y ranura que la guardan
+      .then(() => db.prepare('CREATE TABLE IF NOT EXISTS mis_score (mid TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, ts INTEGER NOT NULL, name TEXT, avatar TEXT, PRIMARY KEY (mid, acc))').run())
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
       .then(() => db.prepare('ALTER TABLE profiles ADD COLUMN medals TEXT').run().catch(() => {})) // medallas de la Liga (ids) que ven los amigos en la ficha de perfil
       .then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
@@ -276,6 +277,7 @@ const cleanMedals = a => [...new Set((Array.isArray(a) ? a : []).map(x => String
 const parseMedals = t => { try { return cleanMedals(JSON.parse(t || '[]')); } catch (e) { return []; } };
 const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
+const MIS_END = Date.parse('2026-10-24T18:00:00Z'); // domingo 24 de octubre, 12:00 del mediodía en Costa Rica (UTC-6)
 async function friendsApi(db, h, route, req, url) {
     const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
     const b = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
@@ -287,6 +289,20 @@ async function friendsApi(db, h, route, req, url) {
         await q('INSERT INTO profiles (acc, ts, name, avatar, lvl, hof, medals) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(acc) DO UPDATE SET ts = ?2, name = ?3, avatar = ?4, lvl = ?5, hof = ?6, medals = ?7',
             me, now, name, avatar, lvl, JSON.stringify(cleanHof(b.hof)), JSON.stringify(cleanMedals(b.medals))).run();
         return reply({ ok: true, acc: me, now });
+    }
+    if (route === '/api/f/mission' && req.method === 'POST') { // Misión 1: capturas de Johto (solo sube; se cierra el domingo 24-oct 12:00 hora de Costa Rica)
+        if (b.mid !== 'm1') return reply({ error: 'misión no válida' }, 400);
+        if (now > MIS_END + 30000) return reply({ closed: true, now });
+        const n = Math.max(0, Math.min(999, b.n | 0));
+        const name = String(b.name || '').replace(/[<>"&]/g, '').trim().slice(0, 24) || 'Entrenador';
+        const avatar = /^[a-z0-9_-]{1,12}$/i.test(b.avatar || '') ? b.avatar : '';
+        await q('INSERT INTO mis_score (mid, acc, n, ts, name, avatar) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(mid, acc) DO UPDATE SET n = ?3, ts = ?4, name = ?5, avatar = ?6 WHERE ?3 > mis_score.n',
+            'm1', me, n, now, name, avatar).run();
+        return reply({ ok: true, now });
+    }
+    if (route === '/api/f/mboard' && req.method === 'GET') {
+        const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', 'm1').all();
+        return reply({ now, end: MIS_END, me, board: results });
     }
     if (route === '/api/f/list' && req.method === 'GET') {
         const [fr, inc, out, unr] = await db.batch([

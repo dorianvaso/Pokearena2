@@ -470,7 +470,26 @@ export default {
                     db.prepare('SELECT (SELECT COUNT(*) FROM accounts) AS accounts, (SELECT COUNT(*) FROM g_arenas) AS arenas'),
                 ]);
                 const arenas = ar.results.map(r => '{"_k":' + JSON.stringify(r.k) + ',"_acc":"' + r.acc + '",' + r.sum.slice(1)).join(',');
-                const saves = sv.results.map(r => '{"_acc":"' + r.acc + '",' + r.body.slice(1)).join(',');
+                // código para cargar de TODAS las partidas del registro (de cualquier cuenta): primero el que trae el registro; si falta, el de save_codes; si no, se lee de la propia ranura guardada
+                const cmap = {}; try { (await db.prepare('SELECT code, h, slot FROM save_codes').all()).results.forEach(c => { cmap[c.h.slice(0, 12) + ':' + c.slot] = c.code; }); } catch (e) {}
+                let budget = 30;
+                const saves = (await Promise.all(sv.results.map(async r => {
+                    let o = null; try { o = JSON.parse(r.body); } catch (e) { return ''; }
+                    if (!/^[A-Z0-9]{12}$/.test(o.code || '') && o.status !== 'eliminada' && o.slot) {
+                        let c = cmap[r.acc + ':' + o.slot];
+                        if (!c && budget > 0) {
+                            budget--;
+                            try {
+                                const hh = await db.prepare('SELECT h FROM blobs WHERE h LIKE ?1 AND k = ?2 LIMIT 1').bind(r.acc + '%', 'slot' + o.slot).first();
+                                const txt = hh ? await readKey(db, hh.h, 'slot' + o.slot) : null;
+                                const m = txt && /"pokearena\.savecode"\s*:\s*"([A-Z0-9]{12})"/.exec(txt);
+                                if (m && (!o.id || txt.includes('"' + o.id + '"'))) { c = m[1]; cmap[r.acc + ':' + o.slot] = c; await db.prepare('INSERT OR IGNORE INTO save_codes (code, h, slot, ts) VALUES (?1, ?2, ?3, ?4)').bind(c, hh.h, +o.slot, Date.now()).run(); }
+                            } catch (e) {}
+                        }
+                        if (c) o.code = c;
+                    }
+                    return '{"_acc":"' + r.acc + '",' + JSON.stringify(o).slice(1);
+                }))).filter(Boolean).join(',');
                 return reply('{"totals":' + JSON.stringify(ct.results[0]) + ',"arenas":[' + arenas + '],"saves":[' + saves + ']}');
             }
             if ((route === '/api/g/chats' || route === '/api/g/chat') && req.method === 'POST') {

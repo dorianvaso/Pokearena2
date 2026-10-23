@@ -14,7 +14,6 @@ function init(db) {
         // ---- datos globales de la consola de desarrollador (de todas las cuentas) ----
         db.prepare('CREATE TABLE IF NOT EXISTS g_arenas (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, acc TEXT NOT NULL, sum TEXT NOT NULL, body TEXT NOT NULL)'),
         db.prepare('CREATE INDEX IF NOT EXISTS g_arenas_ts ON g_arenas (ts DESC)'),
-        db.prepare('CREATE TABLE IF NOT EXISTS g_species (line TEXT PRIMARY KEY, sprite TEXT, gen INTEGER DEFAULT 0, genManual INTEGER DEFAULT 0, apps INTEGER DEFAULT 0, arenas INTEGER DEFAULT 0, wins INTEGER DEFAULT 0, kos INTEGER DEFAULT 0, faints INTEGER DEFAULT 0, elims INTEGER DEFAULT 0, caps INTEGER DEFAULT 0, ms INTEGER DEFAULT 0, dealt INTEGER DEFAULT 0, taken INTEGER DEFAULT 0, bestKos INTEGER DEFAULT 0, raids INTEGER DEFAULT 0, raidWins INTEGER DEFAULT 0, bosses INTEGER DEFAULT 0, last INTEGER DEFAULT 0)'),
         db.prepare('CREATE TABLE IF NOT EXISTS g_saves (id TEXT PRIMARY KEY, acc TEXT NOT NULL, updated INTEGER NOT NULL, body TEXT NOT NULL, pc TEXT)'),
         db.prepare('CREATE TABLE IF NOT EXISTS g_saves_del (id TEXT PRIMARY KEY)'), // filas del registro de partidas eliminadas a mano: no se vuelven a crear
         db.prepare('CREATE TABLE IF NOT EXISTS g_seen (rid TEXT PRIMARY KEY, ts INTEGER NOT NULL)'),
@@ -41,8 +40,7 @@ function init(db) {
         db.prepare('CREATE INDEX IF NOT EXISTS chat_pair ON chat (pair, id)'),
         db.prepare('CREATE INDEX IF NOT EXISTS chat_too ON chat (too, id)'),
         db.prepare('CREATE TABLE IF NOT EXISTS chat_read (acc TEXT NOT NULL, peer TEXT NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (acc, peer))'),
-    ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
-        .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
+    ]).then(() => db.prepare('DROP TABLE IF EXISTS g_species').run()) // el registro por especie ya no existe
       .then(() => db.prepare('CREATE TABLE IF NOT EXISTS save_codes (code TEXT PRIMARY KEY, h TEXT NOT NULL, slot INTEGER NOT NULL, ts INTEGER NOT NULL)').run()) // código único de cada partida -> cuenta y ranura que la guardan
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
       .then(() => db.prepare('ALTER TABLE profiles ADD COLUMN medals TEXT').run().catch(() => {})) // medallas de la Liga (ids) que ven los amigos en la ficha de perfil
@@ -268,11 +266,10 @@ async function roomApi(db, h, route, req, url) {
     return reply({ error: 'no existe' }, 404);
 }
 
-const NUM = ['gen', 'genManual', 'apps', 'arenas', 'wins', 'kos', 'faints', 'elims', 'caps', 'ms', 'dealt', 'taken', 'raids', 'raidWins', 'bosses'];
 const num = v => (Number.isFinite(v) ? Math.max(0, Math.min(1e12, Math.round(v))) : 0);
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
-// Un registro global: { rid, arena?, ops?, saves? }. Es idempotente por 'rid' (el cliente puede reintentar).
+// Un registro global: { rid, arena?, saves? }. Es idempotente por 'rid' (el cliente puede reintentar).
 // ---- amigos ----
 const SPR_OK = /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/[A-Za-z0-9\/_.\-]{1,170}$/;
 const cleanMedals = a => [...new Set((Array.isArray(a) ? a : []).map(x => String(x || '')).filter(x => /^[a-z]{1,12}$/.test(x)))].slice(0, 16);
@@ -388,15 +385,6 @@ async function ingest(db, h, b) {
         let body = full; if (body.length > 1500000) body = JSON.stringify(lite);
         st.push(db.prepare('INSERT OR REPLACE INTO g_arenas (k, ts, acc, sum, body) VALUES (?1, ?2, ?3, ?4, ?5)').bind(acc + ':' + a.id.slice(0, 20), num(a.ts) || now, acc, JSON.stringify(lite), body));
     }
-    if (isObj(b.ops)) {
-        for (const line of Object.keys(b.ops).slice(0, 200)) {
-            const o = b.ops[line]; if (!isObj(o) || line.length > 60) continue;
-            const add = isObj(o.add) ? o.add : {}, mx = isObj(o.max) ? o.max : {};
-            const cols = ['line', 'sprite', ...NUM, 'bestKos', 'last'], vals = [line, typeof o.sprite === 'string' ? o.sprite.slice(0, 400) : '', ...NUM.map(k => num(add[k])), num(mx.bestKos), now];
-            const upd = NUM.map(k => k + ' = ' + k + ' + excluded.' + k).concat(['bestKos = MAX(bestKos, excluded.bestKos)', "sprite = CASE WHEN sprite = '' OR sprite IS NULL THEN excluded.sprite ELSE sprite END", 'last = excluded.last']).join(', ');
-            st.push(db.prepare('INSERT INTO g_species (' + cols.join(',') + ') VALUES (' + cols.map((_, i) => '?' + (i + 1)).join(',') + ') ON CONFLICT(line) DO UPDATE SET ' + upd).bind(...vals));
-        }
-    }
     if (Array.isArray(b.saves)) {
         for (const e of b.saves.slice(0, 10)) if (isObj(e) && typeof e.id === 'string') {
             const { pc, ...rest } = e, pcs = isObj(pc) ? JSON.stringify(pc) : null, id = acc + ':' + e.id.slice(0, 24);
@@ -476,16 +464,14 @@ export default {
             }
             if (route === '/api/g/dev' && req.method === 'GET') {
                 const lim = Math.max(1, Math.min(200, +url.searchParams.get('limit') || 100));
-                const [ar, sp, sv, ct] = await db.batch([
+                const [ar, sv, ct] = await db.batch([
                     db.prepare('SELECT k, acc, sum FROM g_arenas ORDER BY ts DESC LIMIT ?1').bind(lim),
-                    db.prepare('SELECT * FROM g_species'),
                     db.prepare('SELECT acc, body FROM g_saves ORDER BY updated DESC LIMIT 500'),
                     db.prepare('SELECT (SELECT COUNT(*) FROM accounts) AS accounts, (SELECT COUNT(*) FROM g_arenas) AS arenas'),
                 ]);
-                const species = {}; for (const r of sp.results) { const { line, ...rest } = r; species[line] = rest; }
                 const arenas = ar.results.map(r => '{"_k":' + JSON.stringify(r.k) + ',"_acc":"' + r.acc + '",' + r.sum.slice(1)).join(',');
                 const saves = sv.results.map(r => '{"_acc":"' + r.acc + '",' + r.body.slice(1)).join(',');
-                return reply('{"totals":' + JSON.stringify(ct.results[0]) + ',"species":' + JSON.stringify(species) + ',"arenas":[' + arenas + '],"saves":[' + saves + ']}');
+                return reply('{"totals":' + JSON.stringify(ct.results[0]) + ',"arenas":[' + arenas + '],"saves":[' + saves + ']}');
             }
             if ((route === '/api/g/chats' || route === '/api/g/chat') && req.method === 'POST') {
                 const key = env.ADMIN_KEY;
@@ -550,7 +536,6 @@ export default {
                 const b = await req.json().catch(() => ({}));
                 if (b.key !== key) return reply({ error: 'clave incorrecta' }, 403);
                 if (b.what === 'arenas') await db.prepare('DELETE FROM g_arenas').run();
-                else if (b.what === 'species') await db.prepare('DELETE FROM g_species').run();
                 else if (b.what === 'saves') await db.prepare('DELETE FROM g_saves').run();
                 else if (b.what === 'save') { // elimina UNA fila del registro de partidas y deja constancia para que no se vuelva a crear
                     const id = String(b.acc || '').slice(0, 8) + ':' + String(b.id || '').slice(0, 24);

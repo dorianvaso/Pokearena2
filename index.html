@@ -6318,6 +6318,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
       </div>
       <div class="cfg-view" id="cfg-v-home">
         <button type="button" class="cfg-item" id="cfg-go-sound"><em class="cfg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fillp" d="M3 9v6h4l5 4V5L7 9H3z"/><g class="cfg-waves"><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.3 6.3a8 8 0 0 1 0 11.4"/></g><g class="cfg-mute"><path d="M16 9.5l5 5M21 9.5l-5 5"/></g></svg></em><em class="cfg-it"><b>SONIDO</b><small id="cfg-hint-sound">ACTIVADO</small></em><em class="cfg-chev"></em></button>
+        <button type="button" class="cfg-item" id="cfg-go-fps"><em class="cfg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><circle cx="12" cy="18" r="1.3"/></svg></em><em class="cfg-it"><b>FLUIDEZ</b><small id="cfg-hint-fps">AUTOMÁTICA</small></em><em class="cfg-chev"></em></button>
         <button type="button" class="cfg-item" id="cfg-go-save"><em class="cfg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></svg></em><em class="cfg-it"><b>GUARDADO</b><small id="cfg-hint-save">PARTIDA 1</small></em><em class="cfg-chev"></em></button>
         <button type="button" class="cfg-item" id="cfg-go-menu"><em class="cfg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></em><em class="cfg-it"><b>PANTALLA DE TÍTULO</b><small>VOLVER</small></em><em class="cfg-chev"></em></button>
         <div id="cfg-ver" role="button" tabindex="0" aria-label="Versión" style="text-align:center;font-size:.42rem;letter-spacing:.1em;color:#2a75a1;padding:10px 0 2px;user-select:none;-webkit-user-select:none;cursor:default;-webkit-tap-highlight-color:transparent">VERSIÓN <span id="cfg-ver-n"></span></div>
@@ -6326,6 +6327,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         <div class="cfg-snd-badge" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fillp" d="M3 9v6h4l5 4V5L7 9H3z"/><g class="cfg-waves"><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.3 6.3a8 8 0 0 1 0 11.4"/></g><g class="cfg-mute"><path d="M16 9.5l5 5M21 9.5l-5 5"/></g></svg></div>
         <div class="cfg-seg"><button type="button" id="cfg-snd-on">ACTIVADO</button><button type="button" id="cfg-snd-off">SILENCIADO</button></div>
         <div id="cfg-snd-state" class="cfg-sr" aria-live="polite"></div>
+      </div>
+      <div class="cfg-view" id="cfg-v-fps" hidden>
+        <div class="cfg-seg"><button type="button" data-fps="auto">AUTO</button><button type="button" data-fps="60">60 FPS</button><button type="button" data-fps="30">30 FPS</button></div>
+        <div id="cfg-fps-state" class="cfg-sr" aria-live="polite" style="white-space:normal;text-align:center;line-height:1.5"></div>
       </div>
       <div class="cfg-view" id="cfg-v-save" hidden>
         <div id="cfg-slots"></div>
@@ -23246,7 +23251,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
             if (lastFrameTime === null) lastFrameTime = timestamp;
             let dt = timestamp - lastFrameTime;
-            if (window.PA_CAP60 && dt < 14.2) { requestAnimationFrame(gameLoop); return; } // pantalla de 120 Hz en iOS: un fotograma de cada dos
+            { const capMs = window.PA_FPSMS || (window.PA_CAP60 ? 14.2 : 0); if (capMs && dt < capMs) { requestAnimationFrame(gameLoop); return; } } // límite de fotogramas: el elegido en Ajustes (60 o 30) o, en automático, 60 en pantallas de 120 Hz de iOS
             lastFrameTime = timestamp;
 
             if (!gameOver && !pvpDuel) spawnAccumulator += dt * gameSpeed;
@@ -25834,7 +25839,18 @@ document.addEventListener('keydown', e => {
 const cfgPop = document.getElementById('cfg-pop'), cfgSlotsEl = document.getElementById('cfg-slots');
 const cfgStatusEl = document.getElementById('cfg-status');
 const cfgOkBtn = document.getElementById('cfg-ok'), cfgTitleEl = document.getElementById('cfg-title');
-const CFG_VIEWS = { home: 'CONFIGURACIÓN', sound: 'SONIDO', save: 'GUARDADO' };
+const CFG_VIEWS = { home: 'CONFIGURACIÓN', sound: 'SONIDO', fps: 'FLUIDEZ', save: 'GUARDADO' };
+// Límite de fotogramas del juego (por dispositivo): 'auto' | '60' | '30'. 30 gasta menos batería y calienta menos (útil en iPhone).
+window.paFpsMode = () => { try { const v = localStorage.getItem('pa.fps'); return v === '60' || v === '30' ? v : 'auto'; } catch (e) { return 'auto'; } };
+window.paFpsApply = () => { const m = window.paFpsMode(); window.PA_FPSMS = m === '30' ? 30.5 : m === '60' ? 14.2 : 0; };
+window.paFpsApply();
+const FPS_TXT = { auto: 'Automático: el juego elige según tu pantalla.', 60: 'Máxima fluidez (60 fotogramas por segundo).', 30: 'Ahorro: 30 fotogramas por segundo. Menos calentamiento y menos lag en dispositivos justos.' };
+function cfgRenderFps() {
+    const m = window.paFpsMode();
+    document.querySelectorAll('#cfg-v-fps [data-fps]').forEach(b => { const on = b.dataset.fps === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    const st = document.getElementById('cfg-fps-state'); if (st) st.textContent = FPS_TXT[m];
+    cfgHints();
+}
 let cfgBusy = false, cfgView = 'home';
 
 function cfgHints() {
@@ -25842,6 +25858,7 @@ function cfgHints() {
         const s = document.getElementById('cfg-hint-sound'), g = document.getElementById('cfg-hint-save');
         if (s) { s.textContent = isMuted ? 'SILENCIADO' : 'ACTIVADO'; s.closest('.cfg-item').classList.toggle('is-muted', !!isMuted); }
         if (g) g.textContent = SaveSys.usable ? 'PARTIDA ' + SaveSys.active : 'NO DISPONIBLE';
+        const f = document.getElementById('cfg-hint-fps'); if (f) f.textContent = { auto: 'AUTOMÁTICA', 60: '60 FPS', 30: '30 FPS' }[window.paFpsMode()];
     } catch (e) {}
 }
 function cfgShow(v) {
@@ -25851,6 +25868,7 @@ function cfgShow(v) {
     cfgOkBtn.classList.toggle('ghost', v === 'home'); cfgOkBtn.tabIndex = v === 'home' ? -1 : 0;
     cfgHints();
     if (v === 'sound') cfgRenderSound();
+    if (v === 'fps') cfgRenderFps();
     if (v === 'save') { cfgRenderSlots(); cfgBaseStatus(); }
 }
 function cfgBack() { if (cfgView !== 'home') { cfgShow('home'); try { GameAudio.sfx('close'); } catch (e) {} } else closeSettings(); }
@@ -25985,6 +26003,11 @@ document.getElementById('cfg-go-menu').addEventListener('click', () => { try { w
     });
 })();
 document.getElementById('cfg-go-sound').addEventListener('click', () => { cfgShow('sound'); try { GameAudio.sfx('tick'); } catch (e) {} });
+document.getElementById('cfg-go-fps').addEventListener('click', () => { cfgShow('fps'); try { GameAudio.sfx('tick'); } catch (e) {} });
+document.querySelectorAll('#cfg-v-fps [data-fps]').forEach(b => b.addEventListener('click', () => {
+    try { localStorage.setItem('pa.fps', b.dataset.fps); } catch (e) {}
+    window.paFpsApply(); cfgRenderFps(); try { GameAudio.sfx('confirm'); } catch (e) {}
+}));
 document.getElementById('cfg-go-save').addEventListener('click', () => { cfgShow('save'); try { GameAudio.sfx('tick'); } catch (e) {} });
 document.getElementById('cfg-snd-on').addEventListener('click', () => {
     if (isMuted) toggleMute();

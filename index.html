@@ -23651,16 +23651,22 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const cx = (bounds.width - bounds.size) / 2;
             const cy = (bounds.height - bounds.size) / 2;
             const ringR = Math.max(0, Math.min(cx, cy)) * (isRaid() ? 0.38 : (window.PA_TUT && window.PA_TUT.on) ? 0.3 : 0.78);
-            const starters = [];
+            const starters = [], starterNames = [];
             const scatterPts = isRaid() ? raidScatterPoints(startN, cx, cy) : null; // Raid: dispersos por el campo
             for (let i = 0; i < startN; i++) {
                 const meta = (i === mySlot) ? myMeta : startPool.splice(Math.floor(Math.random() * startPool.length), 1)[0];
                 const ang = -Math.PI / 2 + (i * 2 * Math.PI) / startN;
                 const px = scatterPts ? scatterPts[i].x : cx + ringR * Math.cos(ang), py = scatterPts ? scatterPts[i].y : cy + ringR * Math.sin(ang);
-                starters.push(addCombatant(meta.id, Math.round(px), Math.round(py)));
+                if (isRaid() && raidTeam && i > 0) { // Raid con equipo: entran de forma progresiva durante los primeros 4 s (no todos a la vez bajo el primer ataque del ALFA)
+                    const dly = (i * 4000 / Math.max(1, startN - 1)) / Math.max(0.25, gameSpeed);
+                    starterNames.push(meta.name);
+                    activeTimers.push(setTimeout(() => { if (!gameRunning || gameOver || !isRaid() || !raidState || combatantsById[meta.id]) return; try { addCombatant(meta.id, Math.round(px), Math.round(py)); } catch (e) { console.error(e); } }, dly));
+                    continue;
+                }
+                const c0 = addCombatant(meta.id, Math.round(px), Math.round(py)); starters.push(c0); starterNames.push(c0.name);
             }
 
-            const names = starters.map(c => c.name);
+            const names = starterNames;
             if (isRaid()) {
                 raidBegin(cx, cy);
                 logMessage(names.length === 1 ? `¡Comienza la RAID! ${names[0]} se enfrenta al ALFA.` : `¡Comienza la RAID! ${names.slice(0, -1).join(', ')} y ${names[names.length - 1]} se reparten por la arena frente al ALFA.`, 'info');

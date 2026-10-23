@@ -27152,7 +27152,10 @@ function gmaxFix(k, v) {
     try {
         if (k === CAP_BOX_KEY && Array.isArray(v)) {
             v.forEach(e => { if (e && e.name === 'Butterfree Gigamax') { e.name = 'Butterfree'; e.gmax = true; e.sprite = String(e.sprite || '').replace('butterfree-gmax', 'butterfree'); } });
-        } else if (k === CAP_DEX_KEY && v && v['Butterfree Gigamax']) {
+        } else if (k === CAP_DEX_KEY && v && Object.keys(v).some(n => /charizard|gengar/i.test(n) && v[n] && v[n].gmax && v[n].gmaxSprite !== gmaxSpriteFor(n))) {
+            Object.keys(v).forEach(n => { if (/charizard|gengar/i.test(n) && v[n] && v[n].gmax) v[n].gmaxSprite = gmaxSpriteFor(n); }); // entradas guardadas con el sprite Gigamax antiguo
+        }
+        if (k === CAP_DEX_KEY && v && v['Butterfree Gigamax']) {
             const g = v['Butterfree Gigamax'], sp = String(g.sprite || '').replace('butterfree-gmax', 'butterfree');
             const b = v['Butterfree'] || (v['Butterfree'] = { sprite: sp, ts: g.ts || Date.now() });
             b.gmax = true; b.gmaxSprite = GMAX_SPRITE_URL;
@@ -28226,7 +28229,7 @@ function dxApplyFilter() {
 }
 function openDex() {
     const dex = capLoad(CAP_DEX_KEY, {});
-    dxList = dexList().map(x => { const e = dex[x.name] || {}; return { name: x.name, sprite: e.sprite || x.sprite, no: x.no, known: !!dex[x.name], shiny: !!e.shiny, shinySprite: e.shinySprite || '', gmax: !!e.gmax, gmaxSprite: e.gmaxSprite || gmaxSpriteFor(x.name) }; });
+    dxList = dexList().map(x => { const e = dex[x.name] || {}; return { name: x.name, sprite: e.sprite || x.sprite, no: x.no, known: !!dex[x.name], shiny: !!e.shiny, shinySprite: e.shinySprite || '', gmax: !!e.gmax, gmaxSprite: /charizard|gengar/i.test(x.name) ? gmaxSpriteFor(x.name) : (e.gmaxSprite || gmaxSpriteFor(x.name)) }; }); // Charizard y Gengar: siempre el sprite animado nuevo (aunque la entrada guardada traiga el antiguo)
     capEl('dx-count').textContent = dxList.filter(x => x.known).length + ' / ' + dxList.length;
     const list = capEl('dx-list'); list.innerHTML = ''; dxCells = [];
     dxList.forEach((x, i) => {

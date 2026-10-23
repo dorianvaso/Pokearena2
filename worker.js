@@ -43,6 +43,7 @@ function init(db) {
         db.prepare('CREATE TABLE IF NOT EXISTS chat_read (acc TEXT NOT NULL, peer TEXT NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (acc, peer))'),
     ]).then(() => db.prepare('ALTER TABLE g_species ADD COLUMN apps INTEGER DEFAULT 0').run() // apariciones en arena; si la columna es nueva, arranca con arenas + raids jugadas
         .then(() => db.prepare('UPDATE g_species SET apps = arenas + raids').run()).catch(() => {}))
+      .then(() => db.prepare('CREATE TABLE IF NOT EXISTS save_codes (code TEXT PRIMARY KEY, h TEXT NOT NULL, slot INTEGER NOT NULL, ts INTEGER NOT NULL)').run()) // código único de cada partida -> cuenta y ranura que la guardan
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
       .then(() => db.prepare('ALTER TABLE profiles ADD COLUMN medals TEXT').run().catch(() => {})) // medallas de la Liga (ids) que ven los amigos en la ficha de perfil
       .then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
@@ -564,14 +565,29 @@ export default {
                 if (t.length > MAX_BODY || t[0] !== '{') return reply({ error: 'ajustes no válidos' }, 400);
                 await writeKey(db, h, 'settings', t); return reply({ ok: true });
             }
+            if (route === '/api/loadcode' && req.method === 'POST') { // devuelve la partida que tiene ese código (el código actúa como llave)
+                let b = null; try { b = await req.json(); } catch (e) {}
+                const code = String((b && b.code) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (code.length !== 12) return reply({ error: 'código no válido' }, 400);
+                const row = await db.prepare('SELECT h, slot FROM save_codes WHERE code = ?1').bind(code).first();
+                const txt = row ? await readKey(db, row.h, 'slot' + row.slot) : null;
+                if (!txt || !txt.includes('"' + code + '"')) return reply({ error: 'no existe' }, 404);
+                return reply('{"ok":true,"slot":' + txt + '}');
+            }
             const s = /^\/api\/slot\/([123])$/.exec(route);
             if (s) {
                 if (req.method === 'PUT') {
                     const t = await req.text();
                     if (t.length > MAX_BODY || t[0] !== '{' || !t.includes('"data"')) return reply({ error: 'partida no válida' }, 400);
-                    await writeKey(db, h, 'slot' + s[1], t); return reply({ ok: true });
+                    await writeKey(db, h, 'slot' + s[1], t);
+                    const cm = /"pokearena\.savecode"\s*:\s*"([A-Z0-9]{12})"/.exec(t); // el código de la partida apunta a la última cuenta/ranura que la guardó
+                    if (cm) await db.batch([
+                        db.prepare('DELETE FROM save_codes WHERE h = ?1 AND slot = ?2 AND code <> ?3').bind(h, +s[1], cm[1]),
+                        db.prepare('INSERT OR REPLACE INTO save_codes (code, h, slot, ts) VALUES (?1, ?2, ?3, ?4)').bind(cm[1], h, +s[1], Date.now()),
+                    ]);
+                    return reply({ ok: true });
                 }
-                if (req.method === 'DELETE') { await db.prepare('DELETE FROM blobs WHERE h = ?1 AND k = ?2').bind(h, 'slot' + s[1]).run(); return reply({ ok: true }); }
+                if (req.method === 'DELETE') { await db.batch([db.prepare('DELETE FROM blobs WHERE h = ?1 AND k = ?2').bind(h, 'slot' + s[1]), db.prepare('DELETE FROM save_codes WHERE h = ?1 AND slot = ?2').bind(h, +s[1])]); return reply({ ok: true }); }
             }
             return reply({ error: 'no existe' }, 404);
         } catch (e) { return reply({ error: 'error del servidor' }, 500); }

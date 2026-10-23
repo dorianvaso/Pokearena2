@@ -6171,6 +6171,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     <div class="ts-menu">
       <button type="button" class="ts-btn main" id="ts-continue" hidden>CONTINUAR</button>
       <button type="button" class="ts-btn" id="ts-new">NUEVA PARTIDA</button>
+      <button type="button" class="ts-btn sub" id="ts-load">CARGAR PARTIDA</button>
     </div>
     <div class="ts-ver" id="ts-ver"></div>
   </div>
@@ -20893,6 +20894,26 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 keys.forEach(k => { const e = sprCache[k]; if (e && e.st !== 'loading' && !keep.has(k) && !keep.has(sprResolve(k))) { e.img.onload = e.img.onerror = null; e.img.removeAttribute('src'); delete sprCache[k]; } });
             } catch (e) {}
         }
+        // iPhone (WebKit): al volver al menú se sueltan los GIF que siguen retenidos (caché de sprites, imágenes de los Pokémon ocultos) y los audios cargados
+        const PA_BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+        window.paReleaseMem = function () {
+            try {
+                if (typeof gameRunning !== 'undefined' && gameRunning) return;
+                if (window.PA_IOS) {
+                    Object.keys(sprCache).forEach(k => { const e = sprCache[k]; if (e && e.st !== 'loading') { try { e.img.onload = e.img.onerror = null; e.img.removeAttribute('src'); } catch (_) {} delete sprCache[k]; } });
+                    document.querySelectorAll('.pokemon-wrapper').forEach(w => {
+                        if (w.style.display !== 'none') return;
+                        const im = w.querySelector('.pokemon img'); if (!im) return;
+                        const sv = im.getAttribute('src'); if (sv && sv !== PA_BLANK) im.setAttribute('src', PA_BLANK);
+                    });
+                }
+                document.querySelectorAll('audio[id^="snd-"]').forEach(a => { // gritos ya cargados: se descargan (se vuelven a pedir la próxima arena)
+                    const sv = a.getAttribute('src');
+                    if (!sv || sv.indexOf('/audio/cries/') < 0 || a.readyState === 0 || !a.paused) return;
+                    try { a.removeAttribute('src'); a.load(); a.setAttribute('src', sv); a.preload = 'none'; } catch (_) {}
+                });
+            } catch (e) {}
+        };
         function sprEnsure(url, cb) {
             let e = sprCache[url];
             if (!e) {
@@ -23942,6 +23963,9 @@ const SaveSys = (() => {
 
     // Registro global de partidas (vive en 'settings', fuera de las ranuras: sobrevive a borrar partidas).
     // Cada partida lleva un id propio (pokearena.saveid) y una entrada con nombre, avatar, estadísticas y estado.
+    const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const newCode = () => { const a = new Uint8Array(12); try { crypto.getRandomValues(a); } catch (e) { for (let i = 0; i < 12; i++) a[i] = Math.floor(Math.random() * 256); } return Array.from(a, v => CODE_CH[v % 32]).join(''); };
+    const fmtCode = c => String(c || '').replace(/(.{4})(?=.)/g, '$1-');
     const newSid = () => 'G' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
     // Caja compacta: { s: [sprites distintos], l: [[nombre, índiceSprite, brillante, gmax, uid, sumaIV, naturaleza, género], …] }
     function pcSnap(box) {
@@ -23971,9 +23995,11 @@ const SaveSys = (() => {
                 if (!sid) { sid = d['pokearena.saveid'] = newSid(); if (!act && slots[n]) put('slot:' + n, slots[n]); }
                 if (hid.indexOf(sid) >= 0) continue; // fila eliminada a mano del registro: no vuelve a aparecer
                 live[sid] = 1;
+                let code = d['pokearena.savecode'];
+                if (!/^[A-Z0-9]{12}$/.test(code || '')) { code = d['pokearena.savecode'] = newCode(); if (act) schedule(); else if (slots[n]) put('slot:' + n, slots[n]); } // cada partida tiene su código propio
                 let e = log.find(x => x.id === sid);
                 if (!e) { e = { id: sid, created: now }; log.push(e); }
-                e.slot = n; e.status = act ? 'activa' : 'guardada'; delete e.deleted;
+                e.slot = n; e.status = act ? 'activa' : 'guardada'; delete e.deleted; e.code = code;
                 e.name = (tr && tr.name) || ''; e.avatar = (tr && tr.avatar) || '';
                 e.dex = dex; e.box = box; e.pts = (d['pokearena.xp'] && d['pokearena.xp'].total) || 0;
                 e.pc = pcSnap(d['pokearena.box']); // contenido de la Caja (compacto) para verlo desde la consola de desarrollador
@@ -23985,7 +24011,8 @@ const SaveSys = (() => {
     let lastLogSync = 0;
     function flushNow(soft) {
         clearTimeout(timer); timer = 0;
-        if (soft !== true || Date.now() - lastLogSync > 10000) { lastLogSync = Date.now(); logSync(); } // el registro de partidas recorre toda la Caja: no en cada escritura
+        const needCode = !/^[A-Z0-9]{12}$/.test(data['pokearena.savecode'] || '') && !!(data['pokearena.trainer'] || data['pokearena.box'] || data['pokearena.dex']); // partida sin código: se registra ya
+        if (soft !== true || needCode || Date.now() - lastLogSync > 10000) { lastLogSync = Date.now(); logSync(); } // el registro de partidas recorre toda la Caja: no en cada escritura
         const rec = { data: clone(data), ts: Date.now() };
         slots[settings.active] = rec;
         return put('slot:' + settings.active, rec);
@@ -24039,10 +24066,41 @@ const SaveSys = (() => {
         async saveTo(n) {
             if (n === settings.active) return flushNow();
             const rec = { data: clone(data), ts: Date.now() };
-            if (rec.data['pokearena.saveid']) rec.data['pokearena.saveid'] = newSid(); // la copia es otra partida
+            if (rec.data['pokearena.saveid']) { rec.data['pokearena.saveid'] = newSid(); rec.data['pokearena.savecode'] = newCode(); } // la copia es otra partida (con su propio código)
             slots[n] = rec;
             const ok = await put('slot:' + n, rec); logSync();
             return ok;
+        },
+        fmtCode,
+        codeOf(n) { const d = n === settings.active ? data : (slots[n] && slots[n].data); return (d && d['pokearena.savecode']) || ''; },
+        // Carga la partida que tiene ese código: si ya está en este dispositivo solo se activa (con lo más reciente del servidor);
+        // si no, se baja del servidor a una ranura libre (o a la que se indique en 'target').
+        async loadByCode(raw, target) {
+            const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (code.length !== 12) throw new Error('CÓDIGO NO VÁLIDO');
+            await ready;
+            if (timer) await flushNow();
+            const local = SLOTS.find(n => this.codeOf(n) === code);
+            let remote = null;
+            if (API !== null) {
+                try { const r = await this.call('POST', '/api/loadcode', { code }); remote = r && r.slot; }
+                catch (e) { if (!local) throw new Error(e && e.status === 404 ? 'NO EXISTE NINGUNA PARTIDA CON ESE CÓDIGO' : (e && e.status ? 'ERROR DEL SERVIDOR (' + e.status + ')' : 'SIN CONEXIÓN CON EL SERVIDOR')); }
+            } else if (!local) throw new Error('ESTE CÓDIGO NO ESTÁ EN ESTE DISPOSITIVO Y NO HAY SERVIDOR');
+            if (local) {
+                if (remote && remote.data && (remote.ts || 0) > ((slots[local] && slots[local].ts) || 0) + 1000 && !dirty.has('slot:' + local)) {
+                    slots[local] = { data: clone(remote.data), ts: remote.ts }; await put('slot:' + local, slots[local], true); // otro dispositivo la había avanzado
+                }
+                await this.activate(local);
+                return { n: local, local: true };
+            }
+            if (!remote || !remote.data || typeof remote.data !== 'object') throw new Error('NO EXISTE NINGUNA PARTIDA CON ESE CÓDIGO');
+            let n = SLOTS.includes(target) ? target : SLOTS.find(k => info(k).empty);
+            if (!n) return { need: true, slots: SLOTS.map(info) };
+            const d = clone(remote.data); d['pokearena.saveid'] = newSid(); d['pokearena.savecode'] = code;
+            slots[n] = { data: d, ts: remote.ts || Date.now() };
+            await put('slot:' + n, slots[n]);
+            await this.activate(n);
+            return { n, local: false };
         },
         async remove(n) {
             slots[n] = null; await del('slot:' + n);
@@ -25707,6 +25765,7 @@ function updateTrainerChip() { try {
 } catch (e) {} }
 function updateMenuRes() { try { updateTrainerChip(); } catch (e) {} try { const m = document.getElementById('mm-res-money'), n = document.getElementById('mm-res-n'); if (m) m.textContent = Math.floor(capMoney()).toLocaleString('es-ES'); if (n) n.textContent = (capLoad(CAP_BOX_KEY, []) || []).length; } catch (e) {} }
 function showMainMenu() {
+    try { window.paReleaseMem && window.paReleaseMem(); } catch (e) {}
     try { if (window.PA_TUT && window.PA_TUT.on && window.PA_TUT.cleanup) window.PA_TUT.cleanup(); } catch (e) {}
     try { cancelCountdown(); } catch (e) {}
     updateMenuRes();
@@ -26424,9 +26483,45 @@ GameAudio.startMusic('menu'); // suena ya en el título; si el navegador lo bloq
         let oak = false; try { PAOak.maybeStart(); oak = PAOak.isActive(); } catch (e) {}
         if (oak) setTimeout(go, 560); else go();
     }
+    // ---- Cargar partida con código ----
+    const bLoad = document.getElementById('ts-load');
+    function openLoad() {
+        if (document.getElementById('ts-ld')) return;
+        const el = document.createElement('div'); el.id = 'ts-ld';
+        el.innerHTML = '<div class="tl-box"><h3>CARGAR PARTIDA</h3><p>Escribe el código de tu partida</p><input class="tl-in" maxlength="14" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><div class="tl-msg info"></div><div class="tl-slots" hidden></div><div class="tl-row"><button type="button" class="tl-ok">CARGAR</button><button type="button" class="tl-no">CANCELAR</button></div></div>';
+        ts.appendChild(el);
+        const inp = el.querySelector('.tl-in'), msg = el.querySelector('.tl-msg'), slotsEl = el.querySelector('.tl-slots'), ok = el.querySelector('.tl-ok'), no = el.querySelector('.tl-no');
+        const say = (t, c) => { msg.textContent = t || ''; msg.className = 'tl-msg ' + (c || ''); };
+        const close = () => { el.remove(); try { ts.focus({ preventScroll: true }); } catch (e) {} };
+        let busy = false;
+        const fmt = () => { const raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); inp.value = raw.replace(/(.{4})(?=.)/g, '$1-'); };
+        async function submit(target) {
+            if (busy) return; const raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (raw.length !== 12) { say('El código tiene 12 caracteres (XXXX-XXXX-XXXX)'); return; }
+            busy = true; ok.disabled = true; slotsEl.hidden = true; say('Buscando partida…', 'info');
+            try {
+                const r = await SaveSys.loadByCode(raw, target);
+                if (r.need) { // no hay ranura libre: se elige cuál sustituir
+                    say('No hay ranuras libres. ¿Qué partida quieres sustituir?', 'info'); slotsEl.innerHTML = ''; slotsEl.hidden = false;
+                    r.slots.forEach(i => { const b = document.createElement('button'); b.type = 'button'; const nm = (i.trainer && i.trainer.name) || 'Sin nombre'; b.textContent = 'RANURA ' + i.n + ' · ' + nm.toUpperCase() + ' · ' + i.box + ' en la Caja'; b.addEventListener('click', () => { if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = '¿SUSTITUIR RANURA ' + i.n + '? TOCA DE NUEVO'; return; } submit(i.n); }); slotsEl.appendChild(b); });
+                } else {
+                    say('¡Partida cargada!', 'ok'); try { GameAudio.sfx('confirm'); } catch (e) {}
+                    setTimeout(() => { close(); try { refreshBtns(); } catch (e) {} go(); }, 450); return;
+                }
+            } catch (e) { say((e && e.message) || 'NO SE PUDO CARGAR'); }
+            busy = false; ok.disabled = false;
+        }
+        inp.addEventListener('input', fmt);
+        inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); submit(); } else if (e.key === 'Escape') close(); });
+        ok.addEventListener('click', e => { e.stopPropagation(); submit(); });
+        no.addEventListener('click', e => { e.stopPropagation(); close(); });
+        el.addEventListener('click', e => { if (e.target === el) close(); });
+        setTimeout(() => { try { inp.focus(); } catch (e) {} }, 120);
+    }
+    bLoad.addEventListener('click', e => { e.stopPropagation(); try { GameAudio.sfx('tick'); } catch (x) {} openLoad(); });
     bCont.addEventListener('click', e => { e.stopPropagation(); doContinue(); });
     bNew.addEventListener('click', e => { e.stopPropagation(); doNew(); });
-    function onKey(e) { if (e.key === 'F5' || e.key === 'F12' || e.ctrlKey || e.metaKey || e.altKey) return; if (e.target && e.target.classList && e.target.classList.contains('ts-btn') && (e.key === 'Enter' || e.key === ' ' || e.key === 'Tab')) return; e.preventDefault(); e.stopPropagation(); if (e.key === 'Enter' || e.key === ' ') (hasSave() ? doContinue : doNew)(); }
+    function onKey(e) { if (document.getElementById('ts-ld')) return; if (e.key === 'F5' || e.key === 'F12' || e.ctrlKey || e.metaKey || e.altKey) return; if (e.target && e.target.classList && e.target.classList.contains('ts-btn') && (e.key === 'Enter' || e.key === ' ' || e.key === 'Tab')) return; e.preventDefault(); e.stopPropagation(); if (e.key === 'Enter' || e.key === ' ') (hasSave() ? doContinue : doNew)(); }
     // Vida: chispas, nubes y aves que cruzan el cielo
     (function alive() {
         const fx = document.getElementById('ts-fx'); if (!fx || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -28540,7 +28635,7 @@ const DV = (() => {
                 + '<div class="nm"><div class="dv-nr"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b><div class="dv-chip ' + st[1] + '">' + st[0] + '</div></div>'
                 + '<div class="dv-sts">' + ST('dex', String(g.dex | 0), 'acc', 'Pokédex') + ST('box', String(g.box | 0), 'acc', 'Pokémon en la Caja') + (lvn ? ST('lvl', lvn, 'gold', 'Nivel de entrenador') : '') + '</div>'
                 + '<div class="dv-sts">' + (g._acc ? ST('user', g._acc, 'mut mono', 'ID de cuenta') : '') + ST('slot', 'Ranura ' + (g.slot || '—'), 'mut', 'Ranura') + '</div>'
-                + '<div class="dv-sts">' + ST('id', g.id, 'mut mono', 'ID de partida') + ST('cal', fmtShort(g.created), 'mut', 'Creada') + (g.status === 'eliminada' && g.deleted ? ST('trash', fmtShort(g.deleted), 'bad', 'Eliminada') : '') + '</div></div>'
+                + '<div class="dv-sts">' + (g.code ? ST('id', String(g.code).replace(/(.{4})(?=.)/g, '$1-'), 'acc mono', 'Código para cargar la partida') : '') + ST('id', g.id, 'mut mono', 'ID de partida') + ST('cal', fmtShort(g.created), 'mut', 'Creada') + (g.status === 'eliminada' && g.deleted ? ST('trash', fmtShort(g.deleted), 'bad', 'Eliminada') : '') + '</div></div>'
                 + '<button type="button" class="dv-svx" data-del="' + gi + '" aria-label="Eliminar del registro" title="Eliminar del registro">🗑</button></div>';
         });
         if (log.length) h += '<div class="dv-sv-sum" style="margin-top:10px;text-align:center">Toca una partida para ver su Caja · 🗑 la quita del registro</div><div class="dv-row2" style="justify-content:center;margin-top:14px"><button type="button" class="dv-btn dng" id="dv-delsaves">BORRAR REGISTRO DE PARTIDAS</button></div>';
@@ -29019,7 +29114,7 @@ const PAGifts = (() => {
         try {
           // los sprites base se retienen en la caché del juego (como antes); el resto solo calienta la caché HTTP
           // y deja precalculado su encuadre, sin ocupar memoria de decodificación (iOS la limita mucho)
-          if (it.keep && typeof sprEnsure === 'function') sprEnsure(it.u, function(){ fin(); });
+          if (it.keep && !IOS && typeof sprEnsure === 'function') sprEnsure(it.u, function(){ fin(); });
           else if (typeof getSpriteBounds === 'function') getSpriteBounds(it.u, function(){ fin(); });
           else fin();
         } catch(e){ fin(); }
@@ -29049,6 +29144,7 @@ const PAGifts = (() => {
   // fuera de combate: en cuanto la página está cargada y el navegador ocioso (menú, tienda, PC...)
   function boot(){ setTimeout(function(){ idle(start); }, IOS ? 2500 : 1200); }
   if (document.readyState === 'complete') boot(); else window.addEventListener('load', boot);
+  if (IOS) window.addEventListener('load', function(){ setTimeout(function(){ try { window.paReleaseMem && window.paReleaseMem(); } catch(e){} }, 4000); });
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) idle(pump); });
   // al terminar una partida se reanuda la cola (por si quedó algo pendiente)
   window.PerfKit = { resume: function(){ start(); idle(pump); }, pending: function(){ return q.length + active; } };
@@ -30801,6 +30897,25 @@ window.PAPvp = (function () {
     #oak-intro .oak-box { width:min(860px, 92vw); align-self:center; margin-left:0; margin-right:0; }
     #oak-intro .oak-cards { max-width:980px; width:100%; align-self:center; }
 }
+
+/* ===== Cargar partida por código (pantalla de título) ===== */
+#ts-ld{position:absolute;inset:0;z-index:30;display:grid;place-items:center;padding:16px;background:rgba(6,10,28,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:tlIn .25s ease-out}
+@keyframes tlIn{from{opacity:0}to{opacity:1}}
+#ts-ld .tl-box{width:min(92vw,380px);box-sizing:border-box;padding:20px 18px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(24,30,66,.97),rgba(10,14,36,.98));border:1px solid rgba(160,190,255,.35);box-shadow:0 14px 40px rgba(0,0,0,.6);color:#fff;text-align:center;font-family:'PA Chakra S',system-ui,sans-serif}
+#ts-ld h3{margin:0 0 4px;font-size:1rem;letter-spacing:.2em}
+#ts-ld p{margin:0 0 12px;font-size:.72rem;color:#a9b8d8;letter-spacing:.04em}
+#ts-ld .tl-in{width:100%;box-sizing:border-box;padding:12px 10px;border-radius:10px;border:2px solid rgba(160,190,255,.4);background:rgba(4,8,24,.8);color:#fff;font:700 1.15rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-align:center;text-transform:uppercase;outline:none}
+#ts-ld .tl-in:focus{border-color:#7dd3fc;box-shadow:0 0 0 3px rgba(125,211,252,.25)}
+#ts-ld .tl-msg{min-height:1.4em;margin:10px 0 2px;font-size:.72rem;letter-spacing:.06em;color:#fca5a5}
+#ts-ld .tl-msg.ok{color:#86efac}#ts-ld .tl-msg.info{color:#a9b8d8}
+#ts-ld .tl-slots{display:grid;gap:6px;margin:8px 0}
+#ts-ld .tl-slots button,#ts-ld .tl-row button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:10px 12px;border-radius:10px;font:800 .78rem/1.2 'PA Chakra S',system-ui,sans-serif;letter-spacing:.14em;background:rgba(60,80,170,.55);border:1px solid rgba(160,190,255,.4);color:#fff}
+#ts-ld .tl-slots button{background:rgba(150,40,70,.55);font-size:.7rem}
+#ts-ld .tl-row{display:flex;gap:8px;margin-top:6px}
+#ts-ld .tl-row button{flex:1}
+#ts-ld .tl-row .tl-ok{background:linear-gradient(180deg,#2f6bff,#1e46b8)}
+#ts-ld button:active{transform:scale(.96)}
+#ts-ld button:disabled{opacity:.5}
 /* ascenso a ASPIRANTE A CAMPEÓN */
 #lg-asp{position:fixed;inset:0;z-index:9520;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:hidden;text-align:center;padding:20px;background:radial-gradient(circle at 50% 42%,rgba(120,84,16,.9),rgba(8,6,16,.99) 72%);animation:lgIn .4s both}
 #lg-asp .md-rays{position:absolute;left:50%;top:42%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;background:repeating-conic-gradient(rgba(253,224,71,.18) 0 5deg,rgba(253,224,71,0) 5deg 13deg);animation:lgSpin 22s linear infinite;-webkit-mask-image:radial-gradient(circle,#000 0,transparent 58%);mask-image:radial-gradient(circle,#000 0,transparent 58%)}

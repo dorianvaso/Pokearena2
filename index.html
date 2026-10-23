@@ -8277,6 +8277,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // dentro de befuddleRadius: cada uno recibe daño y, con probabilidad, queda envenenado.
         movesData['gigaterror'] = { name: 'Gigaterror', type: 'ghost', power: 60, accuracy: 100, hits: 1, ranged: true, visual: 'befuddle', category: 'special', befuddle: true, terror: true, befuddleRadius: 900, cooldownMs: 7000 };
 
+        ['gigaestupor', 'gigallamarada', 'gigaterror'].forEach(k => { movesData[k + '_c'] = Object.assign({}, movesData[k], { cooldownMs: 2500 }); }); // Gigamax de un pokémon propio: 2,5 s entre usos (el ALFA, 7 s)
+
         // Datos de evolución: por especie de origen, la CADENA de evoluciones (puede
         // tener 1 o más etapas). Cada etapa define su propio disparador:
         //   { type: 'kills',   count: N }  -> N KOs (remates) acumulados
@@ -15467,12 +15469,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const ratio = c.hp / c.maxHp, im = c.imgEl || c.wrapper.querySelector('.pokemon img');
             c.gmax = { msLeft: ms, total: ms, stats: c.stats, maxHp: c.maxHp, attackKey: c.attackKey, front: c.currentFrontSrc || (im ? im.src : ''), name: c.name, duel: !!duel };
             // Mismas estadísticas que el Butterfree Gigamax ALFA de una Raid (tabla base buffeada + IVs perfectos), solo 5 s.
-            if (duel) { // PVP / Liga: subidón sobre las estadísticas del propio pokémon (PS x2,2, ataques x2, defensas x1,5, velocidad x1,2)
+            { // Gigamax de un pokémon propio (Raid, arena, PVP, Liga): subidón sobre SUS estadísticas (PS x2,2, ataques x2, defensas x1,5, velocidad x1,2), mucho menos que el ALFA de una Raid
                 const b0 = c.stats, mul = { hp: 2.2, attack: 2, spAttack: 2, defense: 1.5, spDefense: 1.5, speed: 1.2 };
                 c.stats = Object.assign({}, b0); Object.keys(mul).forEach(k => { if (b0[k] > 0) c.stats[k] = Math.round(b0[k] * mul[k]); });
-            } else c.stats = deriveStats(pokemonStats[GF.stats], Object.fromEntries(STAT_KEYS.map(k => [k, IV_MAX])), c.nature);
+            }
             c.maxHp = c.stats.hp * 3; c.hp = Math.max(1, Math.round(c.maxHp * ratio)); // conserva la proporción de PS
-            c.attackKey = GF.move; c.cdStart = null;
+            c.attackKey = movesData[GF.move + '_c'] ? GF.move + '_c' : GF.move; c.cdStart = null; // versión de pokémon propio: cooldown mucho menor que el del ALFA
             c.wrapper.classList.add('gmax-temp');
             if (im) { im.style.objectViewBox = ''; im.style.transform = ''; const src = sprFor(c, GF.sprite); im.src = src; c.currentFrontSrc = src; c.vFacing = 'front'; }
             const tag = c.wrapper.querySelector('.pokemon-name-tag'); if (tag) tag.textContent = GF.name;

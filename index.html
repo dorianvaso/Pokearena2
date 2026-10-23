@@ -15434,7 +15434,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (c.gmax) { c.gmax.msLeft -= dt; if (c.gmax.msLeft <= 0) gmaxEnd(c); return; }
         }
         // Candidatos: pokémon con forma Gigamax listos para usarla, vivos y en combate. Se activa con el botón del HUD.
-        function gmaxCandidates() { return combatants.filter(c => c.gmaxReady && !c.gmax && !c.isBoss && !c.fainted && !c.isEvolving && !c.isSpawning); }
+        function gmaxTeamBusy(owner) { return combatants.some(x => x.gmax && !x.fainted && (owner === undefined || x.owner === owner)); } // solo 1 Gigamax a la vez por equipo
+        function gmaxCandidates() { if (gmaxTeamBusy()) return []; return combatants.filter(c => c.gmaxReady && !c.gmax && !c.isBoss && !c.fainted && !c.isEvolving && !c.isSpawning); }
         let gmaxBtnKey = '';
         function gmaxActive() { return !gameOver && (isRaid() ? !!raidState : (gameRunning && !!classicPick)); } // el botón existe en Raids y en la arena clásica con un pokémon propio
         function gmaxButtonUpdate() {
@@ -15462,9 +15463,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         document.addEventListener('DOMContentLoaded', () => { const b = document.getElementById('gmax-btn'); if (b) { b.addEventListener('click', e => { e.stopPropagation(); gmaxButtonPress(); }); b.addEventListener('pointerdown', e => e.stopPropagation()); } });
         const GMAX_DUEL_MS = 10000; // PVP / Liga: el Gigamax dura 10 s (en Raid, 5 s)
         function gmaxStart(c, ms, duel) {
-            c.gmaxReady = false; const GF = gmaxFormOf(c); ms = ms || GMAX_DURATION_MS;
+            c.gmaxReady = false; const GF = gmaxFormOf(c); ms = Infinity; // sin límite de tiempo: dura hasta que se debilita (o lo retiran)
             const ratio = c.hp / c.maxHp, im = c.imgEl || c.wrapper.querySelector('.pokemon img');
-            c.gmax = { msLeft: ms, total: ms, stats: c.stats, maxHp: c.maxHp, attackKey: c.attackKey, front: c.currentFrontSrc || (im ? im.src : ''), name: c.name };
+            c.gmax = { msLeft: ms, total: ms, stats: c.stats, maxHp: c.maxHp, attackKey: c.attackKey, front: c.currentFrontSrc || (im ? im.src : ''), name: c.name, duel: !!duel };
             // Mismas estadísticas que el Butterfree Gigamax ALFA de una Raid (tabla base buffeada + IVs perfectos), solo 5 s.
             if (duel) { // PVP / Liga: subidón sobre las estadísticas del propio pokémon (PS x2,2, ataques x2, defensas x1,5, velocidad x1,2)
                 const b0 = c.stats, mul = { hp: 2.2, attack: 2, spAttack: 2, defense: 1.5, spDefense: 1.5, speed: 1.2 };
@@ -15476,7 +15477,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (im) { im.style.objectViewBox = ''; im.style.transform = ''; const src = sprFor(c, GF.sprite); im.src = src; c.currentFrontSrc = src; c.vFacing = 'front'; }
             const tag = c.wrapper.querySelector('.pokemon-name-tag'); if (tag) tag.textContent = GF.name;
             updateCombatantHP(c);
-            logMessage(`¡${c.name} se vuelve GIGAMAX durante ${Math.round(ms / 1000)} segundos!`, 'evolve');
+            logMessage(`¡${c.name} se vuelve GIGAMAX hasta ser debilitado!`, 'evolve');
             try { spawnSparks(c.x + 35, c.y + 35, GF.c1, 30); spawnSparks(c.x + 35, c.y + 35, GF.c2, 16); triggerCameraShake(6, 450 / gameSpeed); } catch (e) {}
             try { const a = document.getElementById(GF.sound); if (a) { a.currentTime = 0; const r = a.play(); if (r && r.catch) r.catch(() => {}); } } catch (e) {}
         }
@@ -15490,6 +15491,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (im) { im.style.objectViewBox = ''; im.src = g.front; c.currentFrontSrc = g.front; c.vFacing = 'front'; try { syncFrontToBackScale(c); } catch (e) {} }
             const tag = c.wrapper.querySelector('.pokemon-name-tag'); if (tag) tag.textContent = g.name;
             updateCombatantHP(c);
+            if (!g.duel && !c.fainted) c.gmaxReady = true; // Raid y arena clásica: sin límite de usos, puede volver a transformarse cuando quiera
             logMessage(`${c.name} vuelve a su forma normal.`, 'info');
         }
 
@@ -24527,7 +24529,8 @@ function raidAutoScore(e, eff, st) {
     return power * Math.pow(Math.max(eff, 0.02), 0.75);
 }
 function raidAutoSelect() {
-    const ids = Object.keys(raidScoreMap).map(Number).sort((a, b) => raidScoreMap[b] - raidScoreMap[a]).slice(0, RAID_TEAM_MAX);
+    const bxA = capLoad(CAP_BOX_KEY, []); let gmA = false; // solo 1 Pokémon Gigamax por equipo
+    const ids = Object.keys(raidScoreMap).map(Number).sort((a, b) => raidScoreMap[b] - raidScoreMap[a]).filter(i => { const g = !!(bxA[i] && bxA[i].gmax); if (g && gmA) return false; if (g) gmA = true; return true; }).slice(0, RAID_TEAM_MAX);
     Object.keys(raidCellMap).forEach(k => raidCellMap[k].classList.remove('sel'));
     raidTeamSel = {};
     ids.forEach(i => { raidTeamSel[i] = true; raidCellMap[i].classList.add('sel'); });
@@ -24580,6 +24583,7 @@ function openRaidTeam() {
                 if (raidTeamSel[i]) { delete raidTeamSel[i]; c.classList.remove('sel'); try { GameAudio.sfx('tick'); } catch (x) {} }
                 else {
                     if (Object.keys(raidTeamSel).length >= RAID_TEAM_MAX) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); return; }
+                    if (e.gmax && Object.keys(raidTeamSel).some(k => box[k] && box[k].gmax)) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); try { GameAudio.sfx('close'); } catch (x) {} return; } // solo 1 Pokémon Gigamax por equipo
                     raidTeamSel[i] = true; c.classList.add('sel'); try { GameAudio.sfx('pop'); } catch (x) {}
                 }
                 raidTeamRefresh();
@@ -24662,6 +24666,7 @@ function startRaidWithTeam() {
         team[raidEnsureAlias(f.id, used[f.id])] = raidTraitsFromEntry(f, e); // 2.º, 3.º... de la misma especie usan una copia
     });
     if (!Object.keys(team).length) return;
+    { let gm = false; Object.keys(team).forEach(k => { const t = team[k]; if (t && t.gmax) { if (gm) delete t.gmax; else gm = true; } }); } // solo 1 Gigamax por equipo
     if (!bagUse('raidticket', 1)) { mmTeamEl.hidden = true; showNeedTicket(); return; } // el tiquet se consume al empezar
     raidTeam = team; multiPlan = null;
     GameAudio.sfx('confirm');
@@ -24801,6 +24806,7 @@ function mpBuildPick() {
         c.addEventListener('click', () => {
             if (mp.sel.has(bi)) { mp.sel.delete(bi); c.classList.remove('sel'); GameAudio.sfx('tick'); }
             else if (mp.sel.size >= room) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); mp.msg = ''; GameAudio.sfx('close'); return; }
+            else if (e.gmax && [...mp.sel].some(k => box[k] && box[k].gmax)) { c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); GameAudio.sfx('close'); return; } // solo 1 Pokémon Gigamax por jugador
             else { mp.sel.add(bi); c.classList.add('sel'); GameAudio.sfx('pop'); }
             mpCount.textContent = mp.sel.size + ' / ' + room;
             const sv = mpFoot.querySelector('[data-act="picksave"]'); if (sv) { sv.disabled = !mp.sel.size; sv.textContent = mp.sel.size ? 'Confirmar (' + mp.sel.size + ')' : 'Confirmar'; }
@@ -29341,6 +29347,8 @@ window.PAProfile = (function () {
             if (e.target.closest('.pk-rm')) { ids[slot] = null; saveIds(ids); sfx('close'); end(); return done(); }
             const it = e.target.closest('.pk-it'); if (!it) return;
             const u = it.dataset.u, j = ids.indexOf(u);
+            const nb = bx.find(x => x.uid === u);
+            if (nb && nb.gmax && ids.some((id, k) => k !== slot && id && id !== u && bx.some(x => x.uid === id && x.gmax))) { sfx('close'); inp.value = ''; inp.placeholder = 'Solo 1 Gigamax por equipo'; return; } // solo 1 Pokémon Gigamax por equipo
             if (j >= 0 && j !== slot) ids[j] = ids[slot]; // ya estaba en otra casilla: se intercambian
             ids[slot] = u; saveIds(ids); sfx('pop'); end(); done();
         });
@@ -30092,7 +30100,8 @@ window.PAPvp = (function () {
         const look = raidFormLookup(), out = [];
         ids.forEach(id => {
             const e = id && by[id]; if (!e) return; const f = look[capClean(e.name)]; if (!f || !speciesMeta[f.id]) return;
-            out.push({ id: f.id, traits: raidTraitsFromEntry(f, e), sprite: (e.sprite && e.sprite.length < 500) ? e.sprite : '', name: dispName(capClean(e.name)), ts: e.ts || 0 });
+            const tr = raidTraitsFromEntry(f, e); if (tr && tr.gmax) { if (out.some(o => o.traits && o.traits.gmax)) delete tr.gmax; } // solo 1 Gigamax por equipo
+            out.push({ id: f.id, traits: tr, sprite: (e.sprite && e.sprite.length < 500) ? e.sprite : '', name: dispName(capClean(e.name)), ts: e.ts || 0 });
         });
         return out;
     }
@@ -30207,7 +30216,7 @@ window.PAPvp = (function () {
         const p = spawnPos(acc), c = addCombatant(sl.id, p.x, p.y);
         if (P.bot && acc === P.foe && P.botPower > 1) botEmpower(c, P.botPower);
         if (P.bot && acc === P.foe) c._botIn = performance.now();
-        if (!c.gmax) c.wrapper.classList.remove('gmax-temp'); if (sl.gmaxUsed) c.gmaxReady = false;
+        if (!c.gmax) c.wrapper.classList.remove('gmax-temp');
         try { logMessage('¡' + T.name + ' lanza a ' + c.name + '!', 'spawn'); } catch (e) {}
         try { directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, DIRECTOR_SPAWN_HOLD_MS, DIRECTOR_PRIORITY_SPAWN); } catch (e) {}
         return true;
@@ -30236,8 +30245,8 @@ window.PAPvp = (function () {
     function duelGmax(acc, i) { // convierte al pokémon activo del hueco i en su forma Gigamax (una vez por pokémon y combate)
         if (P.over || !gameRunning || gameOver) return false;
         const T = P.teams[acc], sl = T && T.slots[i], c = sl && combatantsById[sl.id];
-        if (!c || c.owner !== acc || c.fainted || c.isSpawning || c.isEvolving || c.gmax || !c.gmaxReady || sl.gmaxUsed || c.retreated) return false;
-        sl.gmaxUsed = true; gmaxStart(c, GMAX_DUEL_MS, true);
+        if (!c || c.owner !== acc || c.fainted || c.isSpawning || c.isEvolving || c.gmax || !c.gmaxReady || c.retreated || gmaxTeamBusy(acc)) return false; // 1 solo Gigamax a la vez por equipo
+        gmaxStart(c, GMAX_DUEL_MS, true);
         try { directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, 1400, DIRECTOR_PRIORITY_SPAWN); } catch (e) {}
         return true;
     }
@@ -30249,7 +30258,7 @@ window.PAPvp = (function () {
                 if (c && !c.fainted && c.owner === acc) {
                     const bs = c.baseStats || {}, ty = [bs.type, bs.type2].filter(Boolean).join(','); sl.ty = ty;
                     let s = c.currentFrontSrc || (c.imgEl ? c.imgEl.src : '') || ''; if (s.length > 400) s = '';
-                    return [1, Math.max(0, Math.round(c.hp)), Math.round(c.maxHp), ty, dispName(c.dexName || c.name), s, 0, c.gmax ? 2 : (c.gmaxReady && !sl.gmaxUsed ? 1 : 0)];
+                    return [1, Math.max(0, Math.round(c.hp)), Math.round(c.maxHp), ty, dispName(c.dexName || c.name), s, 0, c.gmax ? 2 : (c.gmaxReady && !gmaxTeamBusy(acc) ? 1 : 0)];
                 }
                 if ((speciesLives[sl.id] || 0) <= 0) return [2];
                 return [0, Math.round(sl.ratio * 100)];
@@ -30327,7 +30336,7 @@ window.PAPvp = (function () {
         const acc = P.foe, now = performance.now(), f = fieldOf(acc).length;
         if (P.botAce) { // el as del líder se vuelve Gigamax cuando le queda menos de la mitad de PS o lleva 9 s en la arena
             const ai = P.teams[acc].slots.findIndex(sl => sl.base === P.botAce), asl = P.teams[acc].slots[ai], ac = asl && combatantsById[asl.id];
-            if (ac && ac.owner === acc && !ac.fainted && !ac.isSpawning && !ac.isEvolving && ac.gmaxReady && !ac.gmax && !asl.gmaxUsed) {
+            if (ac && ac.owner === acc && !ac.fainted && !ac.isSpawning && !ac.isEvolving && ac.gmaxReady && !ac.gmax && !gmaxTeamBusy(acc)) {
                 if (!ac._aceT) ac._aceT = now;
                 if (ac.hp / Math.max(1, ac.maxHp) < 0.5 || now - ac._aceT > 9000) { if (duelGmax(acc, ai)) botSay('gmax', '¡' + ac.name + ', despierta el Gigamax! ¡Que arda todo el estadio!'); }
             }

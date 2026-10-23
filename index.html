@@ -5277,6 +5277,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     #main-menu [data-id="arena"]   { --c: #ff4d6d; }
     #main-menu [data-id="raids"] { --c: #a78bfa; }
     #main-menu [data-id="liga"] { --c: #2dd4a7; }
+    #main-menu [data-id="misiones"] { --c: #4aa3ff; }
     #main-menu [data-id="pokedex"] { --c: #4ade80; }
     #main-menu [data-id="pc"]      { --c: #38bdf8; }
     #main-menu [data-id="bolsa"]   { --c: #f472b6; }
@@ -31313,7 +31314,7 @@ window.PALiga = (function () {
 <script id="pa-missions-js">
 /* Misiones: encargos de la Liga y del Profesor Oak para los ASPIRANTES A CAMPEÓN. Misión 1: capturar más Pokémon de Johto. */
 window.PAMis = (function () {
-    const KEY = 'pokearena.missions', MID = 'm1', END = Date.parse('2026-10-24T18:00:00Z'); // domingo 24-oct 12:00 hora de Costa Rica
+    const KEY = 'pokearena.missions', MID = 'm1', END = Date.parse('2026-10-25T18:00:00Z'); // domingo 25-oct 12:00 hora de Costa Rica
     const JOHTO = new Set(('chikorita bayleef meganium cyndaquil quilava typhlosion totodile croconaw feraligatr sentret furret hoothoot noctowl ledyba ledian spinarak ariados crobat chinchou lanturn pichu cleffa igglybuff togepi togetic natu xatu mareep flaaffy ampharos bellossom marill azumarill sudowoodo politoed hoppip skiploom jumpluff aipom sunkern sunflora yanma wooper quagsire espeon umbreon murkrow slowking misdreavus unown wobbuffet girafarig pineco forretress dunsparce gligar steelix snubbull granbull qwilfish scizor shuckle heracross sneasel teddiursa ursaring slugma magcargo swinub piloswine corsola remoraid octillery delibird mantine skarmory houndour houndoom kingdra phanpy donphan porygon2 stantler smeargle tyrogue hitmontop smoochum elekid magby miltank blissey raikou entei suicune larvitar pupitar tyranitar lugia hooh celebi').split(' '));
     const norm = n => String(n || '').toLowerCase().replace(/^✦\s*/, '').replace(/[^a-z0-9]/g, '');
     const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -31348,9 +31349,9 @@ window.PAMis = (function () {
             say('Aspirante, por fin tengo tu primer encargo. Abre bien los oídos.', 'pop'),
             say('Ya te hablé del Team Rocket. Estos días hemos detectado algo extraño: están apareciendo por la región Pokémon que no son de aquí. Todos originarios de Johto.', 'shake'),
             say('Mis informes dicen que Rocket los robó allí y que, en su huida, muchos se les han escapado. Si los capturamos nosotros antes que ellos, los ponemos a salvo.'),
-            say('Por eso la misión es sencilla: captura Pokémon originarios de Johto. Chikorita, Togepi, Larvitar, Umbreon... cualquiera de esa región, con sus evoluciones.'),
+            say('Por eso la misión es sencilla: captura Pokémon originarios de Johto. Cualquiera de esa región, con sus evoluciones, cuenta.'),
             say('El Aspirante que capture MÁS Pokémon de Johto será reconocido por la Liga y por mí como el mejor rastreador de la región. Solo participáis los Aspirantes a Campeón.', 'jump'),
-            say('Tenéis hasta el DOMINGO 24 DE OCTUBRE, a las 12:00 del mediodía, hora de Costa Rica. Cuenta desde que aceptas esta misión.'),
+            say('Tenéis hasta el DOMINGO. Tu marcador cuenta desde que aceptas esta misión.'),
             say('Puedes seguir tu marcador y el de los demás en la tarjeta MISIONES. ¡Suerte!', 'pop')
         ];
         PALiga._dialog({ name: O.n, sprite: O.s, theme: '' }, lines, done);
@@ -31368,7 +31369,7 @@ window.PAMis = (function () {
         let h = '<div class="ms-art"></div><div class="ms-wrap"><div class="ms-top"><button type="button" class="ms-back">‹ VOLVER</button></div>'
             + '<div class="ms-card"><small>MISIÓN 1 · PROFESOR OAK</small><h2>OPERACIÓN JOHTO</h2>'
             + '<p>Captura más Pokémon originarios de Johto que ningún otro Aspirante a Campeón.</p>'
-            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'MISIÓN TERMINADA' : 'TIEMPO RESTANTE · hasta el dom 24 oct, 12:00 (CR)') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
+            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'MISIÓN TERMINADA' : 'TIEMPO RESTANTE · hasta el domingo 25 de octubre') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
             + '<div class="ms-me"><span>TUS CAPTURAS DE JOHTO</span><b>' + (m.n | 0) + '</b></div></div>';
         if (over && rows.length) h += '<div class="ms-win"><small>GANADOR</small><b>' + esc(rows[0].name || 'Entrenador') + '</b><span>' + rows[0].n + ' capturas</span></div>';
         h += '<div class="ms-card"><small>CLASIFICACIÓN</small><div class="ms-bd">' + (rows.length ? rows.map((r, i) =>

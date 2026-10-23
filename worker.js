@@ -277,7 +277,7 @@ const cleanMedals = a => [...new Set((Array.isArray(a) ? a : []).map(x => String
 const parseMedals = t => { try { return cleanMedals(JSON.parse(t || '[]')); } catch (e) { return []; } };
 const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
-const MIS_END = Date.parse('2026-10-24T18:00:00Z'); // domingo 24 de octubre, 12:00 del mediodía en Costa Rica (UTC-6)
+const MIS_END = Date.parse('2026-10-25T18:00:00Z'); // domingo 25 de octubre, 12:00 del mediodía en Costa Rica (UTC-6)
 async function friendsApi(db, h, route, req, url) {
     const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
     const b = req.method === 'POST' ? await req.json().catch(() => ({})) : {};

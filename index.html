@@ -6452,7 +6452,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 <div class="hp-bar-container"><div id="gengargmax-hp" class="hp-bar"></div></div>
                 <div class="xp-bar-container"><div id="gengargmax-xp" class="xp-bar"></div></div>
             </div>
-            <div id="gengargmax" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10202.gif" alt="Gengar Gigamax" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/94.gif';}"></div>
+            <div id="gengargmax" class="pokemon"><img src="https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10202.webp" alt="Gengar Gigamax"></div>
         </div>
 
         <!-- Mareep -->
@@ -7697,7 +7697,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (!m) return u;
             return pokeSpriteUrl(m[2], { 'ani': 'front', 'ani-shiny': 'shiny', 'ani-back': 'back', 'ani-back-shiny': 'backshiny' }[m[1]]);
         }
-        const SPR_RE = /^(.*?\/(?:animated|black-white|pokemon)\/)(back\/)?(shiny\/)?(\d+\.(?:gif|png))$/;
+        const SPR_RE = /^(.*?\/(?:animated|black-white|pokemon|sword-shield)\/)(back\/)?(shiny\/)?(\d+\.(?:gif|png|webp))$/;
         function sprSet(u, back, shiny) { u = sprNorm(u); const m = SPR_RE.exec(u); return m ? m[1] + (back ? 'back/' : '') + (shiny ? 'shiny/' : '') + m[4] : u; }
         function isBackSpr(u) { const m = SPR_RE.exec(sprNorm(u)); return !!(m && m[2]); }
         function isShinySpr(u) { const m = SPR_RE.exec(sprNorm(u)); return !!(m && m[3]); }
@@ -7707,6 +7707,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         const SPR_HOME = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/';
         const SPR_NOSTATIC = { 10264: 1, 10265: 1, 10266: 1, 10267: 1, 10268: 1, 10269: 1, 10270: 1, 10271: 1, 10301: 1, 10327: 1, 10328: 1, 10329: 1 }; // ids sin black-white/<id>.png
         function sprNext(u) {
+            const sw = /^https:\/\/assets\.pokestats\.gg\/.*\/sword-shield\/((?:back\/)?(?:shiny\/)?)(\d+)\.webp$/.exec(String(u || '')); // sprites animados de Espada/Escudo: si no cargan, el GIF de Showdown
+            if (sw) return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/' + sw[1] + sw[2] + '.gif';
+            const sd = /^(https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/)other\/showdown\/((?:back\/)?(?:shiny\/)?)(10202|10196)\.gif$/.exec(String(u || '')); // si tampoco carga: la especie base (Gen V)
+            if (sd) return sd[1] + 'versions/generation-v/black-white/animated/' + sd[2] + (sd[3] === '10202' ? 94 : 6) + '.gif';
             const hm = /^(.*\/other\/home\/)(shiny\/)?(\d+)\.png$/.exec(String(u || ''));
             if (hm) { const b2 = SPR_FORM_BASE[hm[3]]; return b2 ? hm[1] + (hm[2] || '') + b2 + '.png' : null; }
             const m = SPR_NEXT_RE.exec(String(u || '')); if (!m) return null;
@@ -15304,7 +15308,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Para añadir más ALFAs basta con sumar su entrada a RAID_ALPHAS (+ su wrapper HTML, sus stats y su movimiento).
         const RAID_ALPHAS = [
             { id: 'gengargmax', name: 'Gengar Gigamax', sound: document.getElementById('snd-gengar-gmax'), attackKey: 'gigaterror', ability: null, alpha: true,
-              formName: 'Gengar', formSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/94.gif', gmaxSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10202.gif' } // formName: en la Caja/Pokédex es una forma de Gengar
+              formName: 'Gengar', formSprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/94.gif', gmaxSprite: 'https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10202.webp' } // formName: en la Caja/Pokédex es una forma de Gengar
         ];
         RAID_ALPHAS.forEach(a => { speciesMeta[a.id] = a; });
         let raidPendingAlpha = null; // ALFA elegido al abrir la selección de equipo (para clasificar al equipo contra él)
@@ -15423,8 +15427,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Un Butterfree de la Caja con el signo Gigamax, llevado a una Raid, se vuelve Gigamax UNA vez por vida al tocar el
         // botón GIGAMAX del HUD: durante 5 s es enorme, con más PS y poder y usa Gigaestupor; luego vuelve a la normalidad.
         const GMAX_DURATION_MS = 5000;
-        const GMAX_SPRITE_CHARIZARD = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10196.gif';
-        const GMAX_SPRITE_GENGAR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/10202.gif';
+        const GMAX_SPRITE_CHARIZARD = 'https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10196.webp';
+        const GMAX_SPRITE_GENGAR = 'https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10202.webp';
         function gmaxSpriteFor(name) { const n = String(name || ''); return /charizard/i.test(n) ? GMAX_SPRITE_CHARIZARD : /gengar/i.test(n) ? GMAX_SPRITE_GENGAR : GMAX_SPRITE_URL; }
         function gmaxFormOf(c) { // forma Gigamax según el pokémon (Butterfree o Charizard)
             const n = String((c && (c.dexName || c.name)) || '');

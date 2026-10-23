@@ -43,6 +43,7 @@ function init(db) {
     ]).then(() => db.prepare('DROP TABLE IF EXISTS g_species').run()) // el registro por especie ya no existe
       .then(() => db.prepare('CREATE TABLE IF NOT EXISTS save_codes (code TEXT PRIMARY KEY, h TEXT NOT NULL, slot INTEGER NOT NULL, ts INTEGER NOT NULL)').run()) // código único de cada partida -> cuenta y ranura que la guardan
       .then(() => db.prepare('CREATE TABLE IF NOT EXISTS mis_score (mid TEXT NOT NULL, acc TEXT NOT NULL, n INTEGER NOT NULL, ts INTEGER NOT NULL, name TEXT, avatar TEXT, PRIMARY KEY (mid, acc))').run())
+      .then(() => db.prepare('CREATE TABLE IF NOT EXISTS mis_claim (mid TEXT NOT NULL, acc TEXT NOT NULL, pick TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (mid, acc))').run())
       .then(() => db.prepare('ALTER TABLE g_saves ADD COLUMN pc TEXT').run().catch(() => {})) // contenido de la Caja de cada partida
       .then(() => db.prepare('ALTER TABLE profiles ADD COLUMN medals TEXT').run().catch(() => {})) // medallas de la Liga (ids) que ven los amigos en la ficha de perfil
       .then(() => db.prepare('ALTER TABLE room_members ADD COLUMN avatar TEXT').run().catch(() => {})) // salas creadas antes de existir el avatar: añade la columna (si ya existe, falla sin problema)
@@ -300,9 +301,20 @@ async function friendsApi(db, h, route, req, url) {
             'm1', me, n, now, name, avatar).run();
         return reply({ ok: true, now });
     }
+    if (route === '/api/f/mclaim' && req.method === 'POST') { // solo el GANADOR (más capturas; empate: quien llegó antes) elige 1 recompensa, una sola vez
+        if (now <= MIS_END + 30000) return reply({ error: 'la misión aún no termina' }, 403);
+        if (!['chikorita', 'cyndaquil', 'totodile'].includes(b.pick)) return reply({ error: 'elección no válida' }, 400);
+        const top = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', 'm1').first();
+        if (!top || top.acc !== me) return reply({ error: 'no eres el ganador' }, 403);
+        const ex = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', 'm1', me).first();
+        if (ex) return reply({ ok: true, pick: ex.pick, already: true });
+        await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', 'm1', me, b.pick, now).run();
+        return reply({ ok: true, pick: b.pick });
+    }
     if (route === '/api/f/mboard' && req.method === 'GET') {
         const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', 'm1').all();
-        return reply({ now, end: MIS_END, me, board: results });
+        const cl = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', 'm1', me).first();
+        return reply({ now, end: MIS_END, me, board: results, claim: cl ? cl.pick : null });
     }
     if (route === '/api/f/list' && req.method === 'GET') {
         const [fr, inc, out, unr] = await db.batch([

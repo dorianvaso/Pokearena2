@@ -3,6 +3,10 @@
 <head>
 <script>(function(){try{var u=navigator.userAgent;if(/iP(hone|ad|od)/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)){document.documentElement.classList.add("ios-lite");window.PA_IOS=true;}}catch(e){}})();</script>
     <meta charset="UTF-8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b1329">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pokémon Arena</title>
     <style id="pa-fonts">
@@ -31650,6 +31654,27 @@ window.PALiga = (function () {
     return { open, medalsHtml, medalsHtmlOf, medals, _levels: LEVELS, _dialog: dialog, _oak: () => IMG.oakBust, aspirante: () => { try { return !!(SaveSys.read('pokearena.story', null) || {}).aspirante; } catch (e) { return false; } } };
 })();
 </script>
+<script id="pa-fs-js">
+(function(){
+  var done=false;
+  function go(){
+    var d=document.documentElement;
+    var f=d.requestFullscreen||d.webkitRequestFullscreen;
+    if(!f||document.fullscreenElement||document.webkitFullscreenElement) return;
+    try{ var p=f.call(d,{navigationUI:'hide'}); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+    try{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('portrait').catch(function(){}); }catch(e){}
+  }
+  function first(){
+    if(done) return; done=true;
+    var coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+    if(coarse) go();
+    document.removeEventListener('pointerup',first,true); document.removeEventListener('touchend',first,true);
+  }
+  document.addEventListener('pointerup',first,true); document.addEventListener('touchend',first,true);
+  // si el navegador sale de pantalla completa (gesto atrás), vuelve a pedirla en el siguiente toque
+  document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement){ done=false; document.addEventListener('pointerup',first,true); } });
+})();
+</script>
 <script id="pa-hud2-js">
 /* Mueve la pastilla de hora/clima (#lt-chip) junto al indicador de vidas dentro del HUD; en Raids (HUD distinto) vuelve a flotar sobre la arena. */
 (function () {
@@ -31989,8 +32014,20 @@ window.PAMis = (function () {
   #game-column { width: 100%; justify-content: flex-start; }
   #stage { width: 100%; max-width: none; max-height: none; aspect-ratio: auto; height: 100%; }
   #game-container { flex: 1 1 auto; border: 0; border-radius: 0; box-shadow: none; }
-  #champion-bar { flex: 0 0 clamp(212px, 27dvh, 270px); padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+  #champion-bar { flex: 0 0 clamp(236px, 29dvh, 280px); padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
 }
+
+/* ---- sin choques: el campeón mide lo que necesita y el podio se reparte el resto ---- */
+#champion-bar #hud-pager .hud-left { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+#champion-bar #hud-pager .hud-champ { flex: 0 0 auto; min-height: 0; margin-bottom: 2px; }
+#champion-bar #hud-pager .champ-records { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; gap: 4px; }
+#champion-bar #hud-pager .rec-row { flex: 1 1 0; min-height: 0; align-items: center; }
+#champion-bar #hud-pager .rec-slot { min-height: 0; justify-content: center; }
+#champion-bar #hud-pager .rec-box { height: clamp(22px, 5.4dvh, 38px); }
+#champion-bar #hud-pager .champ-slot { width: clamp(44px, 7.4dvh, 60px); height: clamp(44px, 7.4dvh, 60px); flex: 0 0 auto; }
+#champion-bar #hud-pager .champ-stats { flex-wrap: wrap; row-gap: 3px; }
+#champion-bar #hud-pager .champ-tag { line-height: 1.1; }
+#champion-bar #hud-pager .champ-name { line-height: 1.1; }
 </style>
 <style id="pa-raidfx-css">
 /* ===== RAID: Gengar Gigamax (tamaño) y lluvia de orbes sombríos ===== */

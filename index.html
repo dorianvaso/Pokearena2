@@ -31982,6 +31982,15 @@ window.PAMis = (function () {
 #champion-bar #hud-pager .champ-panel.is-detail .hud-champ { border-color: rgba(255,255,255,.3); border-top-color: rgba(255,255,255,.5); background: var(--glass); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
 #champion-bar #hud-pager .champ-panel.is-detail .champ-tag svg { color: #fff; }
 #champion-bar { background: linear-gradient(180deg, #1c1c22, #0d0d11); }
+
+/* ---- móvil/vertical: pantalla completa, sin marco alrededor de la arena ---- */
+@media (max-width: 899px), (max-aspect-ratio: 5/4) {
+  #app-layout { max-width: none; padding: 0; gap: 0; width: 100%; }
+  #game-column { width: 100%; justify-content: flex-start; }
+  #stage { width: 100%; max-width: none; max-height: none; aspect-ratio: auto; height: 100%; }
+  #game-container { flex: 1 1 auto; border: 0; border-radius: 0; box-shadow: none; }
+  #champion-bar { flex: 0 0 clamp(212px, 27dvh, 270px); padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+}
 </style>
 <style id="pa-raidfx-css">
 /* ===== RAID: Gengar Gigamax (tamaño) y lluvia de orbes sombríos ===== */

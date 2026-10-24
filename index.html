@@ -23234,7 +23234,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         // ===== HUD v2: feed de combate (sprites + iconos, sin texto) y contador de pokémon con vidas =====
         const feedEl = document.getElementById('feed');
-        const FEED_ROWS = 4;
+        const FEED_ROWS = 3;
         const FEED_TTL = { atk: 3600, ability: 5500, evo: 7500, faint: 7500, elim: 9500 };
         const SVG_ARROW = '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 5l7 7-7 7"/></svg>';
         const SVG_UP = '<svg class="eff" viewBox="0 0 24 24" fill="currentColor" style="width:1.1em;height:1.1em"><path d="M12 4l9 15H3z"/></svg>';
@@ -31849,22 +31849,92 @@ window.PAMis = (function () {
 @keyframes mgFall { 0% { opacity: 1; transform: translateY(0) rotate(var(--r0)); } 88% { opacity: 1; } 100% { opacity: 0; transform: translateY(var(--fh)) rotate(var(--r1)); } }
 #magi-rain .mg-banner { position: absolute; left: 50%; top: 9%; translate: -50% 0; padding: 8px 18px; font-weight: 800; letter-spacing: .14em; font-size: clamp(14px, 2.4vw, 26px); color: #fff; background: rgba(30, 64, 175, .82); border: 2px solid #93c5fd; border-radius: 12px; box-shadow: 0 0 22px rgba(96, 165, 250, .8); white-space: nowrap; animation: mgBan 4.5s ease-out both; }
 @keyframes mgBan { 0% { opacity: 0; scale: .6; } 10% { opacity: 1; scale: 1.05; } 14% { scale: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
-/* ===== HUD inferior v2: fila superior (vidas + hora/clima), tipografía legible y PC con ancho contenido ===== */
-#champion-bar #hud-pager .hud-right { gap: 5px; }
-#champion-bar #hud-pager .hud-top { display: flex; align-items: stretch; gap: 5px; flex: 0 0 auto; min-width: 0; }
-#champion-bar #hud-pager .hud-top .alive-chip { flex: 1 1 auto; min-width: 0; height: auto; padding: 3px 7px 8px; gap: 4px; justify-content: flex-start; }
-#champion-bar #hud-pager .hud-top .alive-chip svg { width: 9px; height: 9px; font-size: 9px; }
-#champion-bar #hud-pager .hud-top .alive-chip b { font-size: 9px; }
-#champion-bar #hud-pager .hud-top .alive-chip i { font-size: 7px; }
-#champion-bar #hud-pager .hud-top .alive-bar { left: 7px; right: 7px; bottom: 3px; height: 3px; }
-#champion-bar #hud-pager .hud-top #lt-chip { position: relative; left: auto; top: auto; z-index: auto; flex: 0 0 auto; gap: 6px; padding: 3px 8px 8px; margin: 0; border-radius: 7px; background: var(--hx-well); border: 1px solid rgba(0, 0, 0, .55); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .55), var(--hx-bevel); backdrop-filter: none; -webkit-backdrop-filter: none; }
-#champion-bar #hud-pager .hud-top #lt-chip .lt-ico { font-size: 12px; }
-#champion-bar #hud-pager .hud-top #lt-chip .lt-bar { left: 6px; right: 6px; bottom: 3px; }
-#champion-bar #hud-pager .hud-top #lt-chip .lt-sep { font-size: 10px; }
+/* ===== HUD inferior NEON: diseño moderno (cristal, degradados vivos, tipografía limpia), sprites grandes y fila vidas + hora/clima ===== */
+#champion-bar { flex: 0 0 24%; }
+#champion-bar #hud-pager, #champion-bar #hud-pager * { font-family: 'PA Chakra S', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight: 700; letter-spacing: 0; text-shadow: none; }
+#champion-bar #hud-pager { --hx-well: rgba(255, 255, 255, .075); --hx-cyan: #22d3ee; --hx-gold: #fbbf24; --hx-bevel: inset 0 1px 0 rgba(255, 255, 255, .1);
+    border: 0; border-radius: 18px; background: linear-gradient(165deg, #1b1f55 0%, #121545 55%, #0d0f33 100%);
+    box-shadow: 0 0 0 1px rgba(125, 211, 252, .3), 0 0 22px -4px rgba(99, 102, 241, .55), 0 10px 26px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .14); }
+#champion-bar #hud-pager::before { display: none; }
+#champion-bar #hud-pager::after { left: 22px; right: 22px; top: 0; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #a78bfa, #f472b6, transparent); opacity: .9; }
+#champion-bar #hud-pager .hud-page { padding: 9px 11px 16px; }
+#champion-bar #hud-pager .champ-panel { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+#champion-bar #hud-pager .hud-left { padding-right: 10px; gap: 7px; }
+#champion-bar #hud-pager .hud-right { padding-left: 10px; gap: 6px; border-left: 1px solid rgba(255, 255, 255, .12); box-shadow: none; }
+/* tarjetas de cristal */
+#champion-bar #hud-pager .champ-stat, #champion-bar #hud-pager .alive-chip, #champion-bar #hud-pager .fd, #champion-bar #hud-pager .cd-chip, #champion-bar #hud-pager .cap-ball-btn, #champion-bar #hud-pager .hud-top #lt-chip {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .05)); border: 1px solid rgba(255, 255, 255, .14); border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+/* campeón */
+#champion-bar #hud-pager .champ-slot, #champion-bar #hud-pager .champ-panel.is-empty .champ-slot { border: 2px solid rgba(251, 191, 36, .85); border-radius: 15px; background: radial-gradient(circle at 50% 85%, rgba(251, 191, 36, .45), rgba(30, 27, 90, .8) 70%); box-shadow: 0 0 14px -2px rgba(251, 191, 36, .55), inset 0 0 12px rgba(0, 0, 0, .4); }
+#champion-bar #hud-pager .champ-panel.is-empty .champ-slot { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06); box-shadow: none; }
+#champion-bar #hud-pager .champ-panel.is-detail .champ-slot { border-color: #22d3ee; background: radial-gradient(circle at 50% 85%, rgba(34, 211, 238, .4), rgba(30, 27, 90, .8) 70%); box-shadow: 0 0 14px -2px rgba(34, 211, 238, .6); }
+#champion-bar #hud-pager .champ-tag { font-size: 10px; letter-spacing: .1em; color: #fbbf24; }
+#champion-bar #hud-pager .champ-tag svg { width: 12px; height: 12px; color: #fbbf24; filter: none; }
+#champion-bar #hud-pager .champ-panel.is-detail .champ-tag, #champion-bar #hud-pager .champ-panel.is-detail .champ-tag svg { color: #22d3ee; }
+#champion-bar #hud-pager .champ-name, #champion-bar #hud-pager .champ-panel.is-detail .champ-name { font-size: 16px; font-weight: 800; line-height: 1.1; color: #fff; }
+#champion-bar #hud-pager .champ-stats { gap: 4px; flex-wrap: nowrap; }
+#champion-bar #hud-pager .champ-stat { padding: 3px 7px; gap: 4px; border-radius: 999px; min-width: 0; }
+#champion-bar #hud-pager .champ-stat .cs-ic { width: 12px; height: 12px; font-size: 12px; color: #22d3ee; }
+#champion-bar #hud-pager .champ-stat:nth-child(2) .cs-ic { color: #fbbf24; }
+#champion-bar #hud-pager .champ-val, #champion-bar #hud-pager .champ-panel.is-detail .champ-val { font-size: 12px; color: #fff; }
+#champion-bar #hud-pager .champ-val.long, #champion-bar #hud-pager .champ-panel.is-detail .champ-val.long { font-size: 11px; }
+/* podio: sprites grandes */
+#champion-bar #hud-pager .champ-records { gap: 5px; }
+#champion-bar #hud-pager .rec-row { gap: 6px; }
+#champion-bar #hud-pager .rec-ico { width: 14px; height: 14px; filter: none; }
+#champion-bar #hud-pager .rec-row:nth-child(1) .rec-ico { color: #22d3ee; }
+#champion-bar #hud-pager .rec-row:nth-child(2) .rec-ico { color: #fbbf24; }
+#champion-bar #hud-pager .rec-slot { flex: 1 1 0; width: auto; max-width: 56px; gap: 2px; --rank: #fbbf24; }
+#champion-bar #hud-pager .rec-slot:nth-child(3) { --rank: #cbd5e1; }
+#champion-bar #hud-pager .rec-slot:nth-child(4) { --rank: #f59e0b; }
+#champion-bar #hud-pager .rec-slot:nth-child(4) { --rank: #fb923c; }
+#champion-bar #hud-pager .rec-box { height: clamp(28px, 22cqh, 40px); border: 1.5px solid var(--rank); border-bottom-width: 1.5px; border-radius: 11px; background: radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--rank) 38%, transparent), rgba(255, 255, 255, .05) 75%); box-shadow: 0 0 10px -4px var(--rank); }
+#champion-bar #hud-pager .rec-slot.is-empty .rec-box { border: 1.5px dashed rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .03); box-shadow: none; }
+#champion-bar #hud-pager .hud-champ { flex-basis: 33cqh; }
+#champion-bar #hud-pager .rec-val { font-size: 10px; line-height: 1; color: #fff; }
+#champion-bar #hud-pager .rec-slot.is-empty .rec-val { color: rgba(255, 255, 255, .35); }
+.rec-slot::after { width: 15px !important; height: 15px !important; line-height: 15px !important; font-size: 10px !important; font-weight: 800 !important; top: -6px !important; left: -5px !important; }
+/* fila superior: vidas + hora/clima */
+#champion-bar #hud-pager .hud-top { display: flex; align-items: stretch; gap: 6px; flex: 0 0 auto; min-width: 0; }
+#champion-bar #hud-pager .hud-top .alive-chip { flex: 1 1 auto; min-width: 0; height: auto; padding: 4px 9px 9px; gap: 5px; justify-content: flex-start; }
+#champion-bar #hud-pager .hud-top .alive-chip svg { width: 12px; height: 12px; font-size: 12px; color: #fb7185; filter: none; }
+#champion-bar #hud-pager .hud-top .alive-chip b { font-size: 13px; color: #fff; }
+#champion-bar #hud-pager .hud-top .alive-chip i { font-size: 10px; color: rgba(255, 255, 255, .55); }
+#champion-bar #hud-pager .hud-top .alive-bar { left: 9px; right: 9px; bottom: 3px; height: 3px; background: rgba(255, 255, 255, .14); box-shadow: none; }
+#champion-bar #hud-pager .alive-bar > span { background: linear-gradient(90deg, #34d399, #22d3ee) !important; }
+#champion-bar #hud-pager .hud-top #lt-chip { position: relative; left: auto; top: auto; z-index: auto; flex: 0 0 auto; gap: 7px; padding: 4px 10px 9px; margin: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+#champion-bar #hud-pager .hud-top #lt-chip .lt-ico { font-size: 14px; }
+#champion-bar #hud-pager .hud-top #lt-chip .lt-bar { left: 8px; right: 8px; bottom: 3px; height: 3px; }
+#champion-bar #hud-pager .hud-top #lt-chip .lt-sep { font-size: 11px; }
+/* registro de eventos: sprites grandes */
+#champion-bar #hud-pager .feed { grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 5px; }
+#champion-bar #hud-pager .fd, #champion-bar #hud-pager .fd-evo, #champion-bar #hud-pager .fd-abi, #champion-bar #hud-pager .fd-fnt, #champion-bar #hud-pager .fd-atk.crit { border-left: 3px solid var(--fc); padding: 0 9px 0 5px; gap: 8px; justify-content: flex-start; }
+#champion-bar #hud-pager .fd-s { height: 96%; }
+#champion-bar #hud-pager .fd-c { font-size: 12px; color: #fff; gap: 4px; }
+#champion-bar #hud-pager .fd-c svg { width: 1.3em; height: 1.3em; }
+#champion-bar #hud-pager .fd-c .lv svg { width: .95em; height: .95em; }
+#champion-bar #hud-pager .fd-elim { background: linear-gradient(90deg, rgba(244, 63, 94, .38), rgba(244, 63, 94, .08)); border: 1px solid rgba(244, 63, 94, .5); border-left: 3px solid #f43f5e; box-shadow: 0 0 12px -4px #f43f5e; }
+#champion-bar #hud-pager .fd-atk .fd-c { color: #fff; }
+#champion-bar #hud-pager .fd-atk.crit .fd-c { color: #fde047; }
+/* detalle */
+#champion-bar #hud-pager .champ-detail { font-size: 11px; }
+#champion-bar #hud-pager .cd-lbl { font-size: 10px; color: #22d3ee; }
+#champion-bar #hud-pager .cd-name, #champion-bar #hud-pager .cd-ability .cd-name { font-size: 12px; color: #fff; }
+#champion-bar #hud-pager .cd-chip b { font-size: 9px; color: rgba(255, 255, 255, .6); }
+#champion-bar #hud-pager .cd-chip i { font-size: 11px; color: #fff; }
+/* puntos del pager */
+#champion-bar #hud-pager .hud-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .28); box-shadow: none; }
+#champion-bar #hud-pager .hud-dots i.on { width: 18px; border-radius: 4px; background: linear-gradient(90deg, #22d3ee, #a78bfa); box-shadow: 0 0 8px rgba(34, 211, 238, .6); }
+/* captura */
+#champion-bar #hud-pager .cap-title { font-size: 12px; color: #fff; }
+#champion-bar #hud-pager .cap-hint { font-size: 10px; color: #cbd5e1; }
+#champion-bar #hud-pager .cap-ball-btn b { font-size: 12px; color: #fff; }
+#champion-bar #hud-pager .cap-ball-btn i { font-size: 9px; color: #94a3b8; }
+#champion-bar #hud-pager .cap-ball-btn.on { border-color: #fbbf24; background: linear-gradient(180deg, rgba(251, 191, 36, .3), rgba(251, 191, 36, .1)); }
+#champion-bar #hud-pager .cap-empty { font-size: 11px; color: #94a3b8; }
 @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
-    #champion-bar { display: flex; justify-content: center; }
+    #champion-bar { display: flex; justify-content: center; flex: 0 0 clamp(200px, 25vh, 320px); }
     #champion-bar #hud-pager { width: min(100%, 1240px); margin: 0 auto; }
-    #champion-bar { flex: 0 0 clamp(190px, 24vh, 300px); }
     #champion-bar #hud-pager .hud-page { zoom: calc(1 + (var(--pz, 1) - 1) * .75); }
 }
 </style>

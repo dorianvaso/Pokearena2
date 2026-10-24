@@ -31932,11 +31932,56 @@ window.PAMis = (function () {
 #champion-bar #hud-pager .cap-ball-btn i { font-size: 9px; color: #94a3b8; }
 #champion-bar #hud-pager .cap-ball-btn.on { border-color: #fbbf24; background: linear-gradient(180deg, rgba(251, 191, 36, .3), rgba(251, 191, 36, .1)); }
 #champion-bar #hud-pager .cap-empty { font-size: 11px; color: #94a3b8; }
+/* ---- estilo "Resumen de la arena": cristal translúcido, bordes claros, sprites en baldosas, valores en píldoras ---- */
+#champion-bar #hud-pager { --glass: linear-gradient(135deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .05) 60%, rgba(255, 255, 255, .1));
+    background: linear-gradient(160deg, rgba(58, 70, 140, .62), rgba(20, 26, 70, .78)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-radius: 22px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .35), 0 14px 30px -12px rgba(0, 0, 0, .75); }
+#champion-bar #hud-pager::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7), transparent); }
+#champion-bar #hud-pager .champ-stat, #champion-bar #hud-pager .alive-chip, #champion-bar #hud-pager .fd, #champion-bar #hud-pager .cd-chip, #champion-bar #hud-pager .cap-ball-btn, #champion-bar #hud-pager .hud-top #lt-chip {
+    background: var(--glass); border: 1px solid rgba(255, 255, 255, .2); border-top-color: rgba(255, 255, 255, .4); border-radius: 16px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 8px 18px -12px rgba(0, 0, 0, .7); }
+/* campeón: fila dorada */
+#champion-bar #hud-pager .hud-champ { padding: 6px; border-radius: 18px; border: 1px solid rgba(253, 224, 71, .6); border-top-color: rgba(255, 240, 150, .85); background: linear-gradient(135deg, rgba(253, 224, 71, .3), rgba(255, 255, 255, .05) 62%, rgba(253, 224, 71, .12)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 10px 24px -12px rgba(234, 179, 8, .7); }
+#champion-bar #hud-pager .champ-panel.is-detail .hud-champ { border-color: rgba(125, 211, 252, .6); border-top-color: rgba(186, 230, 253, .85); background: linear-gradient(135deg, rgba(56, 189, 248, .28), rgba(255, 255, 255, .05) 62%, rgba(56, 189, 248, .1)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 10px 24px -12px rgba(14, 165, 233, .7); }
+#champion-bar #hud-pager .champ-panel.is-empty .hud-champ { border-color: rgba(255, 255, 255, .2); background: var(--glass); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
+#champion-bar #hud-pager .champ-slot, #champion-bar #hud-pager .champ-panel.is-empty .champ-slot, #champion-bar #hud-pager .champ-panel.is-detail .champ-slot { border: 1px solid rgba(255, 255, 255, .25); border-radius: 14px; background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .24), rgba(255, 255, 255, .05)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3); }
+#champion-bar #hud-pager .champ-tag, #champion-bar #hud-pager .champ-panel.is-detail .champ-tag { font-size: 10px; letter-spacing: .08em; color: rgba(255, 255, 255, .7); }
+#champion-bar #hud-pager .champ-tag svg { color: #fde047; }
+#champion-bar #hud-pager .champ-panel.is-detail .champ-tag svg { color: #7dd3fc; }
+#champion-bar #hud-pager .champ-name, #champion-bar #hud-pager .champ-panel.is-detail .champ-name { text-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
+#champion-bar #hud-pager .champ-stat { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); }
+#champion-bar #hud-pager .champ-val, #champion-bar #hud-pager .champ-panel.is-detail .champ-val { color: #fff3b0; }
+/* podio y registro: baldosas de cristal */
+#champion-bar #hud-pager .rec-box { border: 1px solid rgba(255, 255, 255, .25); border-bottom: 2px solid var(--rank); border-radius: 14px; background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .22), rgba(255, 255, 255, .05)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 14px -8px var(--rank); }
+#champion-bar #hud-pager .rec-slot.is-empty .rec-box { border: 1px dashed rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .03); box-shadow: none; }
+#champion-bar #hud-pager .rec-val { color: #fff3b0; padding: 2px 6px; border-radius: 999px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .2); }
+#champion-bar #hud-pager .rec-slot.is-empty .rec-val { color: rgba(255, 255, 255, .35); background: none; border-color: transparent; }
+#champion-bar #hud-pager .fd { border-left: 1px solid rgba(255, 255, 255, .2); border-radius: 16px; position: relative; }
+#champion-bar #hud-pager .fd::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--fc); box-shadow: 0 0 8px var(--fc); }
+#champion-bar #hud-pager .fd, #champion-bar #hud-pager .fd-evo, #champion-bar #hud-pager .fd-abi, #champion-bar #hud-pager .fd-fnt, #champion-bar #hud-pager .fd-atk.crit { border-left: 1px solid rgba(255, 255, 255, .2); padding: 0 10px 0 7px; }
+#champion-bar #hud-pager .fd-s { border-radius: 12px; background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .2), rgba(255, 255, 255, .04)); border: 1px solid rgba(255, 255, 255, .2); height: 86%; }
+#champion-bar #hud-pager .fd-elim { background: linear-gradient(135deg, rgba(244, 63, 94, .4), rgba(255, 255, 255, .05) 62%, rgba(244, 63, 94, .14)); border: 1px solid rgba(244, 63, 94, .6); border-top-color: rgba(253, 164, 175, .85); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 20px -12px #f43f5e; }
+#champion-bar #hud-pager .fd-elim::before { background: #fb7185; }
+#champion-bar #hud-pager .hud-top .alive-chip b { color: #fff3b0; }
+#champion-bar #hud-pager .hud-right { border-left-color: rgba(255, 255, 255, .16); }
+#champion-bar #hud-pager .hud-top .alive-bar, #champion-bar #hud-pager .hud-top #lt-chip .lt-bar { background: rgba(255, 255, 255, .16); }
+#champion-bar #hud-pager .hud-champ { padding: 3px; overflow: hidden; }
+#champion-bar #hud-pager .champ-stats { gap: 4px; min-width: 0; }
+#champion-bar #hud-pager .champ-stat { padding: 2px 6px; gap: 3px; flex: 0 1 auto; min-width: 0; }
+#champion-bar #hud-pager .champ-val { font-size: 11px; }
 @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
     #champion-bar { display: flex; justify-content: center; flex: 0 0 clamp(200px, 25vh, 320px); }
     #champion-bar #hud-pager { width: min(100%, 1240px); margin: 0 auto; }
     #champion-bar #hud-pager .hud-page { zoom: calc(1 + (var(--pz, 1) - 1) * .75); }
 }
+
+/* ---- vidrio neutro: sin fondo azul ---- */
+#champion-bar #hud-pager { background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 55%, rgba(255,255,255,.09)); border: 1px solid rgba(255,255,255,.22); border-top-color: rgba(255,255,255,.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 14px 30px -12px rgba(0,0,0,.6); }
+#champion-bar #hud-pager::before { display: none; }
+#champion-bar #hud-pager .champ-panel, #champion-bar #hud-pager .hud-page { background: none; border: 0; box-shadow: none; }
+#champion-bar #hud-pager .champ-panel.is-detail .hud-champ { border-color: rgba(255,255,255,.3); border-top-color: rgba(255,255,255,.5); background: var(--glass); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+#champion-bar #hud-pager .champ-panel.is-detail .champ-tag svg { color: #fff; }
+#champion-bar { background: linear-gradient(180deg, #1c1c22, #0d0d11); }
 </style>
 <style id="pa-raidfx-css">
 /* ===== RAID: Gengar Gigamax (tamaño) y lluvia de orbes sombríos ===== */

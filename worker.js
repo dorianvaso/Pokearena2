@@ -278,6 +278,8 @@ const cleanMedals = a => [...new Set((Array.isArray(a) ? a : []).map(x => String
 const parseMedals = t => { try { return cleanMedals(JSON.parse(t || '[]')); } catch (e) { return []; } };
 const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typeof m === 'object' && typeof m.s === 'string' && SPR_OK.test(m.s))
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
+const MIS2_END = Date.parse('2026-10-26T18:00:00Z'); // Misión 2 (La Granjera): lunes 26 de octubre, 12:00 del mediodía en Costa Rica
+const miltankScore = (iv, hf, wf) => { const sum = iv.reduce((a, v) => a + v, 0); return Math.max(1, Math.min(100, Math.round(1 + 99 * (0.6 * sum / 186 + 0.2 * hf / 1000 + 0.2 * wf / 1000)))); };
 const MIS_END = Date.parse('2026-10-25T18:00:00Z'); // domingo 25 de octubre, 12:00 del mediodía en Costa Rica (UTC-6)
 async function friendsApi(db, h, route, req, url) {
     const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
@@ -292,16 +294,32 @@ async function friendsApi(db, h, route, req, url) {
         return reply({ ok: true, acc: me, now });
     }
     if (route === '/api/f/mission' && req.method === 'POST') { // Misión 1: capturas de Johto (solo sube; se cierra el domingo 24-oct 12:00 hora de Costa Rica)
-        if (b.mid !== 'm1') return reply({ error: 'misión no válida' }, 400);
-        if (now > MIS_END + 30000) return reply({ closed: true, now });
-        const n = Math.max(0, Math.min(999, b.n | 0));
+        if (b.mid !== 'm1' && b.mid !== 'm2') return reply({ error: 'misión no válida' }, 400);
+        if (now > (b.mid === 'm2' ? MIS2_END : MIS_END) + 30000) return reply({ closed: true, now });
+        let n = Math.max(0, Math.min(999, b.n | 0));
+        if (b.mid === 'm2') { // La Granjera: la nota (1-100) se calcula AQUÍ con IVs, tamaño y peso del Miltank enviado
+            const iv = Array.isArray(b.iv) && b.iv.length === 6 ? b.iv.map(v => Math.max(0, Math.min(31, v | 0))) : null;
+            const hf = Math.max(0, Math.min(1000, b.hf | 0)), wf = Math.max(0, Math.min(1000, b.wf | 0));
+            if (!iv) return reply({ error: 'ejemplar no válido' }, 400);
+            n = miltankScore(iv, hf, wf);
+        }
         const name = String(b.name || '').replace(/[<>"&]/g, '').trim().slice(0, 24) || 'Entrenador';
         const avatar = /^[a-z0-9_-]{1,12}$/i.test(b.avatar || '') ? b.avatar : '';
         await q('INSERT INTO mis_score (mid, acc, n, ts, name, avatar) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(mid, acc) DO UPDATE SET n = ?3, ts = ?4, name = ?5, avatar = ?6 WHERE ?3 > mis_score.n',
-            'm1', me, n, now, name, avatar).run();
-        return reply({ ok: true, now });
+            b.mid, me, n, now, name, avatar).run();
+        const best = await q('SELECT n FROM mis_score WHERE mid = ?1 AND acc = ?2', b.mid, me).first();
+        return reply({ ok: true, now, score: n, best: best ? best.n : n });
     }
     if (route === '/api/f/mclaim' && req.method === 'POST') { // solo el GANADOR (más capturas; empate: quien llegó antes) elige 1 recompensa, una sola vez
+        if (b.mid === 'm2') { // La Granjera: el MEJOR Miltank (nota más alta; empate: quien llegó antes) cobra 25 000 ₽, 10 Ultra Ball y 2 Tiquetes de Raid, una sola vez
+            if (now <= MIS2_END + 30000) return reply({ error: 'la misión aún no termina' }, 403);
+            const top2 = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', 'm2').first();
+            if (!top2 || top2.acc !== me) return reply({ error: 'no eres el ganador' }, 403);
+            const ex2 = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', 'm2', me).first();
+            if (ex2) return reply({ ok: true, pick: ex2.pick, already: true });
+            await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', 'm2', me, 'reward', now).run();
+            return reply({ ok: true, pick: 'reward' });
+        }
         if (now <= MIS_END + 30000) return reply({ error: 'la misión aún no termina' }, 403);
         if (!['chikorita', 'cyndaquil', 'totodile'].includes(b.pick)) return reply({ error: 'elección no válida' }, 400);
         const top = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', 'm1').first();
@@ -312,9 +330,10 @@ async function friendsApi(db, h, route, req, url) {
         return reply({ ok: true, pick: b.pick });
     }
     if (route === '/api/f/mboard' && req.method === 'GET') {
-        const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', 'm1').all();
-        const cl = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', 'm1', me).first();
-        return reply({ now, end: MIS_END, me, board: results, claim: cl ? cl.pick : null });
+        const mid = url.searchParams.get('mid') === 'm2' ? 'm2' : 'm1';
+        const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', mid).all();
+        const cl = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', mid, me).first();
+        return reply({ now, end: mid === 'm2' ? MIS2_END : MIS_END, me, board: results, claim: cl ? cl.pick : null });
     }
     if (route === '/api/f/list' && req.method === 'GET') {
         const [fr, inc, out, unr] = await db.batch([

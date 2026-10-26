@@ -4789,15 +4789,6 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
     .pokemon-wrapper.duel-hitflash .pokemon img { filter: brightness(3) saturate(0) !important; }
 
     /* ===== DUELO: cartel VS, onomatopeyas, combo, grietas, destello final, dash ===== */
-    .duel-vs { position: absolute; z-index: 40; pointer-events: none; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; white-space: nowrap; font: 900 italic .8rem/1 'PA Chakra', system-ui, sans-serif; letter-spacing: .05em; animation: duelVs 1.35s cubic-bezier(.2,1.3,.4,1) forwards; }
-    .duel-vs b { color: #fff; background: linear-gradient(100deg, rgba(15,23,42,.92), rgba(30,41,59,.92)); padding: 4px 9px; border: 2px solid #fde047; transform: skewX(-12deg); box-shadow: 0 0 12px rgba(250,204,21,.6); text-shadow: 0 1px 0 #000; }
-    .duel-vs i { font-style: normal; font-size: 1.15rem; color: #ef4444; text-shadow: 0 0 10px #ef4444, 2px 2px 0 #000; }
-    @keyframes duelVs { 0% { opacity: 0; scale: 2.2; } 16% { opacity: 1; scale: 1; } 80% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; translate: 0 -14px; } }
-    .duel-ono { position: absolute; z-index: 41; pointer-events: none; font: 900 italic 1.05rem/1 'PA Chakra', system-ui, sans-serif; letter-spacing: .04em; color: var(--oc, #fde047); transform: translate(-50%, -50%) rotate(var(--or, -8deg)); text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 12px var(--oc, #fde047); animation: duelOno .62s cubic-bezier(.2,1.6,.4,1) forwards; }
-    .duel-ono.big { font-size: 1.7rem; animation-duration: .95s; }
-    @keyframes duelOno { 0% { opacity: 0; scale: .3; } 18% { opacity: 1; scale: 1.35; } 40% { scale: 1; } 78% { opacity: 1; } 100% { opacity: 0; translate: 0 -22px; scale: 1.1; } }
-    .duel-combo { position: absolute; z-index: 41; pointer-events: none; transform: translate(-50%, -50%); font: 900 italic .9rem/1 'PA Chakra', system-ui, sans-serif; color: #fff; padding: 3px 9px; background: linear-gradient(100deg, #dc2626, #f97316); border: 2px solid #fff; transform-origin: center; text-shadow: 0 1px 0 #000; box-shadow: 0 0 14px rgba(249,115,22,.8); animation: duelCombo 1s ease-out forwards; }
-    @keyframes duelCombo { 0% { opacity: 0; scale: 2; rotate: -10deg; } 15% { opacity: 1; scale: 1; rotate: -4deg; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -16px; } }
     .duel-crack { position: absolute; z-index: 1; pointer-events: none; width: 130px; height: 130px; translate: -50% -50%; border-radius: 50%; background: repeating-conic-gradient(from 7deg, rgba(0,0,0,.65) 0 2.5deg, transparent 2.5deg 31deg); -webkit-mask: radial-gradient(circle, transparent 8%, #000 14%, #000 40%, transparent 70%); mask: radial-gradient(circle, transparent 8%, #000 14%, #000 40%, transparent 70%); animation: duelCrack 1.3s ease-out forwards; }
     @keyframes duelCrack { 0% { opacity: 0; scale: .3; } 12% { opacity: .9; scale: 1; } 70% { opacity: .7; } 100% { opacity: 0; scale: 1.1; } }
     .duel-dust { position: absolute; z-index: 24; pointer-events: none; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.75), rgba(200,200,200,.0) 70%); animation: duelDust .55s ease-out forwards; }
@@ -23040,11 +23031,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // en reposo los duelistas se recolocan a base de dashes cortos, nunca deslizándose/arrastrándose.
         // ====================================================================================
         const DUEL_APPR = { meet: 210, ram: 190, spinram: 230, curve: 240 };
-        const DUEL_HITS = { clash: 240, bump: 190 };
+        const DUEL_HITS = { clash: 240, bump: 190, upper: 250, slam: 330, whiff: 260 };
         const DUEL_RECS = { dashout: 210, spinout: 260, hopout: 250 };
         const DUEL_REACT = ['stagger', 'spin', 'bounce', 'skid', 'flip', 'tumble', 'shake'];
         const DUEL_HVP = { // perfil base de la reacción del rival: d = empuje, lift = altura, lf = fracción en el aire, spin = giro, bounce = rebotes, jit = temblor, sq = aplastamiento
-            bump: { d: 48 }, clash: { d: 44 } };
+            bump: { d: 48 }, clash: { d: 44 }, upper: { d: 26, lift: 100, lf: 0.55, spin: 360 }, slam: { d: 14, lift: 78, lf: 0.45, bounce: 2, sq: 1 }, whiff: { d: 0 } };
         const dEase = { out: t => 1 - Math.pow(1 - t, 3), in: t => t * t, io: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2 };
         const dClamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
         const dLerp = (a, b, t) => a + (b - a) * t;
@@ -23082,14 +23073,6 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     case 'end': fxTone(ctx, out, 'triangle', 600, 240, t, 0.01, 0.08, 0.35); fxNoiseLayer(ctx, out, t, 0.3, { type: 'lowpass', q: 0.8, f0: 1800, f1: 300, a: 0.01, peak: 0.1 }); break;
                 }
             } catch (e) { /* sin audio */ }
-        }
-        const DUEL_ONO = ['¡POW!', '¡BAM!', '¡PAF!', '¡WHAM!', '¡CRASH!', '¡TOC!'], DUEL_ONO_COL = ['#fde047', '#fb923c', '#f87171', '#a5f3fc', '#fff'];
-        function duelOno(x, y, big) {
-            const el = document.createElement('div'); el.className = 'duel-ono' + (big ? ' big' : '');
-            el.textContent = big ? '¡K.O. HIT!' : DUEL_ONO[Math.floor(Math.random() * DUEL_ONO.length)];
-            el.style.left = Math.round(x + (Math.random() - 0.5) * 36) + 'px'; el.style.top = Math.round(y - 34 - Math.random() * 14) + 'px';
-            el.style.setProperty('--oc', big ? '#ef4444' : DUEL_ONO_COL[Math.floor(Math.random() * DUEL_ONO_COL.length)]); el.style.setProperty('--or', ((Math.random() - 0.5) * 24).toFixed(0) + 'deg');
-            duelAdd(el, big ? 1000 : 680);
         }
         function duelDust(x, y, n) {
             for (let i = 0; i < n; i++) {
@@ -23141,7 +23124,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         function startDuel(a, b) {
             const d = {
-                id: ++duelSeq, a, b, clock: 0, phase: 'gather', timer: 0, turn: null, n: 0, hitDone: false, strikeMs: 0, restMs: 0, final: false,
+                id: ++duelSeq, a, b, counterBy: null, cnt: false, clock: 0, phase: 'gather', timer: 0, turn: null, n: 0, hitDone: false, strikeMs: 0, restMs: 0, final: false,
                 max: DUEL_MIN_STRIKES + Math.floor(Math.random() * (DUEL_MAX_STRIKES - DUEL_MIN_STRIKES + 1)),
                 cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, wx: 0, wy: 0, wpT: 0, side: a.x <= b.x ? -1 : 1,
                 ended: false, pos: {},
@@ -23159,11 +23142,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             projClashFx(mx, my + 15, '#ffffff', '#e5e7eb'); // choque normal (anillo + chispas)
             duelRing(mx, my + 30, '#ffffff', 90, 0, true);
             try { sndHit.play().catch(() => {}); } catch (e) {}
-            try {
-                const vs = document.createElement('div'); vs.className = 'duel-vs'; vs.style.left = Math.round(mx) + 'px'; vs.style.top = Math.round(my - 62) + 'px';
-                vs.innerHTML = '<b></b><i>VS</i><b></b>'; vs.children[0].textContent = a.name; vs.children[2].textContent = b.name; duelAdd(vs, 1450);
-                duelDust(mx, my + 30, 6); duelSfx('vs');
-            } catch (e) {}
+            try { duelDust(mx, my + 30, 6); duelSfx('vs'); } catch (e) {}
             directorFocus(a.id, DIRECTOR_ATTACK_ZOOM, 1500 / gameSpeed, DIRECTOR_PRIORITY_ATTACK);
         }
 
@@ -23172,16 +23151,29 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // DUELO = EMBESTIDAS A ALTA VELOCIDAD: cada turno el atacante se agacha, sale disparado contra el rival (recto,
             // girando o en curva), choca y retrocede de otro dash, rotando y moviéndose todo el rato. Tempo rápido.
             const fin = d.final, K = {}, tempo = 0.85 + Math.random() * 0.2;
-            if (fin) { K.appr = dPick(['spinram', 'curve']); K.hit = 'bump'; K.f = 260; }
+            if (fin) { K.appr = dPick(['spinram', 'curve']); K.hit = dPick(['bump', 'slam', 'upper']); K.f = 260; }
             else {
                 K.appr = dPick(['ram', 'ram', 'spinram', 'curve', 'meet'].filter(x => x !== d.lastAppr || x === 'ram'));
-                K.hit = K.appr === 'meet' ? 'clash' : 'bump';
+                K.hit = K.appr === 'meet' ? 'clash' : dPick(['bump', 'bump', 'bump', 'upper', 'slam'].filter(x => x !== d.lastHit || x === 'bump'));
                 K.f = 0;
+            }
+            // Defensa del rival: ESQUIVE (más probable si es más rápido; el que esquiva contraataca con más fuerza) o GUARDIA (recibe la mitad)
+            K.dodge = false; K.block = false;
+            if (!fin && K.hit !== 'clash') {
+                const s0 = d.turn, v0 = (s0 === d.a) ? d.b : d.a;
+                let pd = 0.1;
+                try { const es = effSpeed(s0), ev = effSpeed(v0); pd = Math.max(0.04, Math.min(0.3, 0.1 + (ev - es) / Math.max(1, ev + es) * 0.3)); } catch (e) {}
+                if (Math.random() < pd) { K.dodge = true; K.hit = 'whiff'; }
+                else if (K.hit === 'bump' && Math.random() < 0.12) K.block = true;
             }
             K.rec = dPick(['dashout', 'spinout', 'hopout']); K.dir = Math.random() < 0.5 ? 1 : -1;
             const vp = Object.assign({}, DUEL_HVP[K.hit]);
             K.react = '-';
-            if (K.hit !== 'clash') {
+            if (K.hit === 'whiff') { const sg0 = Math.random() < 0.5 ? 1 : -1; vp.dodge = 1; vp.sd = 70 * sg0; K.react = 'dodge'; }
+            else if (K.block) { vp.d = 12; vp.sq = 0.5; K.react = 'block'; }
+            else if (K.hit === 'upper') { const sg1 = Math.random() < 0.5 ? 1 : -1; vp.spin *= sg1; K.react = 'upper'; }
+            else if (K.hit === 'slam') K.react = 'slam';
+            else if (K.hit !== 'clash') {
                 K.react = dPick(DUEL_REACT); const sgn = Math.random() < 0.5 ? 1 : -1;
                 if (K.react === 'spin') { vp.spin = 720 * sgn; vp.d *= 1.2; } // vueltas completas: el rival termina de pie, sin "salto" al acabar el giro
                 else if (K.react === 'bounce') { vp.lift = Math.max(vp.lift || 0, 38); vp.lf = vp.lf || 0.4; vp.bounce = (vp.bounce || 0) + 2; }
@@ -23214,6 +23206,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (P.spin) o.r = P.spin * dEase.io(dClamp(u / (P.lift ? lf : 0.55)));
             if (P.sq) { const q = Math.sin(Math.PI * dClamp(u / 0.6)); o.sx = 1 + 0.3 * P.sq * q; o.sy = 1 - 0.35 * P.sq * q; }
             if (P.jit) o.dx = Math.sin(tau * 0.9) * P.jit * (1 - u);
+            if (P.dodge) { o.s = P.sd * Math.sin(Math.PI * dClamp(u / 0.85)); o.l = -16 * Math.sin(Math.PI * dClamp(u / 0.6)); o.sx = 0.9; o.sy = 1.1; o.tr = u < 0.55 ? 1 : 0; }
             if (P.skid && u < 0.55) o.tr = 1;
             return o;
         }
@@ -23241,6 +23234,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 case 'bump': if (q < 0.4) { const k = q / 0.4; o.a = C + 10 * dEase.out(k); o.sx = 1.45 - 0.45 * k; o.sy = 0.78 + 0.22 * k; o.r = sg * 8 * (1 - k); }
                     else { const k = (q - 0.4) / 0.6; o.a = dLerp(C + 10, C - 40, dEx(k)); o.sx = 1 + 0.25 * Math.sin(Math.PI * k); o.sy = 1 - 0.14 * Math.sin(Math.PI * k); o.r = -sg * 22 * Math.sin(Math.PI * k); o.tr = 1; } // choca y rebota hacia atrás
                     break;
+                case 'upper': if (q < 0.45) { const k = q / 0.45; o.a = C + 4; o.l = -52 * dEase.out(k); o.r = -sg * 38 * k; o.sx = 0.9; o.sy = 1.22; o.tr = 1; }
+                    else { const k = (q - 0.45) / 0.55; o.a = dLerp(C + 4, C - 34, dEx(k)); o.l = -52 * (1 - dEase.in(k)); o.r = -sg * 38 * (1 - k); o.sx = 1 + 0.25 * Math.sin(Math.PI * k); o.sy = 1 - 0.16 * Math.sin(Math.PI * k); }
+                    break; // gancho ascendente: salta con el rival
+                case 'slam': if (q < 0.38) { const k = q / 0.38; o.a = C + 6; o.l = -66 * dEase.out(k); o.sx = 0.92; o.sy = 1.18; o.r = sg * 14 * k; }
+                    else { const k = (q - 0.38) / 0.62, f = dEase.in(Math.min(1, k * 2.2)); o.a = dLerp(C + 6, C - 20, dEx(k)); o.l = -66 * (1 - f); o.sx = 1 + 0.4 * (k > 0.45 ? Math.sin(Math.PI * Math.min(1, (k - 0.45) / 0.4)) : 0); o.sy = 1 - 0.3 * (k > 0.45 ? Math.sin(Math.PI * Math.min(1, (k - 0.45) / 0.4)) : 0); o.r = sg * 14 * (1 - f);
+                        if (k >= 0.45) X.once('land', () => { try { const cc = fxSpriteCenter(X.s); duelDust(cc.x, cc.y + (cc.ry || 20), 7); duelRing(cc.x, cc.y + (cc.ry || 20), '#ffffff', 120, 0, true); spawnSparks(cc.x, cc.y + (cc.ry || 20), '#ffffff', 10); duelSfx('hit', 3, true); } catch (e) {} }); }
+                    break; // martillazo: salta y cae encima
+                case 'whiff': o.a = dLerp(C, C + 78, dEase.out(q)); o.sx = 1.4 - 0.4 * q; o.sy = 0.8 + 0.2 * q; o.r = sg * 26 * Math.sin(Math.PI * q); o.tr = q < 0.6 ? 1 : 0; o.dx = Math.sin(q * 90) * 2 * q; break; // falla: lo atraviesa y se pasa de largo
                 case 'clash': o.a = dLerp(C, -26, dEase.out(q)); o.sx = 1.1; o.r = -sg * 10 * (1 - q); o.dx = Math.sin(q * 130) * 3 * (1 - q); break;
             }
             return o;
@@ -23275,7 +23276,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (d.k.hit === 'clash') duelSetAura(v, duelColor(v), true, true);
             d.whoosh = 0; duelSfx('charge', d.n, d.final);
             playAttackCry(s);
-            logMessage(`¡${s.name} ${d.n === 0 ? 'contraataca' : 'responde'} con ${move.name}!`, 'attack');
+            let mvx = move;
+            if (d.counterBy === s) { mvx = Object.assign({}, mvx, { power: (mvx.power || 40) * 1.3 }); d.counterBy = null; d.cnt = true; } else d.cnt = false;
+            d.move = mvx;
+            logMessage(`¡${s.name} ${d.cnt ? 'contragolpea' : (d.n === 0 ? 'contraataca' : 'responde')} con ${move.name}!`, 'attack');
             registerAttackUsed(s);
             if (d.final) {
                 directorFocus(s.id, DIRECTOR_ATTACK_ZOOM * 1.25, 1700 / gameSpeed, DIRECTOR_PRIORITY_ATTACK);
@@ -23287,10 +23291,22 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             d.hitDone = true;
             const c = fxSpriteCenter(v), x = c.x, y = c.y + (v.dyo || 0), col = duelColor(s), colV = duelColor(v), st = d.k.hit, big = d.final;
             // Todo golpe de duelo es un choque físico: sonido del puñetazo + efecto visual de hit (más grande en el golpe final).
-            forcePhysHit = true; physHitScale = big ? 1.5 : 1.15;
+            if (d.k.dodge) { // ESQUIVE: el golpe no conecta; el rival contraatacará con más fuerza
+                d.counterBy = v; d.hold = 40;
+                duelRing(x, y + 10, '#bae6fd', 100, 0, true); duelDust(x, y + (c.ry || 20) * 0.8, 5); spawnSparks(x, y, '#bae6fd', 8);
+                try { duelSfx('whoosh'); } catch (e) {}
+                logMessage(`💨 ¡${v.name} esquiva el golpe de ${s.name}!`, 'attack');
+                return;
+            }
+            let mvH = d.move;
+            if (d.n > 0) mvH = Object.assign({}, mvH, { power: (mvH.power || 40) * (1 + 0.06 * Math.min(d.n, 7)) }); // IMPULSO: cada golpe del duelo pega un poco más fuerte
+            if (d.k.block) { mvH = Object.assign({}, mvH, { power: (mvH.power || 40) * 0.5 }); logMessage(`🛡️ ¡${v.name} se cubre y amortigua el golpe!`, 'attack'); }
+            forcePhysHit = true; physHitScale = (big ? 1.5 : 1.15) + 0.04 * Math.min(d.n, 6) + (st === 'slam' ? 0.2 : 0);
             let landed;
-            try { landed = resolveSingleHit(d.move, s, v, x, y, sndHit, col, '#ffffff'); }
+            try { landed = resolveSingleHit(mvH, s, v, x, y, sndHit, col, '#ffffff'); }
             finally { forcePhysHit = false; physHitScale = 1; }
+            if (d.k.block) { duelRing(x, y + 10, '#93c5fd', 110, 0, true); spawnSparks(x, y, '#93c5fd', 12); try { const cx = fxCtxReady(); if (cx) { const o = fxOut(cx), t = cx.currentTime + 0.003; fxTone(cx, o, 'square', 1500, 900, t, 0.001, 0.08, 0.1); fxTone(cx, o, 'triangle', 600, 300, t, 0.001, 0.1, 0.18); } } catch (e) {} }
+            if (st === 'upper') { duelRing(x, y + 14, '#fde68a', 120, 0, true); spawnSparks(x, y, '#fde68a', 14); }
             if (!s.fainted && !v.fainted) dashImpactFx(s, v);
             if (landed === false) spawnBurst(x, y, '#ffffff'); // si conectó, el hit físico ya puso su propio destello
             spawnSparks(x, y, col, big ? 18 : 10); spawnSparks(x, y, colV, big ? 8 : 5);
@@ -23298,8 +23314,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             directorFocus(s.id, big ? DIRECTOR_ATTACK_ZOOM * 1.2 : DIRECTOR_ATTACK_ZOOM, (big ? 1300 : 700) / gameSpeed, DIRECTOR_PRIORITY_ATTACK);
             duelHitFlash(v); if (st === 'clash') duelHitFlash(s);
             try {
-                duelSfx('hit', d.n, big); duelOno(x, y, big); duelDust(x, y + (c.ry || 20) * 0.8, big ? 8 : 4);
-                if (d.n >= 1) { const cb = document.createElement('div'); cb.className = 'duel-combo'; cb.textContent = (d.n + 1) + ' COMBO' + (d.n >= 3 ? '!' : ''); cb.style.left = Math.round(x) + 'px'; cb.style.top = Math.round(y - 66) + 'px'; duelAdd(cb, 1050); }
+                duelSfx('hit', d.n, big); duelDust(x, y + (c.ry || 20) * 0.8, big ? 8 : 4);
                 if (big) {
                     duelRing(x, y + 10, '#fde047', 150, 0, true); duelRing(x, y + 10, '#ffffff', 210, 90, true);
                     const cr = document.createElement('div'); cr.className = 'duel-crack'; cr.style.left = Math.round(x) + 'px'; cr.style.top = Math.round(y + (c.ry || 20) * 0.9) + 'px'; duelAdd(cr, 1350);
@@ -23307,7 +23322,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     const gc = document.getElementById('game-container'); if (gc) { const fl = document.createElement('div'); fl.className = 'duel-screenflash'; gc.appendChild(fl); setTimeout(() => fl.remove(), 400); }
                 } else if (d.n >= 2) duelRing(x, y + 10, '#fb923c', 90, 0, true);
             } catch (e) {}
-            d.hold = big ? 170 : (st === 'clash' ? 110 : 70);
+            d.hold = big ? 170 : (st === 'clash' ? 110 : (st === 'slam' ? 120 : 70));
         }
 
         // Puesta en escena de un turno: compone finta/carga + aproximación + golpe + recuperación y mueve a ambos.
@@ -23339,7 +23354,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             }
             ps.x = bx + ux * A.a + nx * A.s; ps.y = by + uy * A.a + ny * A.s;
             s.dyo = A.l; s.dsx = A.sx; s.dsy = A.sy; s.drot = A.r; s.dop = A.op; s.dxo = A.dx;
-            pv.x = vx + ux * VO.a; pv.y = vy + uy * VO.a;
+            pv.x = vx + ux * VO.a + nx * (VO.s || 0); pv.y = vy + uy * VO.a + ny * (VO.s || 0);
             v.dyo = VO.l; v.drot = VO.r; v.dsx = VO.sx; v.dsy = VO.sy; v.dxo = VO.dx;
             // estela, líneas de velocidad y polvo mientras alguien va a toda velocidad
             if (A.tr || VO.tr) {

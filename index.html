@@ -25356,6 +25356,65 @@ const SaveSys = (() => {
 .sh-pill { color:#fff; } .sh-pill.main { background:#fff; color:#111; box-shadow:none; } .sh-pill:not(.main):active { background:rgba(255,255,255,.12); }
 .sh-toast { background:rgba(20,22,28,.92); border:1px solid rgba(255,255,255,.25); color:#fff; }
 </style>
+
+<style id="sh-fn-css">
+/* ===== Tienda estilo Fortnite: fondo azul, tarjetas por rareza, destacados y precio con moneda ===== */
+#shop-screen{--sh:#0b2a7a;background:radial-gradient(90% 60% at 80% 0%,rgba(90,170,255,.55),transparent 60%),radial-gradient(70% 50% at 0% 100%,rgba(30,90,230,.55),transparent 65%),linear-gradient(160deg,#0a2166 0%,#0f3fae 48%,#081a52 100%);color:#fff}
+#shop-screen::before{display:block;background:repeating-linear-gradient(120deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px);opacity:1}
+#shop-screen .sh-wrap{gap:4px}
+#shop-screen .sh-back{background:rgba(5,14,48,.55);border:2px solid rgba(255,255,255,.35);border-radius:10px;transform:skewX(-8deg)}
+#shop-screen .sh-back svg{transform:skewX(8deg)}
+#shop-screen .sh-money{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(5,14,48,.62);border:2px solid rgba(255,255,255,.3);font:900 .78rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em}
+#shop-screen .sh-money span{display:none}
+#shop-screen .sh-money i{display:grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;font-style:normal;font-weight:900;font-size:.8rem;color:#5a3500;background:radial-gradient(circle at 35% 30%,#fff1a8,#ffc928 55%,#c98a00);box-shadow:0 0 8px rgba(255,208,60,.7)}
+#shop-screen .sh-money b{font-weight:900;font-size:.9rem}
+.fn-head{flex:none;padding:2px 16px 4px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.fn-head h1{margin:0;font:900 italic 2.1rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 3px 0 rgba(0,20,90,.7),0 0 18px rgba(120,190,255,.5);transform:skewX(-6deg)}
+.fn-head span{font:800 .55rem/1 'PA Chakra S',system-ui,sans-serif;letter-spacing:.22em;color:#bcd6ff}
+#shop-grid.sh-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:min-content;gap:10px;padding:8px 14px 16px;align-content:start}
+.fn-sec{grid-column:1/-1;margin-top:4px;display:flex;align-items:center;gap:10px}
+.fn-sec b{font:900 italic .72rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(5,14,48,.6);padding:6px 12px;border-left:4px solid #ffe600;transform:skewX(-8deg)}
+.fn-sec::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.4),transparent)}
+#shop-screen .fn-card.sh-slot{all:unset;box-sizing:border-box;position:relative;grid-column:span 2;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;cursor:pointer;border-radius:6px;background:linear-gradient(165deg,var(--rc) -40%,var(--rd) 95%);border:2px solid rgba(255,255,255,.55);box-shadow:0 8px 18px rgba(0,10,60,.55);-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .15s,filter .15s;animation:fnIn .45s cubic-bezier(.2,.9,.3,1) both;animation-delay:var(--d,0ms)}
+#shop-screen .fn-card.big{grid-column:span 3;aspect-ratio:4/5}
+@keyframes fnIn{from{opacity:0;transform:translateY(18px) scale(.94)}}
+#shop-screen .fn-card .fn-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.55),transparent 58%),repeating-linear-gradient(135deg,rgba(255,255,255,.1) 0 6px,transparent 6px 14px)}
+#shop-screen .fn-card::after{content:"";position:absolute;top:-30%;bottom:-30%;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);pointer-events:none;animation:fnShine 5s ease-in-out infinite;animation-delay:calc(var(--d,0ms) + 1s)}
+@keyframes fnShine{0%,70%{left:-60%}100%{left:130%}}
+#shop-screen .fn-card .fn-ico{position:absolute;left:0;right:0;top:6%;bottom:24%;display:flex;align-items:center;justify-content:center}
+#shop-screen .fn-card .fn-ico img{width:58%;height:auto;max-height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 6px 5px rgba(0,0,0,.5));transition:transform .2s}
+#shop-screen .fn-card.big .fn-ico img{width:52%}
+#shop-screen .fn-card .fn-ico svg{width:46%;fill:#fff;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
+#shop-screen .fn-card .fn-own{position:absolute;right:6px;top:6px;z-index:2;font:900 .55rem/1 'PA Chakra S',system-ui,sans-serif;padding:3px 7px;border-radius:999px;background:rgba(5,14,48,.82);color:#fff;border:1px solid rgba(255,255,255,.4)}
+#shop-screen .fn-card .fn-foot{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px 7px;background:linear-gradient(180deg,rgba(4,12,46,.78),rgba(2,8,34,.94));border-top:3px solid var(--rc)}
+#shop-screen .fn-card .fn-nm{font:900 italic .6rem/1.1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 0 #000}
+#shop-screen .fn-card.big .fn-nm{font-size:.74rem}
+#shop-screen .fn-card .fn-pr{display:flex;align-items:center;gap:5px;font:900 .66rem/1 'PA Chakra',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#fff}
+#shop-screen .fn-card .fn-pr i{display:grid;place-items:center;width:1.45em;height:1.45em;border-radius:50%;font-style:normal;font-size:.6rem;color:#5a3500;background:radial-gradient(circle at 35% 30%,#fff1a8,#ffc928 55%,#c98a00)}
+#shop-screen .fn-card .fn-sale{position:absolute;left:-1px;top:8px;z-index:3;padding:4px 10px 4px 8px;font:900 italic .72rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em;color:#10205a;background:#ffe600;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 50%,100% 100%,0 100%);box-shadow:0 2px 6px rgba(0,0,0,.4);animation:fnPulse 1.4s ease-in-out infinite}
+@keyframes fnPulse{50%{transform:scale(1.08)}}
+#shop-screen .fn-card .fn-pr s{margin-left:4px;font-weight:700;font-size:.55rem;color:#ff8a8a;text-decoration:line-through;opacity:.9}
+#shop-screen .fn-card.on{border-color:#ffe600;box-shadow:0 0 0 2px #ffe600,0 8px 18px rgba(0,10,60,.55)}
+@media (hover:hover){#shop-screen .fn-card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 14px 26px rgba(0,10,60,.65);filter:brightness(1.08)}#shop-screen .fn-card:hover .fn-ico img{transform:scale(1.1) rotate(-3deg)}}
+#shop-screen .fn-card:active{transform:scale(.97)}
+#shop-screen .sh-desc{display:none}
+@media (min-width:700px){#shop-screen .fn-card.big{aspect-ratio:16/10}#shop-screen .fn-card.sh-slot{aspect-ratio:1/1.05}}
+@media (prefers-reduced-motion:reduce){#shop-screen .fn-card,#shop-screen .fn-card::after{animation:none}}
+/* ventana de compra */
+#shop-pop.sh-pop{background:rgba(2,8,34,.78)}
+#shop-pop .sh-card{background:linear-gradient(165deg,var(--rc,#5cc4ff) -60%,#0a1b5a 55%,#071340);border:2px solid rgba(255,255,255,.55);border-radius:8px;box-shadow:0 16px 40px rgba(0,10,60,.7);color:#fff}
+#shop-pop .sh-card .sh-dico{border-radius:6px;background:linear-gradient(165deg,var(--rc,#5cc4ff),var(--rd,#1b55c4));width:64px;height:64px;border:2px solid rgba(255,255,255,.6)}
+#shop-pop .sh-card .sh-dico img{width:78%;height:78%}
+#shop-pop .sh-dtxt b{font:900 italic .8rem/1.1 'PA Chakra',system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+#shop-pop .sh-dtxt p{color:#cfe0ff}
+#shop-pop .sh-own{color:#bcd6ff}
+#shop-pop .sh-total{background:rgba(5,14,48,.7);border:1px solid rgba(255,255,255,.25);color:#cfe0ff}
+#shop-pop .sh-total b{color:#ffe14a}
+#shop-pop .sh-pill.main{background:#ffe600;color:#10205a;font-weight:900;font-style:italic;letter-spacing:.1em;border-radius:6px;transform:skewX(-8deg);box-shadow:0 4px 0 #b59a00}
+#shop-pop .sh-pill.main[disabled]{opacity:.45}
+#shop-pop .sh-pill:not(.main){background:rgba(255,255,255,.12);border-radius:6px;transform:skewX(-8deg)}
+#shop-screen .sh-oak{background:rgba(5,14,48,.55);border-color:rgba(255,255,255,.3)}
+</style>
 <style id="mm-alive-css">
 #mm-alive { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
 #mm-alive i { position: absolute; bottom: -12px; border-radius: 50%; background: var(--mc-acc, #38bdf8); box-shadow: 0 0 8px 1px var(--mc-acc, #38bdf8); opacity: 0; animation: mmaRise linear infinite; transition: background .5s, box-shadow .5s; }
@@ -29105,7 +29164,7 @@ const SHOP_ITEMS = [
     { id: 'timerball', cat: 'ball', name: 'Turno Ball', price: 1000, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeBAMAAADJHrORAAAAA3NCSVQFBQUYJt5DAAAAIVBMVEX///8xMTH/1jr/lDreWjqcSjp7e4SlpcXezvf///9KUlJQDnjeAAAAAXRSTlMAQObYZgAAAKBJREFUGNNjYKAJYBQUQOELGQcicwWVTcIEkVSnKJumZSF0iJUou6alOcKl1ZuVw9LSXAQQ/ClhaalwvrBlqWta5swQmAbhmTNDZ86c0YLEn4nMFwXzO1pgTpLKnLVqZkdH60IYf9Xy6Ss6slbB+IxRK2euWrVqKdx+z/Tpq1Yta4c7WGJaWkdHRyHCPxVAbjlSCAiWl5cLogSAoCADXQAABBIzOVVREGcAAAAASUVORK5CYII=',
       desc: 'Mejor cuanto más dura el combate.' },
     { id: 'raidticket', cat: 'key', name: 'Tiquet de Raid', price: 10000, img: 'data:image/png;base64,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',
-      desc: 'Permite iniciar una Raid.' },
+      sale: 0.4, desc: 'Permite iniciar una Raid.' },
     { id: 'rarecandy', cat: 'boost', name: 'Caramelo Raro', price: 750, img: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAACpklEQVR42rWVPWhTURTHfzdEkkHwE40iNiq0UUTfVTTJpuKggtgOYlz8qGDFqdHBNU4WRK1OjQjWpQqCaBG/Jh2kiSJJHcyNiGkXP7F9BZFU9B2HxGhM0sRYD7zhvvfu/3/+5/zPvUpE+J/h4j/HPxI4rFmnRev1tcsgIk0/lrVG4vcmZV80LZZlSbV/mlagtRa/dYGNWvD5l0xfiQQHgKX6DDsiIVwCK9pmkvd2obUWrbXwW8Hcf5NxgcDFpPcwgUCg9O11doxorBPoZOheBmvdekmnnqmGCLS1QazNl9ix/wGOcnDh4BSFn41dZtfeDrKplyxvC5Mzn/D5fWX73fXAtx66TWvrbAC+q4JzknezOAraIx3cuDpINHaQUfMRF/B25C2O+oWhphq0zu5hCW8PELQK63M9GXz+RSwLzCFnJqDYDwCTNgCMpLtJpVKqroKV4bi0R9pL63M9hsX+hbQE5gCwLDCLnBkH4NbVm3gm+6ri1CTw5C8iaieCIpkuqNwTmU8iXalYlJRl3ZBNFQ5KZjBqPnE21o/P7/sNXErZm7TBm483Nwfvc2+qTkLO2AC8G3lX196lJu/e/0hePe8GYNJzhFA4iG3bmEyWYDhUYb/3uQ+MT4xhjCEz1KVqEbh/DtEX71GO9yQB4fF9w8KWBYQCq8icfIFt2zBSvtGesFGOG2++D+iaWoHWWvLeI6WX0dhBADZq4fqAzZ0r2/BbvWUbjTF48301m1tRog1rtaze0g9AcugJA4P7uD7wGUd95ea1wWKmv6IecIVNnw6nlNZarE39iHI4f6owOMdOrObWNWkYsK6LbLvgkEQiQXB7K6K+4ZnChg27qPyc7y3VWSF48vGmFVQ9i6ziFdiiTzN31jzSDw9ML8Gfd0Cz4HUJpiN+AHdAZhyou2jvAAAAAElFTkSuQmCC',
       desc: 'Dáselo a un Pokémon de la Caja (pestaña Evolución) para hacerlo evolucionar. Cuántos hacen falta depende de la especie y de la evolución.' }
 ];
@@ -29119,11 +29178,28 @@ function bagCount(id) { const n = capBag()[id] | 0; return n > 0 ? Math.min(BAG_
 function bagAdd(id, n) { const b = capBag(); b[id] = Math.min(BAG_MAX, bagCount(id) + Math.max(0, n | 0)); capSave(CAP_BAG_KEY, b); return b[id]; }
 function bagUse(id, n) { const b = capBag(), c = bagCount(id), k = Math.max(0, n | 0); if (c < k) return false; b[id] = c - k; capSave(CAP_BAG_KEY, b); return true; }
 function capMoneySpend(n) { n = Math.floor(n); const m = capMoney(); if (n < 0 || n > m) return false; capSave(CAP_MONEY_KEY, m - n); return true; }
+const shopPrice = it => Math.max(1, Math.round((it.price | 0) * (1 - (it.sale || 0))));
 const shopFmt = n => Math.floor(n).toLocaleString('de-DE');
 const shopSvg = p => '<svg viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
 const shopIco = it => it.img ? '<img src="' + it.img + '" alt="" draggable="false">' : shopSvg(SHOP_ICONS[it.cat]);
 const shopEsc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// rareza por precio (colores al estilo Fortnite): común, poco común, raro, épico, legendario
+function shopRar(it) { const p = it.price | 0; return p < 500 ? ['common', '#a7b4c2', '#4d5b69'] : p < 700 ? ['uncommon', '#7be25a', '#23802f'] : p < 900 ? ['rare', '#5cc4ff', '#1b55c4'] : p < 2000 ? ['epic', '#cf7bff', '#6527b8'] : ['legendary', '#ffbe55', '#c0560f']; }
+function shopFnCard(it, i, sel, big, k) {
+    const r = shopRar(it), own = bagCount(it.id);
+    return '<button type="button" class="sh-slot fn-card ' + r[0] + (big ? ' big' : '') + (i === sel ? ' on' : '') + '" data-i="' + i + '" style="--rc:' + r[1] + ';--rd:' + r[2] + ';--d:' + (k * 60) + 'ms" aria-label="' + shopEsc(it.name) + '">'
+        + '<span class="fn-glow"></span><span class="fn-ico">' + shopIco(it) + '</span>' + (own ? '<b class="fn-own">×' + own + '</b>' : '')
+        + '<span class="fn-foot"><b class="fn-nm">' + shopEsc(it.name) + '</b><span class="fn-pr"><i>₽</i>' + shopFmt(shopPrice(it)) + (it.sale ? '<s>' + shopFmt(it.price) + '</s>' : '') + '</span></span>' + (it.sale ? '<span class="fn-sale">-' + Math.round(it.sale * 100) + '%</span>' : '') + '</button>';
+}
+function shopFnHtml(items, sel) {
+    const idx = items.map((it, i) => i).sort((a, b) => items[b].price - items[a].price);
+    const feat = items.length >= 4 ? idx.slice(0, 2) : [], rest = items.map((_, i) => i).filter(i => feat.indexOf(i) < 0);
+    let h = '', k = 0;
+    if (feat.length) h += '<div class="fn-sec"><b>DESTACADO</b></div>' + feat.map(i => shopFnCard(items[i], i, sel, true, k++)).join('');
+    h += '<div class="fn-sec"><b>' + (feat.length ? 'OBJETOS' : 'OBJETOS DE LA TIENDA') + '</b></div>' + rest.map(i => shopFnCard(items[i], i, sel, false, k++)).join('');
+    return h;
+}
 // mode 'shop': tocar un objeto abre la compra · mode 'bag': solo lo que tienes, con su cantidad.
 function makeItemScreen(pre, mode) {
     const $ = id => document.getElementById(pre + '-' + id);
@@ -29142,6 +29218,7 @@ function makeItemScreen(pre, mode) {
     document.getElementById('dex-screen').insertAdjacentHTML('beforebegin',
         '<div class="sh-screen" id="' + pre + '-screen" hidden><div class="sh-wrap">' +
           '<div class="sh-top"><button class="sh-back" id="' + pre + '-back" type="button" aria-label="Volver">' + arrowBack + '</button><div class="sh-money"><span>TUS POKÉMONEDAS</span><i>₽</i><b id="' + pre + '-money"></b></div></div>' +
+          (mode === 'shop' ? '<div class="fn-head"><h1>TIENDA</h1><span>OBJETOS · SIEMPRE DISPONIBLES</span></div>' : '') +
           '<div class="sh-tabs"><button class="sh-lr" id="' + pre + '-prev" type="button" aria-label="Categoría anterior">' + arrowL + '</button><div class="sh-icons" id="' + pre + '-icons"></div><button class="sh-lr" id="' + pre + '-next" type="button" aria-label="Categoría siguiente">' + arrowR + '</button></div>' +
           '<div class="sh-cat" id="' + pre + '-cat"></div>' +
           '<div class="sh-grid" id="' + pre + '-grid"></div>' +
@@ -29153,13 +29230,14 @@ function makeItemScreen(pre, mode) {
     function renderDesc() {
         const it = list()[st.sel];
         $('dico').innerHTML = it ? shopIco(it) : '';
-        $('dname').innerHTML = it ? '<span class="sh-dn">' + shopEsc(it.name) + '</span>' + (mode === 'shop' ? '<span class="sh-dp">₽ ' + shopFmt(it.price) + '</span>' : '<span class="sh-dp">× ' + bagCount(it.id) + '</span>') : '';
+        $('dname').innerHTML = it ? '<span class="sh-dn">' + shopEsc(it.name) + '</span>' + (mode === 'shop' ? '<span class="sh-dp">₽ ' + shopFmt(shopPrice(it)) + '</span>' : '<span class="sh-dp">× ' + bagCount(it.id) + '</span>') : '';
         $('ddesc').textContent = it ? (it.desc || '') : '';
     }
     function render() {
         const items = list();
         $('money').textContent = shopFmt(capMoney());
         let h = '';
+        if (mode === 'shop') { $('grid').innerHTML = shopFnHtml(items, st.sel); renderDesc(); return; }
         items.forEach((it, i) => {
             h += '<button type="button" class="sh-slot' + (i === st.sel ? ' on' : '') + '" data-i="' + i + '" aria-label="' + shopEsc(it.name) + '">' + shopIco(it) +
                  '<b class="sh-n">' + (mode === 'shop' ? shopFmt(it.price) : bagCount(it.id)) + '</b></button>';
@@ -29176,13 +29254,13 @@ function makeItemScreen(pre, mode) {
     }
 
     // ---- compra (solo tienda) ----
-    function maxQty(it) { return Math.max(0, Math.min(BAG_MAX - bagCount(it.id), Math.floor(capMoney() / it.price))); }
+    function maxQty(it) { return Math.max(0, Math.min(BAG_MAX - bagCount(it.id), Math.floor(capMoney() / shopPrice(it)))); }
     function renderBuy() {
         const it = list()[st.sel]; if (!it) return;
         const mx = maxQty(it);
         st.qty = Math.max(1, Math.min(st.qty, Math.max(1, mx)));
         $('qn').textContent = st.qty;
-        $('ptotal').textContent = '₽ ' + shopFmt(st.qty * it.price);
+        $('ptotal').textContent = '₽ ' + shopFmt(st.qty * shopPrice(it));
         $('ptotal-w').classList.toggle('no', mx < 1);
         $('pok').disabled = mx < 1;
         $('pown').textContent = bagCount(it.id);
@@ -29190,7 +29268,7 @@ function makeItemScreen(pre, mode) {
     function openBuy() {
         const it = list()[st.sel]; if (!it) return;
         st.qty = 1;
-        $('pico').innerHTML = shopIco(it); $('pname').textContent = it.name; $('pdesc').textContent = it.desc || '';
+        $('pico').innerHTML = shopIco(it); $('pname').textContent = it.name; $('pop').style.setProperty('--rc', shopRar(it)[1]); $('pop').style.setProperty('--rd', shopRar(it)[2]); $('pdesc').textContent = it.desc || '';
         renderBuy(); $('pop').hidden = false; sfx('pop');
     }
     function closeBuy() { $('pop').hidden = true; sfx('close'); }
@@ -29207,7 +29285,7 @@ function makeItemScreen(pre, mode) {
     function buy() {
         const it = list()[st.sel]; if (!it) return;
         const q = Math.min(st.qty, maxQty(it)); if (q < 1) return;
-        if (!capMoneySpend(q * it.price)) return;
+        if (!capMoneySpend(q * shopPrice(it))) return;
         bagAdd(it.id, q);
         $('pop').hidden = true; sfx('confirm');
         const old = $('screen').querySelector('.sh-toast'); if (old) old.remove();
@@ -30344,7 +30422,6 @@ html.pq3 .pokemon-wrapper::before{filter:none !important}
 .tc .pf-slot span{display:none}
 .tc .pf-slot .plus{color:#9aa7b2;font-size:5cqw}
 .tc .pf-slot u{font-size:3cqw;left:.6cqw;top:.2cqw}
-.tc .pf-slot img{position:absolute;image-rendering:pixelated;max-width:none;height:auto}
 .tc-av{all:unset;box-sizing:border-box;position:relative;display:block;height:100%;min-height:0;overflow:hidden;border-radius:1.6cqw;-webkit-tap-highlight-color:transparent}
 .tc-av.ro{cursor:default}
 .tc-av:not(.ro){cursor:pointer}
@@ -30413,78 +30490,7 @@ window.PAProfile = (function () {
     }
     const AV_COST = 2500;
     function medalSrcs(h) { const o = []; String(h || '').replace(/src="([^"]+)"/g, (_, s) => { o.push(s); return ''; }); return o; }
-    // ---- recorte de CARA: analiza la silueta del sprite, localiza la cabeza (hasta el "cuello") y la encuadra igual para todos ----
-    const FACE_CACHE = {};
-    function faceAnalyze(img, nw, nh) {
-        const cv = document.createElement('canvas'); cv.width = nw; cv.height = nh;
-        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
-        const d = cx.getImageData(0, 0, nw, nh).data; cv.width = cv.height = 0;
-        const op = (x, y) => x >= 0 && y >= 0 && x < nw && y < nh && d[(y * nw + x) * 4 + 3] > 128;
-        let x0 = nw, y0 = nh, x1 = -1, y1 = -1;
-        for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) if (op(x, y)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-        if (x1 < x0) return null;
-        const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
-        // anchura por fila (suavizada)
-        const w = []; for (let y = 0; y < bh; y++) { let c = 0; for (let x = x0; x <= x1; x++) if (op(x, y0 + y)) c++; w.push(c); }
-        const ws = w.map((_, i) => { let s = 0, n = 0; for (let k = -2; k <= 2; k++) if (w[i + k] != null) { s += w[i + k]; n++; } return s / n; });
-        // fin de la cabeza: primer "cuello" (la anchura baja y luego vuelve a subir) en el 62% superior
-        let hb = -1, mx = 0; const lim = Math.floor(bh * 0.62), minRow = Math.max(3, Math.floor(bh * 0.16));
-        for (let y = 0; y <= lim; y++) {
-            mx = Math.max(mx, ws[y]);
-            if (y >= minRow && ws[y] <= mx * 0.85 && ws[y] <= (ws[y - 1] || 1e9) && ws[y] <= (ws[y + 1] || 1e9)) {
-                let after = 0; for (let k = y; k < Math.min(bh, y + Math.ceil(bh * 0.35)); k++) after = Math.max(after, ws[k]);
-                if (after >= ws[y] * 1.2) { hb = y; break; }
-            }
-        }
-        if (hb < 0) hb = Math.round(bh * (bw > bh * 1.15 ? 0.6 : 0.5));
-        hb = Math.max(hb, Math.round(bh * 0.2));
-        // caja de la cabeza
-        let hx0 = nw, hx1 = -1; for (let y = 0; y <= hb; y++) for (let x = x0; x <= x1; x++) if (op(x, y0 + y)) { if (x < hx0) hx0 = x; if (x > hx1) hx1 = x; }
-        let hw = hx1 - hx0 + 1; const hh = hb + 1;
-        // criaturas alargadas: se queda con la zona del extremo más alto en vez de toda la anchura
-        if (hw > hh * 1.5) {
-            let sx = 0, n = 0; const tr = Math.max(2, Math.round(hh * 0.3));
-            for (let y = 0; y < tr; y++) for (let x = hx0; x <= hx1; x++) if (op(x, y0 + y)) { sx += x; n++; }
-            const c = n ? sx / n : (hx0 + hx1) / 2, half = hh * 0.75;
-            hx0 = Math.max(hx0, Math.round(c - half)); hx1 = Math.min(hx1, Math.round(c + half)); hw = hx1 - hx0 + 1;
-        }
-        // ojos: manchas oscuras pequeñas rodeadas de sprite (no el contorno) dentro de la cabeza
-        const lum = (x, y) => { const i = (y * nw + x) * 4; return 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; };
-        const inner = (x, y) => { let n = 0, t = 0; for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) { t++; if (op(x + i, y + j)) n++; } return n / t >= 0.9; };
-        const seen = new Set(), eyes = [];
-        for (let y = y0; y <= y0 + hb; y++) for (let x = hx0; x <= hx1; x++) {
-            const k = y * nw + x; if (seen.has(k) || !op(x, y) || lum(x, y) > 70 || !inner(x, y)) continue;
-            const st = [[x, y]]; seen.add(k); let sx = 0, sy = 0, n = 0;
-            while (st.length && n < 60) { const [a, b] = st.pop(); sx += a; sy += b; n++; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const q = (b + j) * nw + (a + i); if (!seen.has(q) && op(a + i, b + j) && lum(a + i, b + j) <= 70) { seen.add(q); st.push([a + i, b + j]); } } }
-            if (n >= 2 && n < 60) eyes.push({ x: sx / n, y: sy / n });
-        }
-        let cxh = (hx0 + hx1) / 2;
-        if (eyes.length) { const xs = eyes.map(e => e.x).sort((a, b) => a - b); cxh = 0.5 * cxh + 0.5 * xs[xs.length >> 1]; }
-        return { nw, nh, cx: cxh, cy: y0 + hh / 2, hw, hh };
-    }
-    function faceFit(img, tries) {
-        const slot = img && img.parentElement; if (!slot || !img.getAttribute('src')) return;
-        const W = slot.clientWidth, H = slot.clientHeight; if (!W || !H) { if ((tries | 0) < 8) setTimeout(() => faceFit(img, (tries | 0) + 1), 250); return; }
-        const src = img.src;
-        const apply = f => {
-            if (!img.isConnected || img.src !== src) return;
-            const pad = 1.22, S = Math.min(6, Math.min(W / (f.hw * pad), H / (f.hh * pad))), st = img.style;
-            st.width = (f.nw * S).toFixed(1) + 'px'; st.height = 'auto'; st.maxWidth = 'none'; st.transform = 'none'; st.padding = '0';
-            st.left = (W / 2 - f.cx * S).toFixed(1) + 'px'; st.top = (H / 2 - f.cy * S).toFixed(1) + 'px';
-        };
-        if (FACE_CACHE[src]) return apply(FACE_CACHE[src]);
-        const probe = new Image(); probe.crossOrigin = 'anonymous';
-        probe.onload = () => {
-            let f = null; try { f = faceAnalyze(probe, probe.naturalWidth, probe.naturalHeight); } catch (e) {}
-            if (!f) { const nw = probe.naturalWidth, nh = probe.naturalHeight; f = { nw, nh, cx: nw / 2, cy: nh * 0.3, hw: nw * 0.8, hh: nh * 0.4 }; }
-            const ov = (window.PA_FACE_OV || {})[(src.match(/(\d+)\.(?:gif|png)/) || [])[1]]; // ajuste manual opcional por nº de pokédex: { cx, cy, hw, hh } en px del sprite
-            if (ov) f = Object.assign({}, f, ov);
-            FACE_CACHE[src] = f; apply(f);
-        };
-        probe.onerror = () => {};
-        probe.src = src;
-    }
-    function faceAll(root) { root.querySelectorAll('.pf-slot img').forEach(im => faceFit(im)); }
+    function faceAll(root) { root.querySelectorAll('.pf-slot img').forEach(fit); }
     function cardHTML(o) {
         let bd = ''; const mm = o.medals || []; for (let i = 0; i < Math.max(8, mm.length); i++) bd += '<i>' + (mm[i] ? '<img alt="" draggable="false" src="' + esc(mm[i]) + '">' : '') + '</i>';
         const st = o.status;

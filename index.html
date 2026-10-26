@@ -33389,6 +33389,38 @@ window.PAMis = (function () {
 #ms-panel .ms-chips span{font:900 .68rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.12em;padding:5px 9px;background:rgba(255,79,154,.2);border:1px solid rgba(255,79,154,.55);color:#ffe3f0;transform:skewX(-10deg)}
 #ms-panel .ms-chips em{font-style:normal;margin-left:auto;font-size:.68rem;letter-spacing:.12em;color:#9fe9f5}
 @media (max-width:520px){#ms-panel .ms-list{--step:76px;height:calc(var(--step) * 2 + 84px)}}
+
+/* ===== MISIONES v3: fondo negro con diseño + UNA sola tarjeta de información ===== */
+#ms-panel{background:radial-gradient(60% 45% at 8% 0%,rgba(255,79,154,.22),transparent 70%),radial-gradient(55% 45% at 100% 100%,rgba(217,242,60,.14),transparent 70%),
+  repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 26px),repeating-linear-gradient(45deg,rgba(255,255,255,.02) 0 1px,transparent 1px 38px),#06060b}
+#ms-panel::before{left:-6%;top:-10%;width:34%;height:120%;background:linear-gradient(180deg,rgba(255,79,154,.16),rgba(255,79,154,0) 70%);transform:skewX(-14deg);opacity:1}
+#ms-panel::after{content:"";position:absolute;right:-4%;top:0;bottom:0;width:22%;background:repeating-linear-gradient(135deg,rgba(217,242,60,.07) 0 3px,transparent 3px 16px);transform:skewX(-14deg);pointer-events:none}
+#ms-panel .ms-wrap{z-index:1}
+#ms-panel .ms-back{border-color:rgba(255,255,255,.7)}
+#ms-panel .ms-ttl{text-shadow:3px 3px 0 #ff4f9a}
+#ms-panel .ms-det{position:relative;background:linear-gradient(160deg,#171726 0%,#0d0d17 55%,#0a0a12 100%);border-left:6px solid #ff4f9a;border-radius:2px 22px 2px 22px;padding:20px 20px 18px;box-shadow:0 8px 0 rgba(0,0,0,.4),0 0 40px rgba(255,79,154,.12);overflow:hidden}
+#ms-panel .ms-det::before{content:"";position:absolute;right:-30px;top:-30px;width:150px;height:150px;background:repeating-linear-gradient(135deg,rgba(217,242,60,.12) 0 3px,transparent 3px 12px);transform:rotate(8deg);pointer-events:none}
+#ms-panel .ms-det>.ms-card,#ms-panel .ms-det>.ms-win{position:relative;background:none;border:0;border-radius:0;box-shadow:none;padding:16px 0 0;margin:16px 0 0;border-top:1px solid rgba(255,255,255,.12)}
+#ms-panel .ms-det>:first-child{border-top:0;margin-top:0;padding-top:0}
+#ms-panel .ms-det>.ms-card>small{margin-bottom:10px}
+#ms-panel .ms-fm{gap:16px}
+#ms-panel .ms-fi{width:84px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.4))}
+#ms-panel .ms-det h2{margin:2px 0 4px}
+/* estadísticas en dos casillas: tiempo y mejor nota/capturas */
+#ms-panel .ms-det>.ms-card:has(>.ms-cd){display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#ms-panel .ms-det>.ms-card:has(>.ms-cd)>*{grid-column:1/-1}
+#ms-panel .ms-det>.ms-card:has(>.ms-cd)>.ms-cd,#ms-panel .ms-det>.ms-card:has(>.ms-cd)>.ms-me{grid-column:auto;margin:0}
+#ms-panel .ms-cd{display:flex;flex-direction:column;justify-content:center;text-align:left;padding:10px 12px;background:rgba(217,242,60,.08);border:0;border-left:3px solid #d9f23c;border-radius:0 10px 10px 0}
+#ms-panel .ms-cd b{font-size:1.55rem}
+#ms-panel .ms-me{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:10px 12px;background:rgba(255,79,154,.1);border-left:3px solid #ff4f9a;border-radius:0 10px 10px 0}
+#ms-panel .ms-me span{font-size:.62rem;letter-spacing:.18em;color:#ff8cc0}
+#ms-panel .ms-me b{font-size:1.9rem;line-height:1}
+#ms-panel .ms-chips{margin:0 0 2px}
+#ms-panel .ms-say{margin:0;border-radius:0 10px 10px 0;border:0;border-left:3px solid #d9f23c}
+#ms-panel .ms-rwl{flex-direction:row;flex-wrap:wrap;gap:8px;margin:0}
+#ms-panel .ms-rwl span{flex:1 1 auto;padding:8px 12px;border-radius:0 12px 0 12px}
+#ms-panel .ms-det>.ms-win{border-radius:0;background:linear-gradient(100deg,rgba(255,79,154,.3),rgba(255,157,46,.2));padding:12px;margin-top:16px}
+@media (max-width:520px){#ms-panel .ms-det{padding:16px 14px 14px}#ms-panel .ms-cd b{font-size:1.3rem}#ms-panel .ms-me b{font-size:1.6rem}}
 #ms-panel .ms-lock{margin-top:24vh;max-width:520px;margin-left:auto;margin-right:auto}
 @media (min-width:820px){
   #ms-panel .ms-grid{grid-template-columns:minmax(320px,430px) 1fr;gap:26px}

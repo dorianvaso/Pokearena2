@@ -32423,6 +32423,35 @@ window.PAPvp = (function () {
 }
 @media (max-height:700px) and (max-width:520px){#lg-tw .lt-pn{min-height:170px}#lg-tw .lt-nm{font-size:1.4rem}#lg-tw .lt-tm{padding:6px 8px}}
 @media (prefers-reduced-motion:reduce){#lg-tw .lt-pn,#lg-tw .lt-art img,#lg-tw .lt-go,#lg-tw .lt-vsx,#lg-tw .lt-vs b,#lg-tw .lt-nd.on{animation:none!important}}
+
+/* ===== LIGA v2.1: cara en cuadro, equipos dentro de las tarjetas, sin cartel de piso ===== */
+#lg-tw .lt-pn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:34px 8px 10px;min-height:0}
+#lg-tw .lt-art{position:relative;inset:auto;z-index:1;width:100%;display:flex;justify-content:center;align-items:center;flex:none}
+#lg-tw .lt-art img,#lg-tw .lt-me .lt-art img{position:relative;display:block;width:68%;height:auto;max-height:none;max-width:none;aspect-ratio:1;object-fit:cover;object-position:50% 8%;border-radius:16px;border:3px solid #fff;background:#0f172a;box-shadow:0 6px 0 rgba(0,0,0,.35);filter:none;margin:0;animation:ltFace 3.4s ease-in-out infinite}
+#lg-tw .lt-art img.face{object-position:50% 4%;transform-origin:50% 0}
+@keyframes ltFace{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+#lg-tw .lt-ft.lock .lt-art img{filter:brightness(0) opacity(.55)}
+#lg-tw .lt-art b{display:grid;place-items:center;width:68%;aspect-ratio:1;border-radius:16px;border:3px solid #fff;background:rgba(0,0,0,.35);margin:0}
+#lg-tw .lt-nm{position:relative;left:auto;right:auto;bottom:auto;z-index:2;flex:none;margin-top:2px}
+#lg-tw .lt-tp{position:relative;left:auto;right:auto;bottom:auto;z-index:2;flex:none;width:86%;font-size:.62rem}
+#lg-tw .lt-pn .lt-row{position:relative;z-index:2;flex:1;width:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:5px;align-content:stretch;padding:4px 2px 0}
+#lg-tw .lt-pn .lt-row span{aspect-ratio:auto;min-height:44px;background:rgba(6,10,30,.5);border:2px solid rgba(255,255,255,.55);border-radius:10px}
+#lg-tw .lt-pn .lt-row span img{max-width:92%;max-height:92%}
+#lg-tw .lt-pn .lt-row span.q{color:rgba(255,255,255,.55)}
+#lg-tw .lt-medal{left:6px;top:32px;width:34px;height:34px}
+#lg-tw .lt-stage{grid-template-rows:auto auto}
+#lg-tw .lt-vs{display:none}
+#lg-tw .lt-dif{font:900 1rem/1 'PA Chakra',system-ui,sans-serif;color:#fde047;letter-spacing:.12em;text-shadow:0 2px 0 rgba(0,0,0,.5)}#lg-tw .lt-dif s{text-decoration:none;color:rgba(255,255,255,.25)}
+#lg-tw .lt-vsx{top:30%}
+@media (min-width:820px) and (min-aspect-ratio:5/4){
+  #lg-tw .lt-stage{grid-template-rows:minmax(0,1fr)}
+  #lg-tw .lt-vs{display:flex}
+  #lg-tw .lt-pn{padding-top:38px}
+  #lg-tw .lt-art img,#lg-tw .lt-me .lt-art img,#lg-tw .lt-art b{width:min(58%,34vh)}
+  #lg-tw .lt-pn .lt-row span{min-height:0}
+  #lg-tw .lt-mid{gap:18px}
+}
+@media (max-width:520px){#lg-tw .lt-nm{font-size:1.15rem}#lg-tw .lt-pn .lt-row span{min-height:38px}}
 #lg-dlg{position:fixed;inset:0;z-index:9450;overflow:hidden;background:radial-gradient(ellipse at 70% 40%,rgba(20,60,90,.88),rgba(5,10,24,.97) 72%);animation:lgIn .3s both;cursor:pointer}
 #lg-dlg.over{background:radial-gradient(ellipse at 70% 40%,rgba(20,60,90,.78),rgba(5,10,24,.9) 72%)}
 #lg-dlg .dl-rays{position:absolute;left:62%;top:44%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;background:repeating-conic-gradient(rgba(125,211,252,.05) 0 6deg,rgba(125,211,252,0) 6deg 14deg);animation:lgSpin 50s linear infinite;pointer-events:none}
@@ -32919,7 +32948,7 @@ window.PALiga = (function () {
             + '<div class="lg-head"><div><div class="lg-cap">MENÚ PRINCIPAL · <b>LIGA</b></div><h1 class="lg-h1">Liga</h1></div><button class="lg-back" type="button">◂ VOLVER</button></div>'
             + '<div class="lt-main"><div class="lt-rail"><button type="button" class="lt-ar up" aria-label="Subir">▲</button><div class="lt-nodes"></div><button type="button" class="lt-ar dn" aria-label="Bajar">▼</button></div>'
             + '<div class="lt-stage"><div class="lt-whoosh"></div>'
-            + '<div class="lt-pn lt-me"><div class="lt-tag">TÚ</div><div class="lt-art">' + myArt + '</div><div class="lt-nm">' + esc(pf.name || 'Entrenador') + '</div><div class="lt-tp">ASPIRANTE</div></div>'
+            + '<div class="lt-pn lt-me"><div class="lt-tag">TÚ</div><div class="lt-art">' + myArt + '</div><div class="lt-nm">' + esc(pf.name || 'Entrenador') + '</div><div class="lt-tp">ASPIRANTE</div><div class="lt-row">' + myTeam + '</div></div>'
             + '<div class="lt-vsx">VS</div>'
             + '<div class="lt-pn lt-ft"></div>'
             + '<div class="lt-mid"></div></div></div>';
@@ -32935,19 +32964,17 @@ window.PALiga = (function () {
             // líder
             const ft = $q('.lt-ft'), lock = st === 'lock';
             ft.className = 'lt-pn lt-ft ' + st + (L && L.theme ? ' th-' + L.theme : '');
+            let foe = ''; for (let k = 0; k < 6; k++) { const t = L && L.team[k]; foe += '<span class="' + (t && !lock ? '' : 'q') + '">' + (t && !lock ? '<img alt="" draggable="false" src="' + pokeSpriteUrl(t[2], 'front') + '">' : '?') + '</span>'; }
             ft.innerHTML = '<div class="lt-tag">' + (st === 'done' ? 'SUPERADO' : st === 'cur' ? 'RETO ACTUAL' : 'BLOQUEADO') + '</div>'
-                + '<div class="lt-art">' + (L ? '<img alt="" draggable="false" src="' + L.sprite + '">' : '<b>?</b>') + '</div>'
-                + '<div class="lt-nm">' + (lock || !L ? '???' : esc(L.name)) + '</div><div class="lt-tp">' + (lock || !L ? 'LÍDER DE GIMNASIO' : esc(typeOf(L)) + ' · <span class="lt-st">' + dia(L.diff || 1) + '</span>') + '</div>'
+                + '<div class="lt-art">' + (L ? '<img class="face" alt="" draggable="false" src="' + L.sprite + '">' : '<b>?</b>') + '</div>'
+                + '<div class="lt-nm">' + (lock || !L ? '???' : esc(L.name)) + '</div><div class="lt-tp">LÍDER</div><div class="lt-row">' + foe + '</div>'
                 + (st === 'done' && L ? '<img class="lt-medal" alt="" src="' + L.medalImg + '">' : '');
             // centro: equipos + VS + botón
-            let foe = ''; for (let k = 0; k < 6; k++) { const t = L && L.team[k]; foe += '<span class="' + (t && !lock ? '' : 'q') + '">' + (t && !lock ? '<img alt="" draggable="false" src="' + pokeSpriteUrl(t[2], 'front') + '">' : '?') + '</span>'; }
             const can = st === 'cur' && picks.length > 0, rep = st === 'done' && dev;
             const label = st === 'cur' ? 'COMBATIR' : st === 'done' ? (dev ? 'REPETIR ▸' : 'SUPERADO ✓') : 'BLOQUEADO';
             const msg = cur >= LEVELS.length && view >= cur - 1 ? 'Eres Aspirante a Campeón' : !picks.length && st === 'cur' ? 'Elige hasta 6 pokémon en tu Salón de la Fama (toca tu avatar en el menú)' : st === 'lock' ? 'Derrota al piso anterior' : '';
-            $q('.lt-mid').innerHTML = '<div class="lt-rib"><b>PISO ' + (view + 1) + '</b><small>/ ' + SLOTS + '</small></div>'
-                + '<div class="lt-tm"><div class="lt-tl">TU EQUIPO</div><div class="lt-row">' + myTeam + '</div></div>'
-                + '<div class="lt-vs"><i></i><b>VS</b><i></i></div>'
-                + '<div class="lt-tm foe"><div class="lt-tl">' + (lock || !L ? 'EQUIPO RIVAL' : esc(L.name)) + '</div><div class="lt-row">' + foe + '</div></div>'
+            $q('.lt-mid').innerHTML = '<div class="lt-vs"><i></i><b>VS</b><i></i></div>'
+                + (L && !lock ? '<div class="lt-dif" title="Dificultad">' + dia(L.diff || 1) + '</div>' : '')
                 + '<button type="button" class="lt-go' + ((can || rep) ? '' : ' off') + '"' + ((can || rep) ? '' : ' disabled') + '><span>' + label + '</span></button><div class="lt-msg">' + msg + '</div>';
             if (dir) { // animación de subir / bajar: el líder y el centro entran desde arriba o abajo
                 ft.classList.remove('in-up', 'in-dn'); const mid = $q('.lt-mid'); mid.classList.remove('in'); void ft.offsetWidth; ft.classList.add(dir === 'up' ? 'in-up' : 'in-dn'); mid.classList.add('in');

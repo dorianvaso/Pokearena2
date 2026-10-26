@@ -2970,6 +2970,54 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         @keyframes cdDrawIn { from { transform:scale(.7) translateY(20px); opacity:0; } to { transform:scale(1); opacity:1; } }
         @keyframes cdDrawOut { to { transform:scale(.85); opacity:0; } }
         @keyframes cdLock { 0% { transform:scale(.8); } 55% { transform:scale(1.14); box-shadow:0 0 22px 2px rgba(253,224,71,.95); } 100% { transform:scale(1); } }
+
+        /* ===== CUENTA ATRÁS v2: limpia y cinematográfica (barras de cine, un número, un anillo, una onda, destellos suaves) ===== */
+        #countdown-overlay.cdn { background: transparent; gap: 0; }
+        #countdown-overlay.cdn .cd-vig { background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 30%, rgba(4,6,18,.62) 100%); animation: cnVig .6s ease-out both; }
+        #countdown-overlay.cdn.drawing .cn-stage, #countdown-overlay.cdn.drawing .cn-bar, #countdown-overlay.cdn.drawing .cn-streak { display: none; }
+        .cn-bar { position: absolute; left: 0; right: 0; height: 11%; background: #000; z-index: 1; pointer-events: none; }
+        .cn-bar.t { top: 0; animation: cnBarT .45s cubic-bezier(.2,.8,.2,1) both; } .cn-bar.b { bottom: 0; animation: cnBarB .45s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes cnBarT { from { transform: translateY(-100%); } to { transform: none; } } @keyframes cnBarB { from { transform: translateY(100%); } to { transform: none; } }
+        #countdown-overlay.cdn.out .cn-bar.t { animation: cnBarT .4s ease-in reverse both; } #countdown-overlay.cdn.out .cn-bar.b { animation: cnBarB .4s ease-in reverse both; }
+        @keyframes cnVig { from { opacity: 0; } to { opacity: 1; } }
+        #countdown-overlay.cdn .cd-tag { top: calc(11% + 18px); font-size: .62rem; letter-spacing: .5em; padding-left: .5em; font-weight: 700; color: #e2e8f0; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,.8); animation: cnTag .6s ease-out both; }
+        #countdown-overlay.cdn .cd-tag::before, #countdown-overlay.cdn .cd-tag::after { width: 34px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.8)); }
+        #countdown-overlay.cdn .cd-tag::after { background: linear-gradient(270deg, transparent, rgba(255,255,255,.8)); }
+        @keyframes cnTag { from { opacity: 0; letter-spacing: .9em; } to { opacity: 1; } }
+        #countdown-overlay.cdn .cd-sub { top: calc(50% + 120px); z-index: 2; font-size: .5rem; letter-spacing: .4em; color: #e2e8f0; opacity: .9; }
+        .cn-stage { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; display: grid; place-items: center; z-index: 2; pointer-events: none; --glow: 125,211,252; }
+        .cn-stage[data-n="3"] { --glow: 125,211,252; } .cn-stage[data-n="2"] { --glow: 251,191,36; } .cn-stage[data-n="1"] { --glow: 251,113,60; } .cn-stage[data-n="go"] { --glow: 248,60,60; }
+        .cn-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+        .cn-ring circle { fill: none; stroke-linecap: round; }
+        .cn-ring .bg { stroke: rgba(255,255,255,.16); stroke-width: 1.2; }
+        .cn-ring .fg { stroke: rgb(var(--glow)); stroke-width: 2.4; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 0 4px rgba(var(--glow),.9)); }
+        .cn-stage.tick .cn-ring .fg { animation: cnSweep .8s linear forwards; }
+        .cn-stage.go .cn-ring .fg { stroke-dashoffset: 0; animation: none; }
+        @keyframes cnSweep { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+        .cn-wave { position: absolute; inset: 14%; border-radius: 50%; border: 2px solid rgb(var(--glow)); opacity: 0; box-shadow: 0 0 22px rgba(var(--glow),.6); }
+        .cn-stage.tick .cn-wave { animation: cnWave .7s cubic-bezier(.1,.6,.3,1) forwards; }
+        .cn-stage.tick .cn-wave.w2 { animation-delay: .1s; animation-duration: .9s; border-width: 1px; }
+        @keyframes cnWave { 0% { opacity: .9; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.6); } }
+        .cn-glow { position: absolute; inset: -10%; border-radius: 50%; opacity: 0; background: radial-gradient(closest-side, rgba(var(--glow),.45), rgba(var(--glow),0)); }
+        .cn-stage.tick .cn-glow { animation: cnGlow .8s ease-out forwards; }
+        @keyframes cnGlow { 0% { opacity: 0; transform: scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4); } }
+        .cn-num { position: relative; font: 900 italic 7.6rem/1 'PA Chakra', 'Segoe UI', system-ui, sans-serif; color: #fff; padding-right: .06em; letter-spacing: -.02em;
+            text-shadow: 0 0 26px rgba(var(--glow),.85), 0 0 4px rgba(var(--glow),.9), 0 5px 0 rgba(0,0,0,.35); }
+        .cn-num.go { font-size: 4.9rem; letter-spacing: .01em; }
+        .cn-stage.tick .cn-num { animation: cnNum .8s cubic-bezier(.16,.9,.3,1) forwards; }
+        .cn-stage.tick .cn-num.go { animation: cnGo .9s cubic-bezier(.12,1.3,.3,1) forwards; }
+        @keyframes cnNum { 0% { opacity: 0; transform: scale(1.9); filter: blur(10px); } 22% { opacity: 1; transform: scale(1); filter: blur(0); } 78% { opacity: 1; transform: scale(.97); } 100% { opacity: 0; transform: scale(.82); filter: blur(3px); } }
+        @keyframes cnGo { 0% { opacity: 0; transform: scale(.3) skewX(-14deg); filter: blur(8px); } 24% { opacity: 1; transform: scale(1.14) skewX(-4deg); filter: blur(0); } 44% { transform: scale(1); } 100% { opacity: 1; transform: scale(1.04); } }
+        .cn-spark { position: absolute; left: 50%; top: 50%; width: 3px; height: 14px; margin: -7px 0 0 -1.5px; border-radius: 2px; background: linear-gradient(to top, rgba(var(--glow),0), rgb(var(--glow))); opacity: 0; transform-origin: 50% 50%; }
+        .cn-stage.tick .cn-spark { animation: cnSpark .6s ease-out forwards; }
+        @keyframes cnSpark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(-40px); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(var(--d) * -1)); } }
+        .cn-streak { position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; z-index: 1; opacity: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.95) 30%, #fff 50%, rgba(255,255,255,.95) 70%, transparent); box-shadow: 0 0 22px 4px rgba(255,90,70,.7); transform-origin: 50% 50%; }
+        .cn-streak.run { animation: cnStreak .6s ease-out forwards; }
+        @keyframes cnStreak { 0% { opacity: 1; transform: scaleX(0) scaleY(1); } 35% { opacity: 1; transform: scaleX(1) scaleY(1.6); } 100% { opacity: 0; transform: scaleX(1.1) scaleY(.1); } }
+        #countdown-overlay.cdn .cd-flash { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.85), rgba(255,200,140,.3) 45%, rgba(255,120,40,0) 70%); }
+        #countdown-overlay.cdn .cd-flash.run { animation: cdFlash .5s ease-out; }
+        @media (max-width:420px) { .cn-num { font-size: 6.4rem; } .cn-num.go { font-size: 4.2rem; } .cn-stage { width: 190px; height: 190px; margin: -95px 0 0 -95px; } }
+        @media (prefers-reduced-motion: reduce) { .cn-wave, .cn-glow, .cn-spark, .cn-streak { display: none; } }
         @keyframes cdFadeIn { from { opacity:0; } to { opacity:1; } }
         @keyframes cdFadeOut { to { opacity:0; transform:scale(1.06); } }
         @keyframes cdSpin { to { transform:rotate(360deg); } }
@@ -18819,6 +18867,80 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             checkFaint(defender, attacker);
         }
 
+        // =====================================================================================
+        //  COMBATE NORMAL: ESQUIVE por velocidad + contragolpe + poses de reacción (flinch / crítico / tropiezo) + sonido por capas
+        //   · Cada golpe puede ser esquivado (más probable si el defensor es más rápido que el atacante). El que esquiva da un
+        //     paso lateral con estela y contragolpea con +25 % de potencia su siguiente ataque (4,5 s).
+        //   · Los golpes fuertes/críticos hacen retroceder al receptor con su pose; el atacante cuerpo a cuerpo que falla tropieza.
+        //   · Los golpes suenan con más o menos cuerpo según el daño y la efectividad.
+        // =====================================================================================
+        const NC_DODGE_BASE = 0.03, NC_DODGE_MAX = 0.2, NC_DODGE_CD_MS = 1800, NC_COUNTER_MS = 4500, NC_COUNTER_MULT = 1.25;
+        function ncEvasion(att, def, move) {
+            def._evd = false;
+            try {
+                if (!att || !def || att === def || gameOver || forcePhysHit || att.duel || def.duel || att.isBoss || att.isAlpha) return false;
+                if (def.sleep || def.freeze || def.paralysis || def.isCharging || def.isEvolving || def.isSpawning || def.fainted || def.protectMs > 0) return false;
+                const now = performance.now(); if (now < (def.dodgeCdUntil || 0)) return false;
+                const es = effSpeed(att), ev = effSpeed(def);
+                let p = NC_DODGE_BASE + (ev - es) / Math.max(1, ev + es) * 0.2;
+                p = Math.max(0.02, Math.min(NC_DODGE_MAX, p)); if (move && move.ranged) p *= 0.65; // un proyectil es más difícil de esquivar que un golpe cuerpo a cuerpo
+                if (Math.random() >= p) return false;
+                def.dodgeCdUntil = now + NC_DODGE_CD_MS; def._evd = true; return true;
+            } catch (e) { return false; }
+        }
+        function ncSfx(kind, a, b) {
+            try {
+                if (document.hidden) return;
+                const ctx = fxCtxReady(); if (!ctx) return; const out = fxOut(ctx), t = ctx.currentTime + 0.003;
+                switch (kind) {
+                    case 'dodge': fxNoiseLayer(ctx, out, t, 0.22, { type: 'bandpass', q: 1.5, f0: 700, f1: 3400, a: 0.015, peak: 0.13 }); fxTone(ctx, out, 'triangle', 1300, 1900, t + 0.06, 0.004, 0.05, 0.12); break;
+                    case 'counter': fxTone(ctx, out, 'square', 520, 780, t, 0.004, 0.05, 0.1); fxTone(ctx, out, 'square', 780, 1040, t + 0.09, 0.004, 0.05, 0.14); break;
+                    case 'hit': { // a = daño / PS máx., b = efectividad
+                        const r = Math.min(1, a * 3);
+                        fxTone(ctx, out, 'sine', 120 + 60 * (1 - r), 42, t, 0.002, 0.08 + 0.2 * r, 0.12 + 0.3 * r);
+                        if (b > 1) { fxTone(ctx, out, 'triangle', 880, 1320, t + 0.03, 0.003, 0.06, 0.16); fxTone(ctx, out, 'triangle', 1320, 1760, t + 0.1, 0.003, 0.05, 0.18); }
+                        else if (b > 0 && b < 1) fxNoiseLayer(ctx, out, t, 0.16, { type: 'lowpass', q: 0.8, f0: 700, f1: 200, a: 0.004, peak: 0.1 });
+                        break; }
+                    case 'crit': fxTone(ctx, out, 'sawtooth', 900, 200, t, 0.002, 0.1, 0.22); fxNoiseLayer(ctx, out, t, 0.24, { type: 'highpass', q: 0.7, f0: 2400, f1: 1000, a: 0.002, peak: 0.16 }); break;
+                    case 'stumble': fxTone(ctx, out, 'triangle', 380, 180, t, 0.01, 0.06, 0.2); break;
+                }
+            } catch (e) { /* sin audio */ }
+        }
+        function ncPose(c, type, dir, amp, ms) {
+            if (!c || !c.wrapper || c.duel) return;
+            c.pose = { type, dir: dir || 1, amp: amp || 1, t0: performance.now(), dur: Math.max(120, ms / gameSpeed) };
+        }
+        function ncPoseCalc(P, k) { // k = 0..1 -> {ox, oy, r, sx, sy}
+            const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1 }, sn = Math.sin(Math.PI * k);
+            switch (P.type) {
+                case 'dodge': { const e = Math.sin(Math.PI * Math.min(1, k / 0.85)); o.ox = P.dir * 26 * P.amp * e; o.oy = -12 * Math.sin(Math.PI * Math.min(1, k / 0.6)); o.r = -P.dir * 14 * e; o.sx = 0.92; o.sy = 1.08; break; }
+                case 'flinch': o.ox = P.dir * 9 * P.amp * sn; o.r = P.dir * 11 * P.amp * sn; o.sx = 1 + 0.1 * P.amp * sn; o.sy = 1 - 0.1 * P.amp * sn; break;
+                case 'crit': o.ox = P.dir * 15 * sn; o.oy = -9 * sn; o.r = P.dir * 26 * Math.sin(k * Math.PI * 3) * (1 - k); o.sx = 1 + 0.2 * sn; o.sy = 1 - 0.2 * sn; break;
+                case 'stumble': o.ox = P.dir * 8 * sn; o.r = P.dir * 17 * sn; o.sx = 1 + 0.08 * sn; o.sy = 1 - 0.12 * sn; break;
+            }
+            return o;
+        }
+        function ncDodgeFx(def, att, tx, ty) {
+            try {
+                const dir = (def.x >= att.x ? 1 : -1) * (Math.random() < 0.35 ? -1 : 1);
+                ncPose(def, 'dodge', dir, 1, 420);
+                for (let i = 0; i < 3; i++) { const t = setTimeout(() => { if (def.wrapper && !def.fainted) spawnDashTrail(def, true); }, (i * 70) / gameSpeed); activeTimers.push(t); }
+                const f = feetOf(def); dashDust(f.x, f.y, 3, dir);
+                duelRing(tx, ty, '#bae6fd', 80, 0, true);
+                ncSfx('dodge');
+            } catch (e) {}
+        }
+        function ncHitFx(att, def, damage, eff, crit, x, y) {
+            try {
+                if (!att || !def || att.duel || def.duel || !(damage > 0)) return;
+                const ratio = damage / Math.max(1, def.maxHp), dir = (def.x >= att.x) ? 1 : -1;
+                if (crit) { ncPose(def, 'crit', dir, 1, 480); ncSfx('crit'); duelRing(x, y, '#fde047', 110, 0, true); }
+                else if (ratio >= 0.1) ncPose(def, 'flinch', dir, Math.min(2, 0.6 + ratio * 4), 300);
+                if (ratio >= 0.1 || crit) { const f = feetOf(def); dashDust(f.x, f.y, crit ? 4 : 2, dir); }
+                if (eff > 1) duelRing(x, y, '#fbbf24', 90, 0, true); else if (eff > 0 && eff < 1) spawnSparks(x, y, '#94a3b8', 4);
+                ncSfx('hit', ratio, eff);
+            } catch (e) {}
+        }
         function resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, burstColor, sparkColor, hitLabel) {
             if (gameOver) return; // combate terminado: ningún golpe en vuelo hace efecto
             if (defender.fainted) return false;
@@ -18833,6 +18955,10 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 checkFaint(attacker, null);
             }
             defender.noAttackedMs = 0; // le han lanzado un ataque (acierte o no): reinicia la espera de Munchlax
+            if (attacker && attacker.counterUntil > performance.now() && move.power > 0 && !forcePhysHit && !attacker.duel) { // CONTRAGOLPE tras esquivar
+                attacker.counterUntil = 0; move = { ...move, power: Math.round(move.power * NC_COUNTER_MULT) }; logMessage(`⚡ ¡${attacker.name} contragolpea con ${move.name}!`, 'attack'); ncSfx('counter');
+                try { const cc = fxSpriteCenter(attacker); spawnSparks(cc.x, cc.y, '#fde047', 8); } catch (e) {}
+            }
             { const pa = attacker && attacker.ability && abilitiesData[attacker.ability]; // Piel Feérica: Normal -> Hada, +20% de potencia
               if (pa && pa.refrigerate && move.type === 'normal') { move = { ...move, type: 'ice', power: Math.round(move.power * 1.2) }; try { showAbilityNotification(attacker, attacker.ability); } catch (e) {} }
               if (pa && pa.pixilate && move.type === 'normal') { move = { ...move, type: 'fairy', power: Math.round(move.power * 1.2) }; try { showAbilityNotification(attacker, attacker.ability); } catch (e) {} } }
@@ -18896,10 +19022,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 protectedHit = true;
             }
 
-            if (!(attacker && attacker.ability && abilitiesData[attacker.ability] && abilitiesData[attacker.ability].noGuardAttack) && !(move.poisonUserNeverMisses && (attacker.stats.type === 'poison' || attacker.stats.type2 === 'poison')) && !checkAccuracy(move.accuracy * sandVeilMult(defender))) {
+            if (!(attacker && attacker.ability && abilitiesData[attacker.ability] && abilitiesData[attacker.ability].noGuardAttack) && !(move.poisonUserNeverMisses && (attacker.stats.type === 'poison' || attacker.stats.type2 === 'poison')) && (ncEvasion(attacker, defender, move) || !checkAccuracy(move.accuracy * sandVeilMult(defender)))) {
                 attacker.furyStreak = 0; // Cortefuria: un fallo reinicia la racha
                 if (attacker.critStreak) { attacker.critStreak = 0; updateXPBar(attacker); } // Inkay: un fallo rompe la racha de críticos
                 spawnDodgePopup(defender); // el golpe no llega al objetivo: "Esquivado" sobre su sprite
+                if (defender._evd) { defender._evd = false; defender.counterUntil = performance.now() + NC_COUNTER_MS; ncDodgeFx(defender, attacker, targetX, targetY); logMessage(`💨 ¡${defender.name} esquiva ${move.name} de ${attacker.name} y se prepara para contraatacar!`, 'miss'); }
+                try { if (!attacker.duel && isPhysContactHit(move)) { ncPose(attacker, 'stumble', (defender.x >= attacker.x) ? 1 : -1, 1, 380); ncSfx('stumble'); } } catch (e) {}
                 logMessage(`¡${move.name} de ${attacker.name} falló${hitLabel ? ' en su ' + hitLabel : ''}!`, 'miss');
                 if (move.crashOnMiss && !attacker.fainted) { // Golpe Voltaico: al fallar, el usuario se hace daño (la mitad de sus PS máximos)
                     const cd = Math.max(1, Math.floor(attacker.maxHp * move.crashOnMiss));
@@ -19087,6 +19215,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             updateCombatantHP(defender);
             camHit(attacker, defender, damage, isCritical, effectiveness); // alimenta a la cámara cinematográfica
             spawnDamagePopup(defender, damage, effectiveness, isCritical);
+            ncHitFx(attacker, defender, damage, effectiveness, isCritical, targetX, targetY);
             registerSuperEffectiveHit(attacker, effectiveness);
             registerHeavyHit(attacker, defender, damage);
             registerHitReceived(defender, move);
@@ -24789,6 +24918,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                         c.trailAccum = 0; c.strideBurst = false;
                         if (c.strideCrouch && !c.isMoving && !kmag) { sx = 1.08; sy = 0.9; } // anticipación antes de la zancada
                     }
+                    if (c.pose) { const PP = c.pose, pk = (performance.now() - PP.t0) / PP.dur; if (pk >= 1 || c.duel) c.pose = null; else { const q = ncPoseCalc(PP, pk); ox += q.ox; oy += q.oy; rot += q.r; sx *= q.sx; sy *= q.sy; } } // poses de combate normal (esquive, retroceso, tropiezo)
                     if (c.duel) { ox += c.dxo || 0; oy += c.dyo || 0; rot += c.drot || 0; sx *= (c.dsx || 1); sy *= (c.dsy || 1); } // pose de duelo (ver duelChoreo)
                     if (kmag > 1.2) { rot += -Math.sign(c.kx || 1) * Math.min(hPow > 1.5 ? 24 : 14, kmag * 2.2); sy *= 0.95; }
                     if (hitAge < 170 && hPow > 1.4) { const hs = Math.sin(hitAge / 170 * Math.PI) * Math.min(2, hPow - 1); sx *= 1 + 0.09 * hs; sy *= 1 - 0.1 * hs; }
@@ -24897,31 +25027,41 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const host = document.getElementById('game-container');
             const ov = document.createElement('div');
             ov.id = 'countdown-overlay';
-            ov.innerHTML = '<div class="cd-rays"></div><div class="cd-tag">' + (isRaid() ? 'RAID' : pvpDuel ? 'PVP' : 'ARENA' + ((BIOMES[window.PA_BIOME] && !multiPlan && !(window.PA_TUT && window.PA_TUT.on)) ? ' · ' + BIOMES[window.PA_BIOME].name : '')) + '</div>' +
-                '<div class="cd-vig"></div><div class="cd-flash"></div>' +
-                '<div class="cd-stage" data-n="3"><div class="cd-halo"></div><div class="cd-pulse"></div><div class="cd-pulse p2"></div>' +
-                '<svg class="cd-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="cd-ring-bg" cx="50" cy="50" r="46"/><circle class="cd-ring-fg" cx="50" cy="50" r="46" pathLength="100"/></svg>' +
-                '<div class="cd-num"></div></div>' +
+            ov.className = 'cdn';
+            ov.innerHTML = '<div class="cn-bar t"></div><div class="cn-bar b"></div><div class="cd-vig"></div><div class="cd-flash"></div><div class="cn-streak"></div>' +
+                '<div class="cd-tag">' + (isRaid() ? 'RAID' : pvpDuel ? 'PVP' : 'ARENA' + ((BIOMES[window.PA_BIOME] && !multiPlan && !(window.PA_TUT && window.PA_TUT.on)) ? ' · ' + BIOMES[window.PA_BIOME].name : '')) + '</div>' +
+                '<div class="cn-stage" data-n="3"><div class="cn-glow"></div><div class="cn-wave"></div><div class="cn-wave w2"></div>' +
+                '<svg class="cn-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="47"/><circle class="fg" cx="50" cy="50" r="47" pathLength="100"/></svg>' +
+                Array.from({ length: 12 }, (_, k) => '<i class="cn-spark" style="--a:' + (k * 30 + (k % 2 ? 7 : -5)) + 'deg;--d:' + (70 + (k % 3) * 22) + 'px"></i>').join('') +
+                '<div class="cn-num"></div></div>' +
                 '<div class="cd-sub">' + (isRaid() ? '¡UN POKÉMON ALFA SE ACERCA!' : '¡PREPÁRATE!') + '</div>';
             host.appendChild(ov);
-            const stage = ov.querySelector('.cd-stage'), num = ov.querySelector('.cd-num'), pulse = ov.querySelector('.cd-pulse'), sub = ov.querySelector('.cd-sub');
-            const cdFx = ov.querySelectorAll('.cd-pulse.p2, .cd-ring-fg, .cd-flash, .cd-halo');
+            const stage = ov.querySelector('.cn-stage'), num = ov.querySelector('.cn-num'), sub = ov.querySelector('.cd-sub'), flash = ov.querySelector('.cd-flash'), streak = ov.querySelector('.cn-streak');
             const steps = ['3', '2', '1', '¡YA!'];
             let i = 0;
+            const cnSnd = (isGo, n) => { // capa de sonido extra, suave, sobre el sonido de siempre
+                try {
+                    const ctx = fxCtxReady(); if (!ctx) return; const out = fxOut(ctx), t = ctx.currentTime + 0.003;
+                    if (!isGo) { const f = { 3: 440, 2: 523, 1: 659 }[n] || 440; fxTone(ctx, out, 'sine', 150, 70, t, 0.003, 0.2, 0.28); fxTone(ctx, out, 'triangle', f, f, t, 0.004, 0.05, 0.22); }
+                    else { fxNoiseLayer(ctx, out, t, 0.5, { type: 'bandpass', q: 1.0, f0: 300, f1: 3600, a: 0.02, peak: 0.16 }); fxTone(ctx, out, 'sine', 110, 36, t, 0.004, 0.34, 0.7); [523, 659, 784, 1047].forEach((fr, k) => fxTone(ctx, out, 'triangle', fr, fr, t + 0.02 + k * 0.045, 0.004, 0.05, 0.4)); }
+                } catch (e) {}
+            };
             const show = () => {
                 const isGo = i === steps.length - 1;
-                num.textContent = steps[i]; num.setAttribute('data-t', steps[i]);
+                num.textContent = steps[i];
                 stage.dataset.n = isGo ? 'go' : steps[i];
                 stage.classList.toggle('go', isGo); num.classList.toggle('go', isGo);
-                num.classList.remove('pop'); pulse.classList.remove('run'); cdFx.forEach(e => e.classList.remove('run')); void num.offsetWidth; // reinicia las animaciones
-                num.classList.add('pop'); pulse.classList.add('run'); cdFx.forEach(e => e.classList.add('run'));
+                stage.classList.remove('tick'); flash.classList.remove('run'); streak.classList.remove('run'); void stage.offsetWidth; // reinicia las animaciones
+                stage.classList.add('tick'); flash.classList.add('run');
                 try { GameAudio.sfx(isGo ? 'go' : 'count'); } catch (e) {}
+                cnSnd(isGo, steps[i]);
                 if (isGo) {
+                    streak.classList.add('run');
                     sub.textContent = '¡A LUCHAR!';
                     countingDown = false;
                     startGameNow();
-                    countdownTimers.push(setTimeout(() => ov.classList.add('out'), 450));
-                    countdownTimers.push(setTimeout(() => { ov.remove(); countdownTimers = []; }, 1050));
+                    countdownTimers.push(setTimeout(() => ov.classList.add('out'), 550));
+                    countdownTimers.push(setTimeout(() => { ov.remove(); countdownTimers = []; }, 1150));
                 } else {
                     i++;
                     countdownTimers.push(setTimeout(show, 800));

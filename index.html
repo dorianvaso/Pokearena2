@@ -12003,7 +12003,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const ks = Object.keys(BIOMES);
                 b = BIOMES[window.PA_BIOME_FORCE] ? window.PA_BIOME_FORCE : ks[Math.floor(Math.random() * ks.length)];
             }
-            window.PA_BIOME = b; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
+            window.PA_BIOME = b; window.PA_ARENA_SHOW = true; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
         }
         function biomeBoost(m) { // multiplicador del peso de sorteo según el tipo del pokémon y el bioma actual
             try {
@@ -12949,6 +12949,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             BASE_ZOOM = 1 / ARENA_SCALE;
             window.PA_ARENA_MODE = mode;
             try { document.documentElement.classList.toggle('bio-arena', mode === 'classic' || mode === 'raids'); } catch (e) {} // arenas de imagen: clima más visible
+            window.PA_ARENA_SHOW = mode !== 'classic'; // la clásica se muestra tras sortear su bioma (pickBiome); el resto ya tiene su mapa fijo
             window.PA_BIOME = 'forest'; // la arena clásica sortea su bioma al empezar (startGame)
             document.body.classList.toggle('raids-mode', mode === 'raids'); // el marco pasa a apaisado en Raids
             manualZoom = BASE_ZOOM;
@@ -13798,8 +13799,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         }
 
         function spawnSparks(x, y, color, count = 8) {
-            if (fxReapQ.length > 780) return; // tope de efectos vivos (260): más no se aprecian y saturan la GPU
+            if (fxReapQ.length > 240) return; // tope de efectos vivos: más no se aprecian y saturan la GPU
             if (gameSpeed > 1) count = Math.max(1, Math.round(count / Math.sqrt(gameSpeed))); // a x2/x4 pasan demasiado rápido para verse
+            count = fxN(count); if (count <= 0) return;
             for (let i = 0; i < count; i++) {
                 const s = fxPool.get('spark-particle');
                 let ang = Math.random() * Math.PI * 2;
@@ -13835,6 +13837,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // chispazo de rayos finos (.impact-burst) que gira un ángulo aleatorio
         // en cada golpe para que no se vea repetitivo.
         function spawnBurst(x, y, color) {
+            if (Math.random() > (window.PA_FXL || 1)) return;
             const b = document.createElement('div');
             b.className = 'impact-burst';
             b.style.left = x + 'px';
@@ -13912,7 +13915,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                             { opacity: 1, transform: 'translate(' + T + ') rotate(' + rot + 'deg) scale(1.1)', offset: 0.3 },
                             { opacity: 0, transform: 'translate(' + T + ') rotate(' + (rot + 10) + 'deg) scale(.85)' }], 260, 'cubic-bezier(.2,.8,.3,1)');
                     }
-                    if (big || Math.random() < 0.5) {
+                    if (big || Math.random() < 0.5 * (window.PA_FXL || 1)) {
                         const rs2 = Math.round(30 * k), re2 = (2.1 + k * 0.8).toFixed(2);
                         anim(physFxEl('phys-ring', x, y, '--pc:' + tint + ';width:' + rs2 + 'px;height:' + rs2 + 'px;border-width:' + (crit ? 4 : 3) + 'px'), [
                             { opacity: 0.9, transform: 'translate(' + T + ') scale(.3)' },
@@ -14158,7 +14161,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             { const pk = wrapper.querySelector('.pokemon'); ball.style.setProperty('--pbh', Math.max(44, (pk && pk.offsetHeight) || 50) + 'px'); }
             let sp = '';
             const sCols = ['#ffffff', '#bfdbfe', '#fde68a', '#e0f2fe'];
-            for (let i = 0; i < 14; i++) sp += '<i class="pbx-sp" style="--a:' + Math.round(-175 + i * (170 / 13) + (Math.random() - 0.5) * 10) + 'deg;--d:' + Math.round(22 + Math.random() * 30) + 'px;--sc:' + sCols[i % 4] + '"></i>';
+            const stepSp = (window.PA_FXL || 1) < 0.6 ? 2 : 1; // con muchos pokémon, la mitad de chispas en la pokeball
+            for (let i = 0; i < 14; i += stepSp) sp += '<i class="pbx-sp" style="--a:' + Math.round(-175 + i * (170 / 13) + (Math.random() - 0.5) * 10) + 'deg;--d:' + Math.round(22 + Math.random() * 30) + 'px;--sc:' + sCols[i % 4] + '"></i>';
             ball.innerHTML = '<i class="pbx-shade"></i><i class="pbx-glow"></i><i class="pbx-beam"></i><i class="pbx-ring"></i><i class="pbx-ring r2"></i><i class="pbx-dust l"></i><i class="pbx-dust r"></i>' +
                 '<b class="pbx-ball"><i class="pbx-bot"></i><i class="pbx-top"></i><i class="pbx-band"></i><i class="pbx-btn"></i><i class="pbx-shine"></i></b><i class="pbx-flash"></i>' + sp;
             wrapper.appendChild(ball);
@@ -15588,7 +15592,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             for (let i = 0; i < logQ.length; i++) frag.appendChild(logQ[i]);
             logQ.length = 0;
             battleLogEl.appendChild(frag);
-            while (battleLogEl.childElementCount > 80) battleLogEl.removeChild(battleLogEl.firstChild);
+            while (battleLogEl.childElementCount > 60) battleLogEl.removeChild(battleLogEl.firstChild);
             battleLogEl.scrollTop = battleLogEl.scrollHeight;
         }
         function logMessage(text, type = 'info') {
@@ -15598,7 +15602,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             entry.textContent = text;
             logQ.push(entry);
             if (logQ.length > 80) logQ.shift();
-            if (!logQOn) { logQOn = true; requestAnimationFrame(logFlush); }
+            if (!logQOn) { logQOn = true; setTimeout(logFlush, 350); }
         }
 
         function updateCombatantHP(c) {
@@ -22437,6 +22441,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // como una carrera y no como un simple deslizamiento por el campo.
         function spawnDashTrail(c, soft) { // soft = estela del duelo: más tenue y de vida más corta
             if (!c.pokemonEl) return;
+            if (Math.random() > (window.PA_FXL || 1)) return;
             if (window.PA_PQ >= 2 && (c._trN = (c._trN || 0) + 1) % 2) return; // calidad adaptativa nivel 2: una estela de cada dos
             const imgEl = c.pokemonEl.querySelector('img');
             if (!imgEl) return;
@@ -22473,6 +22478,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function feetOf(c) { return { x: c.x + (elW(c.wrapper) || 70) / 2, y: c.y + (elH(c.wrapper) || 95) }; }
         function dashDust(x, y, n, dirX) {
             if (window.PA_PQ >= 2) n = Math.max(1, Math.ceil(n / 2));
+            n = fxN(n); if (n <= 0) return;
             for (let i = 0; i < n; i++) {
                 const sz = 7 + Math.random() * 8, d = fxPool.get('dash-fx dash-dust');
                 d.style.cssText = `left:${x + (Math.random() - 0.5) * 16 - sz / 2}px;top:${y - sz / 2 - Math.random() * 4}px;width:${sz}px;height:${sz}px`;
@@ -22485,7 +22491,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             }
         }
         function dashStreak(c, dx, dy) {
-            if (!c.pokemonEl) return;
+            if (!c.pokemonEl || Math.random() > (window.PA_FXL || 1)) return;
             const f = feetOf(c), sh = elH(c.pokemonEl) || 50;
             const off = (Math.random() - 0.5) * sh * 0.8, back = 8 + Math.random() * 12, len = 22 + Math.random() * 22;
             const cx = f.x - dy * off - dx * back, cy = f.y - sh * 0.5 + dx * off - dy * back;
@@ -22567,9 +22573,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 activeTimers.push(t);
             };
             ring(0, 2.4 * (0.6 + 0.5 * p), Math.max(2, Math.min(7, 2 + p)));
-            if (p > 1.8) ring(70, 2.4 * (0.6 + 0.5 * p) * 1.35, 2);
+            if (p > 1.8 && (window.PA_FXL || 1) > 0.5) ring(70, 2.4 * (0.6 + 0.5 * p) * 1.35, 2);
             dashDust(f.x, f.y, Math.max(1, Math.min(8, Math.round(2.4 * Math.pow(p, 0.8)))), dx);
-            if (p >= 1.5) { // nube de polvo que se abre en todas direcciones
+            if (p >= 1.5 && (window.PA_FXL || 1) > 0.5) { // nube de polvo que se abre en todas direcciones
                 const n = Math.min(8, Math.round(3 + p * 1.2));
                 for (let i = 0; i < n; i++) {
                     const ang = (i / n) * Math.PI * 2 + Math.random() * 0.5, dist = 16 + p * 9 + Math.random() * 14, sz = 8 + Math.random() * 9;
@@ -22583,7 +22589,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     a.onfinish = () => fxPool.put(d);
                 }
             }
-            if (p >= 2.4) { // escombros que saltan y caen
+            if (p >= 2.4 && (window.PA_FXL || 1) > 0.5) { // escombros que saltan y caen
                 const n = Math.min(5, Math.round(p * 1.1));
                 for (let i = 0; i < n; i++) {
                     const sz = 4 + Math.random() * 4, vx = (Math.random() - 0.5) * 70 + dx * 18, up = 18 + Math.random() * 26;
@@ -24572,8 +24578,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // con los récords; si hay un pokémon seleccionado (tocado, con la cámara centrada en
         // él: selectedId) pasa a la vista de DETALLE de ese pokémon (sprite, tiempo y KOs
         // propios, ataque y habilidad). Al deseleccionarlo, o si se debilita, vuelve al rey.
-        let recUiAt = 0;
-        function updateChampionUI() {
+        let recUiAt = 0, champUiAt = 0;
+        function updateChampionUI(throttle) {
+            if (throttle === true) { const tn = performance.now(); if (tn - champUiAt < 120) return; champUiAt = tn; }
             raidBossBarUpdate();
             try { gmaxButtonUpdate(); } catch (e) {}
             { const rn = performance.now(); if (rn - recUiAt > 250) { recUiAt = rn; updateRecordsUI(); } }
@@ -24605,7 +24612,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
             const src = c.currentFrontSrc || (c.imgEl ? c.imgEl.src : '');
             if (src && src !== champShown.src) { champSprite.src = src; champShown.src = src; layoutSprite(champSprite, champSlot, src, 0.92); }
-            champSprite.alt = c.name;
+            if (champSprite.alt !== c.name) champSprite.alt = c.name;
 
             if (c.name !== champShown.name) { champNameEl.textContent = c.name; champShown.name = c.name; }
 
@@ -24852,6 +24859,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (c._px !== c.x || c._py !== c.y) { c._px = c.x; c._py = c.y; st.translate = c.x + 'px ' + c.y + 'px'; }
         }
         const loopSnapshot = [], loopSnapCmp = (a, b) => b._spd - a._spd;
+        let fxGovAt = 0; window.PA_FXL = 1;
+        function fxN(n) { const v = n * (window.PA_FXL || 1), f = Math.floor(v); return f + (Math.random() < v - f ? 1 : 0); } // cantidad escalada por el gobernador (redondeo aleatorio)
         function gameLoop(timestamp) {
             if (!gameRunning) return;
             if (isPaused) return;
@@ -24860,6 +24869,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             let dt = timestamp - lastFrameTime;
             { const capMs = window.PA_FPSMS || (window.PA_CAP60 ? 14.2 : 0); if (capMs && dt < capMs) { requestAnimationFrame(gameLoop); return; } } // límite de fotogramas: el elegido en Ajustes (60 o 30) o, en automático, 60 en pantallas de 120 Hz de iOS
             lastFrameTime = timestamp;
+            if (timestamp - fxGovAt > 400) { // gobernador de efectos: con muchos pokémon vivos (o si va justo) se reducen las partículas decorativas
+                fxGovAt = timestamp; let al = 0; for (let i = 0; i < combatants.length; i++) if (!combatants[i].fainted) al++;
+                let l = al <= 8 ? 1 : Math.max(0.2, 8 / al); if (window.PA_PQ >= 2) l *= 0.6; if (dt > 34) l *= 0.75;
+                window.PA_FXL = Math.max(0.15, Math.min(1, l));
+            }
 
             try { magiRainTick(dt * gameSpeed); } catch (e) {}
             if (!gameOver && !pvpDuel) spawnAccumulator += dt * gameSpeed;
@@ -25046,7 +25060,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 updateCooldownBar(c, timestamp);
             });
 
-            updateChampionUI();
+            updateChampionUI(true);
             updateDevEvoButton(); // se oculta solo si el seleccionado empieza a evolucionar, se debilita o ya no tiene evolución pendiente
             updateCamera();
 
@@ -25928,6 +25942,92 @@ const SaveSys = (() => {
 .sh-toast { background:rgba(20,22,28,.92); border:1px solid rgba(255,255,255,.25); color:#fff; }
 </style>
 
+<style id="cn4-css">
+/* ===== cuenta atrás v4: un solo número nítido con contorno de color y rebote (sin mitades, línea ni desenfoque) ===== */
+#countdown-overlay .cn-stage{width:300px;height:200px;margin:-100px 0 0 -150px}
+#countdown-overlay .cn-split,#countdown-overlay .cn-timer{display:none}
+#countdown-overlay .cn-glow{inset:-30% -20%;border-radius:50%;background:radial-gradient(closest-side,rgba(6,10,28,.62) 0%,rgba(6,10,28,.38) 55%,rgba(6,10,28,0) 100%)}
+#countdown-overlay .cd-tag{text-shadow:0 1px 8px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.9)}
+#countdown-overlay .cn-stage .cn-num{color:#fff;padding:0 .04em 0 0;font-size:9rem;letter-spacing:-.03em;transform:none;-webkit-text-stroke:5px rgb(var(--glow));paint-order:stroke fill;text-shadow:0 7px 0 rgba(0,0,0,.45),0 0 28px rgba(var(--glow),.85);will-change:transform,opacity}
+#countdown-overlay .cn-stage .cn-num.go{font-size:5.6rem;letter-spacing:.01em}
+#countdown-overlay .cn-num::before,#countdown-overlay .cn-num::after{content:none!important;display:none!important}
+#countdown-overlay .cn-stage.tick .cn-num{animation:cnPop .82s cubic-bezier(.2,.9,.25,1) forwards}
+#countdown-overlay .cn-stage.tick .cn-num.go{animation:cnGoPop .9s cubic-bezier(.2,1.1,.3,1) forwards}
+@keyframes cnPop{0%{opacity:0;transform:scale(1.75)}16%{opacity:1;transform:scale(.93)}30%{transform:scale(1.04)}42%,70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.78)}}
+@keyframes cnGoPop{0%{opacity:0;transform:scale(.4) rotate(-4deg)}24%{opacity:1;transform:scale(1.14) rotate(1deg)}42%{transform:scale(1) rotate(0)}100%{opacity:1;transform:scale(1.05)}}
+#countdown-overlay.cdn .cd-sub{top:calc(50% + 118px);font-size:.5rem;font-weight:700;letter-spacing:.42em;padding-left:.42em;color:#fff;opacity:.9;text-shadow:0 2px 10px rgba(0,0,0,.75)}
+@media (max-width:420px){#countdown-overlay .cn-stage{width:240px;height:170px;margin:-85px 0 0 -120px}#countdown-overlay .cn-stage .cn-num{font-size:7.4rem}#countdown-overlay .cn-stage .cn-num.go{font-size:4.6rem}#countdown-overlay.cdn .cd-sub{top:calc(50% + 100px)}}
+</style>
+<style id="lk-css">
+/* ===== CASILLERO (bolsa): fondo negro con diseño, vista previa por rareza, ranuras y rejilla ===== */
+#bag-screen{--sh:#000;background:radial-gradient(90% 60% at 80% 0%,rgba(255,255,255,.07),transparent 60%),radial-gradient(70% 50% at 0% 100%,rgba(255,255,255,.05),transparent 65%),linear-gradient(160deg,#050505 0%,#000 50%,#060606 100%);color:#fff}
+#bag-screen::before{display:block;background:repeating-linear-gradient(120deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px);opacity:1}
+#bag-screen .sh-wrap{gap:4px;max-width:1100px}
+#bag-screen .sh-back{background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.35);border-radius:10px;transform:skewX(-8deg)}
+#bag-screen .sh-back svg{transform:skewX(8deg)}
+#bag-screen .sh-money{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.62);border:2px solid rgba(255,255,255,.3);font:900 .78rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em}
+#bag-screen .sh-money span{display:none}
+#bag-screen .sh-money i{display:grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;font-style:normal;font-weight:900;font-size:.8rem;color:#5a3500;background:radial-gradient(circle at 35% 30%,#fff1a8,#ffc928 55%,#c98a00)}
+#bag-screen .sh-money b{font-weight:900;font-size:.9rem}
+.lk-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:4px 14px calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+.lk-stage{flex:none;height:clamp(190px,34%,300px);display:flex}
+.lk-card{position:relative;flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;border-radius:6px;border:3px solid rgba(255,255,255,.9);background:linear-gradient(160deg,var(--rc,#4d5b69),var(--rd,#222) 80%);box-shadow:0 8px 0 rgba(0,0,0,.5),0 0 30px color-mix(in srgb,var(--rc,#888) 35%,transparent);transform:skewX(-3deg)}
+.lk-card>*:not(.lk-rays){transform:skewX(3deg)}
+.lk-card.pop{animation:lkPop .38s cubic-bezier(.2,.9,.25,1.1)}
+@keyframes lkPop{from{transform:skewX(-3deg) scale(.96);filter:brightness(1.5)}to{transform:skewX(-3deg) scale(1);filter:none}}
+.lk-rays{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg at 34% 50%,rgba(255,255,255,.16) 0 7deg,transparent 7deg 18deg);animation:lkSpin 40s linear infinite;pointer-events:none}
+@keyframes lkSpin{to{transform:rotate(360deg)}}
+.lk-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(0,0,0,.18) 20%,transparent 22%) 0 0/12px 12px,radial-gradient(70% 90% at 30% 50%,rgba(255,255,255,.3),transparent 65%);pointer-events:none;transform:none}
+.lk-pic{position:relative;flex:0 0 40%;height:84%;margin-left:3%;display:flex;align-items:center;justify-content:center;animation:lkFloat 3.2s ease-in-out infinite}
+.lk-pic img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 10px 8px rgba(0,0,0,.5))}
+.lk-pic svg,.lk-ph svg{width:55%;fill:#fff;filter:drop-shadow(0 6px 5px rgba(0,0,0,.5))}
+@keyframes lkFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.lk-info{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding:10px 12px 10px 0}
+.lk-rar{align-self:flex-start;font:900 italic .55rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.18em;padding:5px 9px;background:rgba(0,0,0,.65);border-left:4px solid #ffe600}
+.lk-info h2{margin:0;font:900 italic clamp(1.15rem,5.2vw,1.9rem)/1 'PA Chakra',system-ui,sans-serif;text-transform:uppercase;text-shadow:0 3px 0 rgba(0,0,0,.55)}
+.lk-info p{margin:0;font:600 .5rem/1.7 'PA Chakra S',system-ui,sans-serif;color:rgba(255,255,255,.92);text-shadow:0 1px 2px #000;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lk-qty{margin-top:auto;display:flex;align-items:baseline;gap:8px}
+.lk-qty b{font:900 italic 1.6rem/1 'PA Chakra',system-ui,sans-serif;text-shadow:0 3px 0 rgba(0,0,0,.55)}
+.lk-qty small{font:800 .5rem/1 'PA Chakra S',system-ui,sans-serif;letter-spacing:.18em;opacity:.85}
+.lk-none{background:linear-gradient(160deg,#2a2f38,#0d0f13);border-color:rgba(255,255,255,.3);box-shadow:none}
+.lk-none .lk-ph{flex:0 0 36%;display:grid;place-items:center;opacity:.35}
+.lk-none .lk-info h2{font-size:1.2rem}
+.lk-right{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.lk-cats{flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.lk-cat{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:1/1.05;cursor:pointer;border-radius:6px;background:linear-gradient(180deg,rgba(60,66,78,.9),rgba(14,16,22,.95));border:2px solid rgba(255,255,255,.2);transform:skewX(-6deg);transition:transform .15s,border-color .15s}
+.lk-cat>*{transform:skewX(6deg)}
+.lk-cat svg{width:44%;fill:rgba(255,255,255,.85)}
+.lk-cat span{font:900 italic .42rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;opacity:.85;max-width:94%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk-cat b{position:absolute;right:-3px;top:-6px;min-width:1.5em;padding:3px 5px;border-radius:999px;background:#ffe600;color:#10205a;font:900 .5rem/1 'PA Chakra S',system-ui,sans-serif;text-align:center;transform:none}
+.lk-cat.nil{opacity:.5}
+.lk-cat.on{border-color:#ffe600;box-shadow:0 0 0 2px #ffe600,0 0 18px rgba(255,230,0,.35);background:linear-gradient(180deg,#3a3f4c,#14171e);opacity:1}
+.lk-cat.on svg{fill:#ffe600}
+.lk-grid{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:min-content;gap:9px;padding:4px 4px 6px;align-content:start;scrollbar-width:none}
+.lk-grid::-webkit-scrollbar{display:none}
+.lk-it{all:unset;box-sizing:border-box;position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border-radius:6px;border:3px solid rgba(255,255,255,.85);background:linear-gradient(160deg,var(--rc),var(--rd) 85%);box-shadow:0 5px 0 rgba(0,0,0,.45);animation:lkIn .4s cubic-bezier(.2,.9,.25,1.1) both;animation-delay:var(--d,0ms);transition:transform .15s,box-shadow .15s}
+@keyframes lkIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+.lk-it .lk-ig{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.5),transparent 60%),repeating-linear-gradient(135deg,rgba(255,255,255,.1) 0 6px,transparent 6px 14px)}
+.lk-it .lk-im{position:relative;width:64%;height:64%;display:flex;align-items:center;justify-content:center}
+.lk-it .lk-im img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 4px 3px rgba(0,0,0,.5))}
+.lk-it .lk-im svg{width:70%;fill:#fff}
+.lk-it b{position:absolute;right:0;bottom:0;padding:3px 7px 3px 9px;font:900 .56rem/1 'PA Chakra S',system-ui,sans-serif;background:rgba(0,0,0,.82);color:#fff;border-top-left-radius:8px}
+.lk-it.on{border-color:#ffe600;box-shadow:0 0 0 2px #ffe600,0 0 16px rgba(255,230,0,.4);transform:translateY(-3px) scale(1.04);z-index:1}
+.lk-it.empty{background:rgba(255,255,255,.03);border:2px dashed rgba(255,255,255,.14);box-shadow:none;cursor:default;animation:none}
+.lk-it:active:not(.empty){transform:scale(.95)}
+@media (hover:hover){.lk-it:not(.empty):hover{transform:translateY(-3px) scale(1.04)}.lk-cat:hover{border-color:#fff}}
+@media (min-width:820px) and (min-aspect-ratio:5/4){
+  .lk-body{flex-direction:row;gap:22px;padding:6px 26px 22px}
+  .lk-stage{flex:0 0 42%;height:auto;max-height:min(100%,560px);align-self:center;aspect-ratio:4/5}
+  .lk-card{flex-direction:column;align-items:stretch;gap:0}
+  .lk-pic{flex:0 0 52%;height:auto;width:100%}
+  .lk-info{padding:0 18px 16px}
+  .lk-info h2{font-size:2rem}.lk-info p{font-size:.62rem;-webkit-line-clamp:5}
+  .lk-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+  .lk-cats{gap:10px}.lk-cat span{font-size:.55rem}
+}
+@media (max-height:700px) and (max-width:520px){.lk-stage{height:clamp(150px,30%,220px)}.lk-cat{aspect-ratio:1/.85}}
+@media (prefers-reduced-motion:reduce){.lk-rays,.lk-pic,.lk-it,.lk-card.pop{animation:none}}
+</style>
 <style id="sh-fn-css">
 /* ===== Tienda estilo Fortnite: fondo azul, tarjetas por rareza, destacados y precio con moneda ===== */
 #shop-screen{--sh:#000;background:radial-gradient(90% 60% at 80% 0%,rgba(255,255,255,.07),transparent 60%),radial-gradient(70% 50% at 0% 100%,rgba(255,255,255,.05),transparent 65%),linear-gradient(160deg,#050505 0%,#000 50%,#060606 100%);color:#fff}
@@ -27509,6 +27609,7 @@ function updateTrainerChip() { try {
 } catch (e) {} }
 function updateMenuRes() { try { updateTrainerChip(); } catch (e) {} try { const m = document.getElementById('mm-res-money'), n = document.getElementById('mm-res-n'); if (m) m.textContent = Math.floor(capMoney()).toLocaleString('es-ES'); if (n) n.textContent = (capLoad(CAP_BOX_KEY, []) || []).length; } catch (e) {} }
 function showMainMenu() {
+    window.PA_ARENA_SHOW = false; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {} // en el menú no se ve la arena anterior
     try { window.paReleaseMem && window.paReleaseMem(); } catch (e) {}
     try { if (window.PA_TUT && window.PA_TUT.on && window.PA_TUT.cleanup) window.PA_TUT.cleanup(); } catch (e) {}
     try { cancelCountdown(); } catch (e) {}
@@ -28789,7 +28890,8 @@ function draw(){
  draw0();
  const m=window.PA_ARENA_MODE,want=m==='pvp'?'pvp':m==='raids'?'bio:lava':m==='classic'?'bio:'+(window.PA_BIOME||'forest'):'classic';
  const have=cv.dataset.mode==='bio'?'bio:'+cv.dataset.bio:cv.dataset.mode;
- cv.style.visibility=(have===want)?'':'hidden';
+ const vis=(have===want&&window.PA_ARENA_SHOW)?'':'hidden'; // fuera de una partida (menús, Liga, sorteo previo) NO se enseña ninguna arena: evita ver la anterior
+ cv.style.visibility=vis;{const ob=document.getElementById('arena-bg-out');if(ob)ob.style.visibility=vis;}
 }
 window.PA_redrawArena=()=>{try{draw();}catch(e){}sched();}; // lo llama setArenaMode / pickBiome al cambiar de modo o bioma
 
@@ -29892,7 +29994,59 @@ function makeItemScreen(pre, mode) {
     return { open, close, render };
 }
 const ShopUI = makeItemScreen('shop', 'shop');
-const BagUI = makeItemScreen('bag', 'bag');
+
+// ===== BOLSA estilo CASILLERO (Locker de Fortnite): vista previa grande del objeto, ranuras por categoría y rejilla por rareza =====
+function makeLocker() {
+    const $ = id => document.getElementById('bag-' + id);
+    const st = { cat: 0, sel: 0 };
+    const RAR = { common: 'COMÚN', uncommon: 'POCO COMÚN', rare: 'RARO', epic: 'ÉPICO', legendary: 'LEGENDARIO' };
+    const arrowBack = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>';
+    document.getElementById('dex-screen').insertAdjacentHTML('beforebegin',
+        '<div class="sh-screen lk-screen" id="bag-screen" hidden><div class="sh-wrap">' +
+          '<div class="sh-top"><button class="sh-back" id="bag-back" type="button" aria-label="Volver">' + arrowBack + '</button><div class="sh-money"><span>TUS POKÉMONEDAS</span><i>₽</i><b id="bag-money"></b></div></div>' +
+          '<div class="fn-head"><h1>CASILLERO</h1><span>BOLSA · TUS OBJETOS</span></div>' +
+          '<div class="lk-body"><div class="lk-stage" id="bag-stage"></div>' +
+            '<div class="lk-right"><div class="lk-cats" id="bag-cats"></div><div class="lk-grid" id="bag-grid"></div></div></div>' +
+        '</div></div>');
+    const sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
+    const inCat = c => SHOP_ITEMS.filter(it => it.cat === SHOP_CATS[c].id && bagCount(it.id) > 0);
+    const catTotal = c => inCat(c).reduce((a, it) => a + bagCount(it.id), 0);
+    function renderStage(anim) {
+        const it = inCat(st.cat)[st.sel], el = $('stage');
+        if (!it) { el.innerHTML = '<div class="lk-card lk-none"><div class="lk-ph">' + shopSvg(SHOP_ICONS[SHOP_CATS[st.cat].id]) + '</div><div class="lk-info"><h2>' + SHOP_CATS[st.cat].name + '</h2><p>No tienes objetos en esta ranura.<br>Consíguelos en la Tienda del menú.</p></div></div>'; return; }
+        const r = shopRar(it);
+        el.innerHTML = '<div class="lk-card ' + r[0] + (anim ? ' pop' : '') + '" style="--rc:' + r[1] + ';--rd:' + r[2] + '"><div class="lk-rays"></div><div class="lk-pic">' + shopIco(it) + '</div>' +
+            '<div class="lk-info"><span class="lk-rar">' + RAR[r[0]] + '</span><h2>' + shopEsc(it.name) + '</h2><p>' + shopEsc(it.desc || '') + '</p>' +
+            '<div class="lk-qty"><b>×' + bagCount(it.id) + '</b><small>EN LA BOLSA</small></div></div></div>';
+    }
+    function renderCats() {
+        $('cats').innerHTML = SHOP_CATS.map((c, i) => {
+            const n = catTotal(i);
+            return '<button type="button" class="lk-cat' + (i === st.cat ? ' on' : '') + (n ? '' : ' nil') + '" data-c="' + i + '" aria-label="' + c.name + '">' + shopSvg(SHOP_ICONS[c.id]) + '<span>' + c.name + '</span>' + (n ? '<b>' + n + '</b>' : '') + '</button>';
+        }).join('');
+    }
+    function renderGrid() {
+        const items = inCat(st.cat); let h = '';
+        items.forEach((it, i) => { const r = shopRar(it); h += '<button type="button" class="lk-it ' + r[0] + (i === st.sel ? ' on' : '') + '" data-i="' + i + '" style="--rc:' + r[1] + ';--rd:' + r[2] + ';--d:' + (i * 45) + 'ms" aria-label="' + shopEsc(it.name) + '"><span class="lk-ig"></span><span class="lk-im">' + shopIco(it) + '</span><b>×' + bagCount(it.id) + '</b></button>'; });
+        const total = Math.max(8, Math.ceil(items.length / 4) * 4);
+        for (let k = items.length; k < total; k++) h += '<i class="lk-it empty" aria-hidden="true"></i>';
+        $('grid').innerHTML = h;
+    }
+    function render(anim) { $('money').textContent = shopFmt(capMoney()); renderCats(); renderGrid(); renderStage(anim); }
+    $('back').addEventListener('click', close);
+    $('cats').addEventListener('click', e => { const b = e.target.closest('.lk-cat'); if (!b) return; st.cat = +b.dataset.c; st.sel = 0; render(true); $('grid').scrollTop = 0; sfx('tick'); });
+    $('grid').addEventListener('click', e => {
+        const c = e.target.closest('.lk-it[data-i]'); if (!c) return;
+        st.sel = +c.dataset.i; $('grid').querySelectorAll('.lk-it.on').forEach(x => x.classList.remove('on')); c.classList.add('on'); renderStage(true); sfx('tick');
+    });
+    function open() {
+        st.cat = 0; for (let i = 0; i < SHOP_CATS.length; i++) if (inCat(i).length) { st.cat = i; break; }
+        st.sel = 0; render(false); document.getElementById('bag-screen').hidden = false; $('grid').scrollTop = 0; sfx('pop');
+    }
+    function close() { document.getElementById('bag-screen').hidden = true; sfx('close'); }
+    return { open, close, render };
+}
+const BagUI = makeLocker();
 function openShop() { ShopUI.open(); }
 function closeShop() { ShopUI.close(); }
 function openBag() { BagUI.open(); }
@@ -31903,6 +32057,7 @@ window.PAPvp = (function () {
     function closeFind() { P.searching = false; clearTimeout(P.tm.find); clearInterval(P.tm.fclock); const el = $('pvp-find'); if (el) el.remove(); }
     function open() {
         if ($('pvp-find') || P.on) return;
+        window.PA_ARENA_SHOW = false; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
         const root = $('main-menu') || document.body, pf = mpProfile(), picks = myPicks();
         const el = document.createElement('div'); el.id = 'pvp-find';
         let team = ''; for (let i = 0; i < 6; i++) { const p = picks[i]; team += p ? '<span><img alt="" draggable="false" src="' + esc(p.sprite) + '"></span>' : '<span class="e"></span>'; }
@@ -33011,6 +33166,7 @@ window.PALiga = (function () {
     const LG_ACC = { olivia: '#d4a95a', volkner: '#facc15', flint: '#fb923c', grimsley: '#a78bfa' };
     function open() {
         if ($('lg-tw')) return;
+        window.PA_ARENA_SHOW = false; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
         const cur = curIndex(), el = document.createElement('div'); el.id = 'lg-tw';
         let fx = ''; for (let k = 0; k < 16; k++) fx += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;animation-duration:' + (7 + Math.random() * 8).toFixed(1) + 's;animation-delay:-' + (Math.random() * 12).toFixed(1) + 's"></i>';
         const pf = (typeof mpProfile === 'function') ? mpProfile() : {};

@@ -337,7 +337,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         .pokemon-wrapper.boss-growing .pokemon { animation: bossGrow var(--boss-grow-ms, 2200ms) cubic-bezier(.25,.9,.3,1.12) forwards; }
         .pokemon-wrapper.boss-growing .pokemon-hud { animation: bossHudGrow var(--boss-grow-ms, 2200ms) cubic-bezier(.25,.9,.3,1.12) forwards; }
         .pokemon-wrapper.boss-growing::before { animation: bossShadowGrow var(--boss-grow-ms, 2200ms) cubic-bezier(.25,.9,.3,1.12) forwards; }
-        @keyframes bossShake { 0% { translate: 0 0; } 25% { translate: 3px -2px; } 50% { translate: -3px 2px; } 75% { translate: 2px 3px; } 100% { translate: 0 0; } }
+        @keyframes bossShake { 0% { transform: translate(0,0); } 25% { transform: translate(3px,-2px); } 50% { transform: translate(-3px,2px); } 75% { transform: translate(2px,3px); } 100% { transform: translate(0,0); } }
         @keyframes bossGrow {
             0%   { width: var(--bw0); height: var(--bh0); filter: none; }
             14%  { width: calc(var(--bw0) * 0.9); height: calc(var(--bh0) * 0.9); filter: brightness(4) saturate(0); }
@@ -397,6 +397,58 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         @keyframes bmGhost { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
         @keyframes bmHue { to { filter: hue-rotate(360deg); } }
         @keyframes bmPsy { 0%, 100% { scale: 1 .8; filter: hue-rotate(0deg); } 50% { scale: 1 1.18; filter: hue-rotate(40deg); } }
+
+        /* ===== ATAQUES DEL JEFE: tormenta de rayos / meteoros / onda de choque / furia / agotamiento ===== */
+        .bz-tele { position: absolute; left: 0; top: 0; height: var(--bzw, 46px); transform-origin: 0 50%; pointer-events: none; z-index: 3; will-change: transform; }
+        .bz-tele > i { position: absolute; display: block; pointer-events: none; }
+        .bz-tele .l { left: 0; right: 0; top: 0; bottom: 0; background: linear-gradient(to bottom, transparent, var(--c1) 50%, transparent); opacity: 0; mix-blend-mode: screen; animation: bzBand var(--tele-ms, 950ms) ease-in forwards; }
+        .bz-tele .f { left: 0; right: 0; top: 50%; height: 4px; translate: 0 -50%; background: repeating-linear-gradient(90deg, var(--c3) 0 18px, transparent 18px 36px); box-shadow: 0 0 8px var(--c2); animation: bzFlow .35s linear infinite, bzBlink calc(var(--tele-ms, 950ms) / 5) steps(2) infinite; }
+        .bz-tele .o { left: 0; top: 50%; width: 54px; height: 54px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, var(--c3), var(--c2) 35%, transparent 70%); mix-blend-mode: screen; animation: bzGrow var(--tele-ms, 950ms) ease-in forwards; }
+        .bz-tele .x { right: 0; top: 50%; width: 22px; height: 22px; translate: 50% -50%; border: 3px solid var(--c3); border-radius: 50%; opacity: .8; }
+        .bz-tele.go { animation: bzOut .22s ease-out forwards; }
+        @keyframes bzFlow { from { background-position-x: 0; } to { background-position-x: 36px; } }
+        @keyframes bzBlink { 0% { opacity: .45; } 50% { opacity: 1; } }
+        @keyframes bzBand { from { opacity: 0; } to { opacity: .55; } }
+        @keyframes bzGrow { from { scale: .2; opacity: .3; } to { scale: 1.1; opacity: 1; } }
+        @keyframes bzOut { to { opacity: 0; } }
+        .bz-seg { z-index: 5; }
+        .bz-seg .bm-glow, .bz-seg .bm-body, .bz-seg .bm-core { opacity: 1; }
+        .bz-head { position: absolute; right: 0; top: 50%; width: calc(var(--bw, 46px) * 1.5); height: calc(var(--bw, 46px) * 1.5); translate: 50% -50%; border-radius: 50%; mix-blend-mode: screen; background: radial-gradient(circle, var(--c3) 0%, var(--c2) 32%, var(--c1) 55%, transparent 72%); animation: bmOrbPulse .3s ease-in-out infinite; }
+        .bz-spot { position: absolute; width: var(--r); height: var(--r); translate: -50% -50%; pointer-events: none; z-index: 2; }
+        .bz-spot > i { position: absolute; display: block; border-radius: 50%; }
+        .bz-spot .a { inset: 0; border: 3px dashed var(--c3); box-shadow: 0 0 12px var(--c2), inset 0 0 18px var(--c1); animation: bzSpin 2.2s linear infinite; }
+        .bz-spot .b { inset: 0; background: radial-gradient(circle, transparent 30%, var(--c1) 100%); opacity: .5; animation: bzBlink calc(var(--tele-ms, 1000ms) / 6) steps(2) infinite; }
+        .bz-spot .c { inset: 50%; background: var(--c3); mix-blend-mode: screen; animation: bzFill var(--tele-ms, 1000ms) ease-in forwards; }
+        @keyframes bzSpin { to { rotate: 360deg; } }
+        @keyframes bzFill { from { inset: 50%; opacity: .3; } to { inset: 8%; opacity: .85; } }
+        .bz-meteor { position: absolute; width: 0; height: 0; z-index: 6; pointer-events: none; animation: bzFall var(--fall-ms, 260ms) cubic-bezier(.5,0,1,.6) forwards; }
+        .bz-meteor i { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; mix-blend-mode: screen; background: radial-gradient(circle, var(--c3) 0%, var(--c2) 38%, var(--c1) 62%, transparent 72%); box-shadow: 0 -60px 36px -8px var(--c1); }
+        @keyframes bzFall { from { translate: -70px -420px; opacity: .3; scale: .6; } to { translate: 0 0; opacity: 1; scale: 1.1; } }
+        .bz-boom { position: absolute; width: var(--r); height: var(--r); translate: -50% -50%; pointer-events: none; z-index: 6; }
+        .bz-boom i { position: absolute; display: block; border-radius: 50%; inset: 0; }
+        .bz-boom .a { background: radial-gradient(circle, var(--c3) 0%, var(--c2) 40%, transparent 72%); mix-blend-mode: screen; animation: bzBoom var(--boom-ms, 600ms) ease-out forwards; }
+        .bz-boom .b { border: 4px solid var(--c3); animation: bzBoomRing var(--boom-ms, 600ms) ease-out forwards; }
+        @keyframes bzBoom { from { scale: .2; opacity: 1; } to { scale: 1.25; opacity: 0; } }
+        @keyframes bzBoomRing { from { scale: .4; opacity: 1; } to { scale: 1.6; opacity: 0; } }
+        .bz-shock-tele { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2; }
+        .bz-shock-tele i { position: absolute; display: block; left: 0; top: 0; translate: -50% -50%; border-radius: 50%; border: 3px solid var(--c3); box-shadow: 0 0 14px var(--c2); animation: bzCharge var(--tele-ms, 1150ms) ease-in infinite; }
+        .bz-shock-tele i:nth-child(2) { animation-delay: calc(var(--tele-ms, 1150ms) / -3); }
+        .bz-shock-tele i:nth-child(3) { animation-delay: calc(var(--tele-ms, 1150ms) / -1.5); }
+        @keyframes bzCharge { from { width: 230px; height: 230px; opacity: 0; } 60% { opacity: .9; } to { width: 20px; height: 20px; opacity: 0; } }
+        .bz-shock { position: absolute; width: 100px; height: 100px; translate: -50% -50%; border-radius: 50%; pointer-events: none; z-index: 5; border: 22px solid var(--c2); box-shadow: 0 0 26px var(--c1), inset 0 0 26px var(--c1), 0 0 60px var(--c1); mix-blend-mode: screen; }
+        .bz-rage { position: absolute; width: 60px; height: 60px; translate: -50% -50%; border-radius: 50%; pointer-events: none; z-index: 5; border: 6px solid #ef4444; box-shadow: 0 0 30px #ef4444; animation: bzRage 1.2s ease-out forwards; }
+        @keyframes bzRage { from { scale: .5; opacity: 1; } to { scale: 14; opacity: 0; } }
+        .boss-call { position: absolute; z-index: 30; pointer-events: none; transform: translate(-50%, -100%); white-space: nowrap; font: 900 italic 1rem/1 'PA Chakra', system-ui, sans-serif; letter-spacing: .06em; color: var(--cc, #fde047); text-shadow: 0 0 10px var(--cc, #fde047), 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; animation: bzCall var(--cms, 1900ms) ease-out forwards; }
+        @keyframes bzCall { 0% { opacity: 0; scale: .4; } 12% { opacity: 1; scale: 1.25; } 22% { scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -26px; } }
+        .pokemon-wrapper.boss-enraged { animation: bzRageShake .16s linear infinite; }
+        .pokemon-wrapper.boss-enraged::after { content: ""; position: absolute; inset: -14% -10%; border-radius: 50%; pointer-events: none; z-index: -1; background: radial-gradient(circle, rgba(239,68,68,.55), rgba(239,68,68,0) 68%); animation: bossAura .5s ease-in-out infinite; }
+        .pokemon-wrapper.boss-enraged .sprite, .pokemon-wrapper.boss-enraged img { filter: drop-shadow(0 0 8px #ef4444) saturate(1.35) brightness(1.08); }
+        @keyframes bzRageShake { 0% { transform: translate(0,0); } 25% { transform: translate(1.5px,-1px); } 50% { transform: translate(-1.5px,1px); } 75% { transform: translate(1px,1.5px); } 100% { transform: translate(0,0); } }
+        .pokemon-wrapper.boss-tired .sprite, .pokemon-wrapper.boss-tired img { filter: grayscale(.45) brightness(.82); }
+        .boss-tired-fx { position: absolute; left: 50%; top: -6%; width: 0; height: 0; pointer-events: none; z-index: 8; animation: bzOrbit 1.4s linear infinite; }
+        .boss-tired-fx i { position: absolute; font-style: normal; font-size: 1.15rem; color: #fde047; text-shadow: 0 0 8px #facc15; }
+        .boss-tired-fx i:nth-child(1) { left: -40px; top: 0; } .boss-tired-fx i:nth-child(2) { left: 30px; top: -6px; } .boss-tired-fx i:nth-child(3) { left: -4px; top: -16px; }
+        @keyframes bzOrbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         /* Partículas del rayo y de la carga */
         .bm-p { position: absolute; z-index: 6; pointer-events: none; width: var(--ps, 6px); height: var(--ps, 6px); margin: calc(var(--ps, 6px) / -2) 0 0 calc(var(--ps, 6px) / -2); border-radius: 50%; background: var(--pc, #fff); box-shadow: 0 0 6px var(--pc, #fff); animation: bmP var(--pl, 700ms) ease-out forwards; }
         .bm-p.p-shard { border-radius: 1px; width: calc(var(--ps, 6px) * .55); height: calc(var(--ps, 6px) * 1.7); rotate: var(--pr, 0deg); }
@@ -6879,7 +6931,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 <div class="hp-bar-container"><div id="farfetchdgalar-hp" class="hp-bar"></div></div>
                 <div class="xp-bar-container"><div id="farfetchdgalar-xp" class="xp-bar"></div></div>
             </div>
-            <div id="farfetchdgalar" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10164.gif" alt="Farfetch'd"></div>
+            <div id="farfetchdgalar" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10166.gif" alt="Farfetch'd"></div>
         </div>
 
         <!-- Scyther -->
@@ -8057,8 +8109,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
            Todas las especies y formas (también las posteriores a la 5.ª generación) tienen su versión animated en esa carpeta. */
         const SPR_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
         const SPR_GENV = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/';
-        const SPR_DEX = {"electrike":309,"manectric":310,"scyther":123,"scizor":212,"kleavor":900,"farfetchdgalar":10164,"sirfetchd":865,"tyrunt":696,"tyrantrum":697,"zorua":570,"zoroark":571,"zubat":41,"golbat":42,"crobat":169,"onix":95,"steelix":208,"houndour":228,"houndoom":229,"shinx":403,"luxio":404,"luxray":405,"silicobra":843,"sandaconda":844,"magikarp":129,"gyarados":130,"chikorita":152,"bayleef":153,"meganium":154,"cyndaquil":155,"quilava":156,"typhlosion":157,"totodile":158,"croconaw":159,"feraligatr":160,"machop":66,"machoke":67,"machamp":68,"carvanha":318,"sharpedo":319,"ditto":132,"honedge":679,"doublade":680,"aegislash":681,"skarmory":227,"grubbin":736,"charjabug":737,"vikavolt":738,"sneasel":215,"weavile":461,"amaura":698,"aurorus":699,"archen":566,"archeops":567,"miltank":241,"gible":443,"gabite":444,"garchomp":445,"teddiursa":216,"ursaring":217,"ursaluna":901,"horsea":116,"seadra":117,"kingdra":230,"sandile":551,"krokorok":552,"krookodile":553,"tynamo":602,"eelektrik":603,"eelektross":604,"gligar":207,"gliscor":472,"vullaby":629,"mandibuzz":630,"basculin":550,"basculegion":902,"leafeon":470,"glaceon":471,"sylveon":700,"murkrow":198,"honchkrow":430,"trapinch":328,"vibrava":329,"flygon":330,"espeon":196,"umbreon":197,"eevee":133,"vaporeon":134,"jolteon":135,"flareon":136,"drifloon":425,"drifblim":426,"scraggy":559,"scrafty":560,"snubbull":209,"granbull":210,"bulbasaur":1,"ivysaur":2,"venusaur":3,"charmander":4,"charmeleon":5,"charizard":6,"squirtle":7,"wartortle":8,"blastoise":9,"caterpie":10,"metapod":11,"butterfree":12,"weedle":13,"kakuna":14,"beedrill":15,"spearow":21,"fearow":22,"pikachu":25,"raichu":26,"vulpix":37,"ninetales":38,"mankey":56,"primeape":57,"abra":63,"kadabra":64,"alakazam":65,"geodude":74,"graveler":75,"golem":76,"slowpoke":79,"slowbro":80,"gastly":92,"haunter":93,"gengar":94,"cubone":104,"marowak":105,"mareep":179,"flaaffy":180,"ampharos":181,"slowking":199,"girafarig":203,"riolu":447,"lucario":448,"drilbur":529,"excadrill":530,"pawniard":624,"bisharp":625,"mimikyu":778,"rookidee":821,"corvisquire":822,"corviknight":823,"maschiff":942,"mabosstiff":943,"tinkatink":957,"tinkatuff":958,"tinkaton":959,"larvitar":246,"pupitar":247,"tyranitar":248,"munchlax":446,"snorlax":143,"buneary":427,"lopunny":428,"joltik":595,"galvantula":596,"farigiraf":981,"heracross":214,"hawlucha":701,"relicanth":369,"lapras":131,"cranidos":408,"rampardos":409,"fomantis":753,"lurantis":754,"kingambit":983,"toxel":848,"meowth":52,"persian":53,"rockruff":744,"lycanroc-midnight":10126,"lycanroc-dusk":10152,"wimpod":767,"starly":396,"staravia":397,"staraptor":398,"larvesta":636,"volcarona":637,"inkay":686,"malamar":687,"golisopod":768,"mareanie":747,"greavard":971,"houndstone":972,"ferroseed":597,"ferrothorn":598,"wingull":278,"pelipper":279,"magnemite":81,"magneton":82,"magnezone":462,"shroomish":285,"breloom":286,"morelull":755,"shiinotic":756,"darumaka":554,"darmanitan":555,"turtonator":776,"milcery":868,"alcremie":869,"toxapex":748,"lycanroc":745,"toxtricity":849,"butterfree-gmax":10198,"charizard-gmax":10196,"toxtricity-lowkey":10184,"mimikyu-busted":10143}; // identificador de especie/forma -> nº de Pokédex (o id de forma de PokeAPI)
-        const SPR_FORM_BASE = {"10164": 83, "10248": 902, "10184": 849, "10126": 745, "10152": 745, "10143": 778, "10198": 12}; // si un id de forma no carga, se usa el sprite de la especie base
+        const SPR_DEX = {"electrike":309,"manectric":310,"scyther":123,"scizor":212,"kleavor":900,"farfetchdgalar":10166,"sirfetchd":865,"tyrunt":696,"tyrantrum":697,"zorua":570,"zoroark":571,"zubat":41,"golbat":42,"crobat":169,"onix":95,"steelix":208,"houndour":228,"houndoom":229,"shinx":403,"luxio":404,"luxray":405,"silicobra":843,"sandaconda":844,"magikarp":129,"gyarados":130,"chikorita":152,"bayleef":153,"meganium":154,"cyndaquil":155,"quilava":156,"typhlosion":157,"totodile":158,"croconaw":159,"feraligatr":160,"machop":66,"machoke":67,"machamp":68,"carvanha":318,"sharpedo":319,"ditto":132,"honedge":679,"doublade":680,"aegislash":681,"skarmory":227,"grubbin":736,"charjabug":737,"vikavolt":738,"sneasel":215,"weavile":461,"amaura":698,"aurorus":699,"archen":566,"archeops":567,"miltank":241,"gible":443,"gabite":444,"garchomp":445,"teddiursa":216,"ursaring":217,"ursaluna":901,"horsea":116,"seadra":117,"kingdra":230,"sandile":551,"krokorok":552,"krookodile":553,"tynamo":602,"eelektrik":603,"eelektross":604,"gligar":207,"gliscor":472,"vullaby":629,"mandibuzz":630,"basculin":550,"basculegion":902,"leafeon":470,"glaceon":471,"sylveon":700,"murkrow":198,"honchkrow":430,"trapinch":328,"vibrava":329,"flygon":330,"espeon":196,"umbreon":197,"eevee":133,"vaporeon":134,"jolteon":135,"flareon":136,"drifloon":425,"drifblim":426,"scraggy":559,"scrafty":560,"snubbull":209,"granbull":210,"bulbasaur":1,"ivysaur":2,"venusaur":3,"charmander":4,"charmeleon":5,"charizard":6,"squirtle":7,"wartortle":8,"blastoise":9,"caterpie":10,"metapod":11,"butterfree":12,"weedle":13,"kakuna":14,"beedrill":15,"spearow":21,"fearow":22,"pikachu":25,"raichu":26,"vulpix":37,"ninetales":38,"mankey":56,"primeape":57,"abra":63,"kadabra":64,"alakazam":65,"geodude":74,"graveler":75,"golem":76,"slowpoke":79,"slowbro":80,"gastly":92,"haunter":93,"gengar":94,"cubone":104,"marowak":105,"mareep":179,"flaaffy":180,"ampharos":181,"slowking":199,"girafarig":203,"riolu":447,"lucario":448,"drilbur":529,"excadrill":530,"pawniard":624,"bisharp":625,"mimikyu":778,"rookidee":821,"corvisquire":822,"corviknight":823,"maschiff":942,"mabosstiff":943,"tinkatink":957,"tinkatuff":958,"tinkaton":959,"larvitar":246,"pupitar":247,"tyranitar":248,"munchlax":446,"snorlax":143,"buneary":427,"lopunny":428,"joltik":595,"galvantula":596,"farigiraf":981,"heracross":214,"hawlucha":701,"relicanth":369,"lapras":131,"cranidos":408,"rampardos":409,"fomantis":753,"lurantis":754,"kingambit":983,"toxel":848,"meowth":52,"persian":53,"rockruff":744,"lycanroc-midnight":10126,"lycanroc-dusk":10152,"wimpod":767,"starly":396,"staravia":397,"staraptor":398,"larvesta":636,"volcarona":637,"inkay":686,"malamar":687,"golisopod":768,"mareanie":747,"greavard":971,"houndstone":972,"ferroseed":597,"ferrothorn":598,"wingull":278,"pelipper":279,"magnemite":81,"magneton":82,"magnezone":462,"shroomish":285,"breloom":286,"morelull":755,"shiinotic":756,"darumaka":554,"darmanitan":555,"turtonator":776,"milcery":868,"alcremie":869,"toxapex":748,"lycanroc":745,"toxtricity":849,"butterfree-gmax":10198,"charizard-gmax":10196,"toxtricity-lowkey":10184,"mimikyu-busted":10143}; // identificador de especie/forma -> nº de Pokédex (o id de forma de PokeAPI)
+        const SPR_FORM_BASE = {"10166": 83, "10248": 902, "10184": 849, "10126": 745, "10152": 745, "10143": 778, "10198": 12}; // si un id de forma no carga, se usa el sprite de la especie base
         function pokeSpriteUrl(slug, kind) { // kind: 'front' | 'back' | 'shiny' | 'backshiny'
             const id = SPR_DEX[slug]; if (!id) return SPR_GENV + slug + '.gif';
             const pre = { front: '', back: 'back/', shiny: 'shiny/', backshiny: 'back/shiny/' }[kind || 'front'];
@@ -16462,7 +16514,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             c.wrapper.classList.remove('boss-growing'); c.wrapper.classList.add('boss-form');
             c.isEvolving = false;
             bossEndAt = matchElapsedMs + BOSS_MAX_MS; bossClockShown = -1; // empieza la cuenta atrás de 2:30
-            bossBeamNextAt = matchElapsedMs + BEAM_FIRST_MS; // primer rayo cargado
+            bossEnraged = false; bossLastKind = ''; bossBeamNextAt = matchElapsedMs + 7500; // primer ataque
             const now = performance.now(); c.lastAttack = now; c.atkRetryAt = 0;
             try { spawnBurst(c.x + 35, c.y + 95 - c.bossH / 2, '#a855f7'); spawnSparks(c.x + 35, c.y + 95 - c.bossH / 2, '#fde047', 24); triggerCameraShake(9, 500 / gameSpeed); } catch (e) {}
             raidBarShown = -1;
@@ -16519,7 +16571,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // y dispara un rayo que cubre toda la arena y gira 360° alrededor de él. Daña a cada pokémon que toca (una vez por pasada;
         // pasa por resolveSingleHit, así que cuentan tipos, Protección, habilidades como Pararrayos, estados, KOs...).
         // El rayo es del tipo del jefe y cada tipo tiene su propio FX (colores, textura, movimiento y partículas).
-        const BEAM_FIRST_MS = 9000;          // espera tras crecer hasta el primer rayo (tiempo de partida)
+        const BEAM_FIRST_MS = 7500;          // espera tras crecer hasta el primer rayo (tiempo de partida)
         const BEAM_COOLDOWN_MIN = 14000;     // tiempo entre rayos: mínimo...
         const BEAM_COOLDOWN_MAX = 21000;     // ...y máximo (aleatorio)
         const BEAM_CHARGE_MS = 1600;         // carga previa (aviso)
@@ -16680,127 +16732,294 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             container.appendChild(e); bossBeamParts++;
             setTimeout(() => { e.remove(); bossBeamParts = Math.max(0, bossBeamParts - 1); }, life + 80);
         }
-        function bossBeamParticles(b, ang, burst) {
-            const f = BEAM_FX[b.type] || BEAM_FX.normal, dx = Math.cos(ang), dy = Math.sin(ang);
-            const n = burst ? f.n * 2 : f.n, reach = Math.min(b.len, Math.max(view.width, view.height) * ARENA_SCALE * 0.7);
-            for (let i = 0; i < n; i++) {
-                const d = Math.pow(Math.random(), 1.4) * reach + 40, off = (Math.random() - 0.5) * BEAM_WIDTH * 1.1;
-                bossBeamParticle(b, b.cx + dx * d - dy * off, b.cy + dy * d + dx * off, false);
-            }
-        }
-        function bossBeamParticlesAll(b, ang, burst) { for (let k = 0; k < BEAM_ARMS; k++) bossBeamParticles(b, ang + k * Math.PI * 2 / BEAM_ARMS, burst); }
+        // =====================================================================================
+        //  ATAQUES DEL JEFE (cada uno con su aviso, su FX y su sonido, del tipo del jefe):
+        //   · TORMENTA DE RAYOS: varios rayos que entran por un borde de la arena a distintos tiempos, cruzan en línea recta
+        //     (muchos apuntados a pokémon concretos) y salen por el borde opuesto. Cada uno avisa antes con una línea.
+        //   · LLUVIA DE METEOROS: círculos de aviso sobre varios puntos; tras un instante cae un meteoro y explota en área.
+        //   · ONDA DE CHOQUE: el jefe golpea el suelo y un anillo se expande desde él por toda la arena.
+        //   · FURIA: por debajo del 50 % de PS el jefe se enfurece (más rápido, más rayos y meteoros, ataques encadenados).
+        //   · AGOTAMIENTO: tras la onda de choque (y a veces tras la tormenta) el jefe queda agotado unos segundos: defensas
+        //     bajas, ventana para castigarlo.
+        //  Todo el daño pasa por resolveSingleHit (tipos, Protección, Pararrayos, estados, KOs...).
+        // =====================================================================================
+        const BZ_TELE_MS = 950, BZ_FLY_MS = 900, BZ_LEN = 260, BZ_BEAM_GAP = 330, BZ_WIDTH = 46;
+        const BZ_SPOT_R = 66, BZ_METEOR_TELE_MS = 1000, BZ_METEOR_FALL_MS = 260, BZ_METEOR_POWER = 34;
+        const BZ_SHOCK_TELE_MS = 1150, BZ_SHOCK_MS = 1300, BZ_SHOCK_BAND = 30, BZ_SHOCK_POWER = 30;
+        const BZ_TIRED_MS = 3800, BZ_TIRED_DEF = 0.55, BZ_ENRAGE_HP = 0.5;
+        let bossFx = [];                 // elementos de FX vivos (se limpian al acabar el ataque o caer el jefe)
+        let bossAtk = null;              // ataque en curso
+        let bossEnraged = false, bossTiredUntil = 0, bossTiredBase = null, bossLastKind = '';
 
-        function bossBeamPlace(b, ang) {
-            const ctr = fxSpriteCenter(b.c);
-            b.cx = ctr.x; b.cy = ctr.y;
-            for (let k = 0; k < b.els.length; k++) b.els[k].style.transform = 'translate3d(' + ctr.x.toFixed(1) + 'px,' + (ctr.y - BEAM_WIDTH / 2).toFixed(1) + 'px,0) rotate(' + (ang + k * Math.PI * 2 / b.els.length).toFixed(4) + 'rad)';
+        function bzCtx(c) {
+            const type = (c.stats && BEAM_FX[c.stats.type]) ? c.stats.type : 'normal', m = bossBeamMove(type);
+            return { c, type, mv: m.mv, col: m.col, sound: m.sound, cx: 0, cy: 0, len: 300 };
         }
-
-        function bossBeamStart(c) {
-            const type = (c.stats && BEAM_FX[c.stats.type]) ? c.stats.type : 'normal';
-            const m = bossBeamMove(type);
-            const len = Math.ceil(Math.hypot(bounds.width, bounds.height)) + 300;
-            const els = [];
-            for (let k = 0; k < BEAM_ARMS; k++) {
-                const e = document.createElement('div');
-                e.className = 'bm bm-' + type + ' bm-charging';
-                e.style.width = len + 'px';
-                e.style.setProperty('--bw', BEAM_WIDTH + 'px');
-                e.style.setProperty('--orb', '44px'); // orbe pequeño y por detrás del sprite: el jefe se ve entero
-                e.style.setProperty('--charge-ms', Math.round(BEAM_CHARGE_MS / gameSpeed) + 'ms');
-                e.style.setProperty('--bm-k', String(1 / gameSpeed));
-                e.innerHTML = '<div class="bm-tele"></div><div class="bm-glow"></div><div class="bm-body"><div class="bm-tex"></div></div><div class="bm-core"></div>' + (k === 0 ? '<div class="bm-orb"></div>' : '');
-                els.push(e);
-            }
-            const ang0 = Math.random() * Math.PI * 2;
-            bossBeam = { c, type, mv: m.mv, col: m.col, sound: m.sound, els, len, phase: 'charge', t: 0, angle: ang0, dir: Math.random() < 0.5 ? 1 : -1, swept: 0, cx: 0, cy: 0, k: gameSpeed };
-            els.forEach(e => container.appendChild(e));
-            bossBeamPlace(bossBeam, ang0);
-            bossBeam.snd = bossBeamSfx(type, 'charge', BEAM_CHARGE_MS / gameSpeed);
-            logMessage(`⚠️ ¡${c.name} concentra energía para un ataque cargado! (Rayo de tipo ${TYPE_NAME_ES[type] || type})`, 'attack');
-            try { triggerCameraShake(3, 500 / gameSpeed); } catch (e) {}
+        function bzAdd(el) { container.appendChild(el); bossFx.push(el); return el; }
+        function bzDrop(el, ms) { const f = () => { try { el.remove(); } catch (e) {} const i = bossFx.indexOf(el); if (i >= 0) bossFx.splice(i, 1); }; if (ms) setTimeout(f, ms); else f(); }
+        function bzTargets(c) { return combatants.filter(t => t !== c && !t.fainted && !t.retreated && !t.isBoss && t.wrapper && !t.isSpawning && !t.isEvolving && !t.isUnderground && !t.isAirborne && !t.isPhantom); }
+        function bzCall(c, text, color) {
+            const p = fxSpriteCenter(c), e = document.createElement('div'); e.className = 'boss-call';
+            e.textContent = text; e.style.left = Math.round(p.x) + 'px'; e.style.top = Math.round(p.y - (c.bossH || 120) / 2 - 18) + 'px';
+            e.style.setProperty('--cc', color || '#fde047'); e.style.setProperty('--cms', Math.round(1900 / gameSpeed) + 'ms');
+            bzAdd(e); bzDrop(e, 2000 / gameSpeed + 100);
         }
-
-        function bossBeamStop() {
-            const b = bossBeam; bossBeam = null;
-            if (!b) return;
-            if (b.snd) { b.snd.stop(); b.snd = null; }
-            b.els.forEach(el => { el.classList.remove('bm-charging'); el.classList.add('bm-out'); setTimeout(() => el.remove(), 360); });
+        // ---- SONIDO de los ataques (Web Audio sintetizado) ----
+        function bzSfx(kind, type) {
+            try {
+                if (document.hidden) return;
+                const ctx = fxCtxReady(); if (!ctx) return;
+                const out = fxOut(ctx), P = BEAM_SND[type] || BEAM_SND.normal, t = ctx.currentTime + 0.005;
+                switch (kind) {
+                    case 'warn': fxTone(ctx, out, 'square', 880, 880, t, 0.004, 0.06, 0.11); fxTone(ctx, out, 'square', 660, 660, t + 0.15, 0.004, 0.06, 0.11); fxTone(ctx, out, 'square', 880, 880, t + 0.3, 0.004, 0.06, 0.11); break;
+                    case 'tick': fxTone(ctx, out, 'square', 1200, 1200, t, 0.002, 0.035, 0.05); break;
+                    case 'launch':
+                        fxNoiseLayer(ctx, out, t, 0.4, { type: 'bandpass', q: 1.2, f0: 400, f1: 3400, a: 0.01, peak: 0.2 });
+                        fxTone(ctx, out, P.w === 'square' ? 'sawtooth' : P.w, P.f0 * 1.6, P.f1 * 1.3, t, 0.006, 0.1, 0.4);
+                        if (P.crk) fxCrackle(ctx, out, t, 0.4, P.crk, 0.4, 2200); break;
+                    case 'fall': fxTone(ctx, out, 'sine', 2300, 240, t, 0.01, 0.1, 0.8); fxNoiseLayer(ctx, out, t, 0.75, { type: 'highpass', q: 0.7, f0: 1800, f1: 500, a: 0.25, peak: 0.08 }); break;
+                    case 'boom':
+                        fxTone(ctx, out, 'sine', 140, 38, t, 0.004, 0.34, 0.55); fxNoiseLayer(ctx, out, t, 0.5, { type: 'lowpass', q: 0.8, f0: 2400, f1: 180, a: 0.003, peak: 0.3 });
+                        if (P.crk) fxCrackle(ctx, out, t, 0.5, P.crk, 0.4, 1500); break;
+                    case 'stomp': fxTone(ctx, out, 'sine', 90, 30, t, 0.004, 0.4, 0.6); fxNoiseLayer(ctx, out, t, 0.4, { type: 'lowpass', q: 0.8, f0: 900, f1: 120, a: 0.003, peak: 0.28 }); break;
+                    case 'shock': fxTone(ctx, out, 'sine', 70, 28, t, 0.01, 0.4, 1.1); fxNoiseLayer(ctx, out, t, 1.2, { type: 'bandpass', q: 0.8, f0: 140, f1: 2000, a: 0.06, peak: 0.26 }); fxTone(ctx, out, 'sawtooth', 110, 220, t, 0.05, 0.08, 1.1); break;
+                    case 'enrage':
+                        fxTone(ctx, out, 'sawtooth', 250, 46, t, 0.02, 0.24, 1.2); fxTone(ctx, out, 'sawtooth', 262, 50, t, 0.02, 0.18, 1.2); fxTone(ctx, out, 'sine', 60, 36, t, 0.05, 0.3, 1.3);
+                        fxNoiseLayer(ctx, out, t, 1.1, { type: 'bandpass', q: 1.1, f0: 1100, f1: 200, a: 0.02, peak: 0.28 }); [523, 659, 784].forEach((fr, i) => fxTone(ctx, out, 'square', fr, fr, t + 1.0 + i * 0.09, 0.004, 0.05, 0.16)); break;
+                    case 'tired': fxTone(ctx, out, 'triangle', 540, 130, t, 0.01, 0.14, 0.9); fxTone(ctx, out, 'sine', 300, 90, t + 0.5, 0.01, 0.1, 0.7); break;
+                    case 'rest': [392, 523, 659].forEach((fr, i) => fxTone(ctx, out, 'triangle', fr, fr, t + i * 0.07, 0.004, 0.07, 0.18)); break;
+                }
+            } catch (e) { /* sin audio */ }
         }
-
         function bossBeamStrike(b, t, p) {
             const col = b.col;
             try { spawnBurst(p.x, p.y, col[1]); spawnSparks(p.x, p.y, col[0], 12); } catch (e) {}
             for (let i = 0; i < 3; i++) bossBeamParticle(b, p.x + (Math.random() - 0.5) * 30, p.y + (Math.random() - 0.5) * 30, false);
             resolveSingleHit(b.mv, b.c, t, p.x, p.y, b.sound, col[0], col[1], null);
         }
+        function bzCanHit(t) { return matchElapsedMs >= (t._bmHitAt || 0); }
+        function bzMarkHit(t, gap) { t._bmHitAt = matchElapsedMs + (gap || 450); }
 
-        function bossBeamHits(b, ang) {
-            const c = b.c, ctr = { x: b.cx, y: b.cy };
-            const dx = Math.cos(ang), dy = Math.sin(ang), half = BEAM_WIDTH / 2;
-            const list = combatants.slice();
-            for (let i = 0; i < list.length; i++) {
-                const t = list[i];
-                if (t === c || t.fainted || t.retreated || t.isBoss || !t.wrapper || t.isSpawning || t.isEvolving || t.isUnderground || t.isAirborne || t.isPhantom) continue;
-                if (matchElapsedMs < (t._bmHitAt || 0)) continue;
-                const p = fxSpriteCenter(t);
-                const rx = p.x - ctr.x, ry = p.y - ctr.y;
-                if (rx * dx + ry * dy < 0) continue;                       // el rayo solo sale hacia delante
-                const perp = Math.abs(rx * dy - ry * dx);
-                if (perp > half + Math.min(p.rx, p.ry) * 0.85) continue;   // no lo toca
-                t._bmHitAt = matchElapsedMs + BEAM_HIT_GAP_MS;
-                bossBeamStrike(b, t, p);
-                if (gameOver || c.fainted || bossBeam !== b) return;
+        // ---------- planificación de los rayos: línea recta de borde a borde ----------
+        function bzBeamPlan(c, aimed, pool) {
+            const W = bounds.width, H = bounds.height; let P;
+            const tg = pool && pool.length ? pool : bzTargets(c);
+            if (aimed && tg.length) { const t = tg[Math.floor(Math.random() * tg.length)], p = fxSpriteCenter(t); P = { x: p.x, y: p.y }; }
+            else P = { x: W * (0.12 + 0.76 * Math.random()), y: H * (0.12 + 0.76 * Math.random()) };
+            const ch = [0, Math.PI / 2, Math.PI / 4, -Math.PI / 4, Math.PI / 6, -Math.PI / 6, Math.PI / 3, -Math.PI / 3];
+            const th = ch[Math.floor(Math.random() * ch.length)] + (Math.random() - 0.5) * 0.18;
+            let dx = Math.cos(th), dy = Math.sin(th), smin = -1e9, smax = 1e9;
+            if (Math.abs(dx) > 1e-6) { const a = -P.x / dx, b = (W - P.x) / dx; smin = Math.max(smin, Math.min(a, b)); smax = Math.min(smax, Math.max(a, b)); }
+            if (Math.abs(dy) > 1e-6) { const a = -P.y / dy, b = (H - P.y) / dy; smin = Math.max(smin, Math.min(a, b)); smax = Math.min(smax, Math.max(a, b)); }
+            if (!(smax - smin > 80)) return null;
+            const rev = Math.random() < 0.5, s0 = rev ? smax : smin, ox = P.x + Math.cos(th) * s0, oy = P.y + Math.sin(th) * s0;
+            if (rev) { dx = -dx; dy = -dy; }
+            return { x0: ox, y0: oy, dx, dy, total: smax - smin, ang: Math.atan2(dy, dx) };
+        }
+        function bzPlace(el, x, y, ang) { el.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + (y - BZ_WIDTH / 2).toFixed(1) + 'px,0) rotate(' + ang.toFixed(4) + 'rad)'; }
+
+        // ---------- inicio de un ataque ----------
+        function bzStart(c) {
+            const en = bossEnraged, tg = bzTargets(c); if (!tg.length) { bossBeamNextAt = matchElapsedMs + 2500; return; }
+            const ctx = bzCtx(c);
+            const kinds = ['barrage', 'meteors', 'shock'], w = [0.46, 0.3, 0.24];
+            let kind = ''; for (let tries = 0; tries < 6 && (!kind || kind === bossLastKind); tries++) { let r = Math.random(), i = 0; while (i < 2 && r > w[i]) { r -= w[i]; i++; } kind = kinds[i]; }
+            bossLastKind = kind;
+            const items = []; let name = '';
+            if (kind === 'barrage') {
+                name = '¡TORMENTA DE RAYOS!';
+                const n = 4 + (en ? 3 : 0) + (tg.length >= 6 ? 1 : 0), gap = BZ_BEAM_GAP * (en ? 0.75 : 1), pool = tg.slice().sort(() => Math.random() - 0.5);
+                for (let i = 0; i < n; i++) { const plan = bzBeamPlan(c, Math.random() < 0.72, pool.length ? [pool[i % pool.length]] : null); if (plan) items.push({ k: 'beam', delay: i * gap + Math.random() * 140, t: 0, phase: 'wait', plan, hit: new Set() }); }
+            } else if (kind === 'meteors') {
+                name = '¡LLUVIA DE METEOROS!';
+                const n = 5 + (en ? 3 : 0), pool = tg.slice().sort(() => Math.random() - 0.5);
+                for (let i = 0; i < n; i++) {
+                    let x, y; if (Math.random() < 0.7 && pool.length) { const p = fxSpriteCenter(pool[i % pool.length]); x = p.x; y = p.y; } else { x = bounds.width * (0.1 + 0.8 * Math.random()); y = bounds.height * (0.12 + 0.76 * Math.random()); }
+                    items.push({ k: 'meteor', delay: i * (en ? 300 : 380) + Math.random() * 160, t: 0, phase: 'wait', x, y, hit: new Set() });
+                }
+            } else {
+                name = '¡ONDA DE CHOQUE!';
+                items.push({ k: 'shock', delay: 0, t: 0, phase: 'wait', hit: new Set() });
+            }
+            if (!items.length) { bossBeamNextAt = matchElapsedMs + 2500; return; }
+            bossAtk = bossBeam = { kind, items, ctx, t: 0 };
+            bzCall(c, name, en ? '#fca5a5' : '#fde047'); bzSfx('warn', ctx.type);
+            logMessage(`⚠️ ¡${c.name} prepara ${name.replace(/[¡!]/g, '').toLowerCase()}! (tipo ${TYPE_NAME_ES[ctx.type] || ctx.type})`, 'attack');
+            try { triggerCameraShake(3, 420 / gameSpeed); } catch (e) {}
+        }
+        function bzEnd(a) {
+            const c = bossC; bossAtk = bossBeam = null;
+            if (!c || c.fainted) return;
+            const k = bossEnraged ? 0.6 : 1;
+            bossBeamNextAt = matchElapsedMs + (9000 + Math.random() * 5000) * k;
+            if (a.kind === 'shock') bzTired(c, BZ_TIRED_MS);
+            else if (a.kind === 'barrage' && Math.random() < (bossEnraged ? 0.45 : 0.3)) bzTired(c, BZ_TIRED_MS * 0.65);
+            else if (bossEnraged && Math.random() < 0.4) bossBeamNextAt = matchElapsedMs + 900; // furia: ataque encadenado
+        }
+        // ---------- agotamiento ----------
+        function bzTired(c, ms) {
+            if (bossTiredBase) { bossTiredUntil = Math.max(bossTiredUntil, matchElapsedMs + ms); return; }
+            bossTiredBase = { def: c.stats.defense, sd: c.stats.spDefense };
+            c.stats.defense = Math.round(c.stats.defense * BZ_TIRED_DEF); c.stats.spDefense = Math.round(c.stats.spDefense * BZ_TIRED_DEF);
+            bossTiredUntil = matchElapsedMs + ms;
+            c.wrapper.classList.add('boss-tired');
+            const s = document.createElement('div'); s.className = 'boss-tired-fx'; s.innerHTML = '<i>✦</i><i>✧</i><i>✦</i>'; c.wrapper.appendChild(s);
+            bzCall(c, '¡AGOTADO! Defensa baja', '#93c5fd'); bzSfx('tired');
+            logMessage(`😵 ¡${c.name} queda agotado! Su defensa baja unos segundos: ¡es el momento de atacar!`, 'attack');
+        }
+        function bzRested(c) {
+            if (!bossTiredBase) return;
+            c.stats.defense = bossTiredBase.def; c.stats.spDefense = bossTiredBase.sd; bossTiredBase = null;
+            if (c.wrapper) { c.wrapper.classList.remove('boss-tired'); c.wrapper.querySelectorAll('.boss-tired-fx').forEach(e => e.remove()); }
+            bzSfx('rest');
+        }
+        // ---------- furia ----------
+        function bzEnrage(c) {
+            bossEnraged = true;
+            c.wrapper.classList.add('boss-enraged');
+            bzSfx('enrage'); bzCall(c, '¡FURIA!', '#f87171');
+            try { bossBanner(c, '¡' + c.name.toUpperCase() + ' SE ENFURECE!', 'ataques más rápidos y feroces'); } catch (e) {}
+            logMessage(`🔥 ¡${c.name} se enfurece! Sus ataques serán más rápidos y feroces.`, 'evolve');
+            try { const p = fxSpriteCenter(c); spawnBurst(p.x, p.y, '#ef4444'); spawnSparks(p.x, p.y, '#fca5a5', 30); triggerCameraShake(10, 700 / gameSpeed); playAttackCry(c); } catch (e) {}
+            const r = document.createElement('div'); r.className = 'bz-rage'; const p = fxSpriteCenter(c); r.style.left = Math.round(p.x) + 'px'; r.style.top = Math.round(p.y) + 'px';
+            bzAdd(r); bzDrop(r, 1300);
+            bossBeamNextAt = Math.min(bossBeamNextAt || 0, matchElapsedMs + 2500);
+        }
+        // ---------- limpieza ----------
+        function bzCleanup() {
+            const c = bossC;
+            bossFx.slice().forEach(e => { try { e.remove(); } catch (x) {} }); bossFx = [];
+            bossAtk = bossBeam = null;
+            if (bossTiredBase && c && c.stats) { c.stats.defense = bossTiredBase.def; c.stats.spDefense = bossTiredBase.sd; }
+            bossTiredBase = null; bossTiredUntil = 0;
+            if (c && c.wrapper) { c.wrapper.classList.remove('boss-tired', 'boss-enraged'); c.wrapper.querySelectorAll('.boss-tired-fx').forEach(e => e.remove()); }
+            bossEnraged = false;
+        }
+        function bossBeamStop() { bzCleanup(); }
+
+        // ---------- avance de cada elemento del ataque ----------
+        function bzStepBeam(a, it, dt, ts) {
+            const ctx = a.ctx, c = ctx.c, P = it.plan, tele = BZ_TELE_MS, fly = BZ_FLY_MS / (bossEnraged ? 1.25 : 1);
+            if (it.phase === 'done') return;
+            it.t += dt;
+            if (it.t < it.delay) return;
+            const t = it.t - it.delay;
+            if (it.phase === 'wait') {
+                it.phase = 'tele';
+                const e = document.createElement('div'); e.className = 'bz-tele bm-' + ctx.type; e.style.width = P.total + 'px'; e.style.setProperty('--bzw', BZ_WIDTH + 'px'); e.style.setProperty('--tele-ms', Math.round(tele / gameSpeed) + 'ms');
+                e.innerHTML = '<i class="f"></i><i class="l"></i><i class="o"></i><i class="x"></i>'; bzPlace(e, P.x0, P.y0, P.ang); it.tele = bzAdd(e); bzSfx('tick');
+            }
+            if (it.phase === 'tele') {
+                if (t < tele) return;
+                it.phase = 'fly'; if (it.tele) { it.tele.classList.add('go'); bzDrop(it.tele, 220); it.tele = null; }
+                const e = document.createElement('div'); e.className = 'bm bm-' + ctx.type + ' bm-firing bz-seg'; e.style.setProperty('--bw', BZ_WIDTH + 'px'); e.style.setProperty('--bm-k', String(1 / gameSpeed)); e.style.width = '0px';
+                e.innerHTML = '<div class="bm-glow"></div><div class="bm-body"><div class="bm-tex"></div></div><div class="bm-core"></div><i class="bz-head"></i>'; it.seg = bzAdd(e);
+                bzSfx('launch', ctx.type);
+                try { spawnBurst(P.x0, P.y0, ctx.col[1]); spawnSparks(P.x0, P.y0, ctx.col[0], 10); } catch (x) {}
+            }
+            if (it.phase === 'fly') {
+                const total = P.total, s = ((t - tele) / fly) * (total + BZ_LEN), tail = Math.max(0, s - BZ_LEN), head = Math.min(s, total);
+                if (head - tail <= 0 && s > total) { it.phase = 'done'; if (it.seg) { bzDrop(it.seg, 0); it.seg = null; } return; }
+                it.seg.style.width = Math.max(0, head - tail).toFixed(1) + 'px';
+                bzPlace(it.seg, P.x0 + P.dx * tail, P.y0 + P.dy * tail, P.ang);
+                const half = BZ_WIDTH / 2;
+                // en pasos cortos para no "saltarse" a nadie con la velocidad de juego alta
+                const list = bzTargets(c);
+                for (let i = 0; i < list.length; i++) {
+                    const tt = list[i]; if (it.hit.has(tt) || !bzCanHit(tt)) continue;
+                    const p = fxSpriteCenter(tt), rx = p.x - P.x0, ry = p.y - P.y0, along = rx * P.dx + ry * P.dy, rad = Math.min(p.rx, p.ry) * 0.85;
+                    if (along < tail - rad || along > head + rad) continue;
+                    if (Math.abs(rx * P.dy - ry * P.dx) > half + rad) continue;
+                    it.hit.add(tt); bzMarkHit(tt); bossBeamStrike(ctx, tt, p);
+                    if (gameOver || c.fainted || bossAtk !== a) return;
+                }
+                if (ts >= (it._pt || 0) && !document.hidden) { it._pt = ts + 45; ctx.cx = P.x0 + P.dx * head; ctx.cy = P.y0 + P.dy * head; bossBeamParticle(ctx, ctx.cx + (Math.random() - 0.5) * 30, ctx.cy + (Math.random() - 0.5) * 30, false); }
             }
         }
-
+        function bzStepMeteor(a, it, dt) {
+            const ctx = a.ctx, c = ctx.c;
+            if (it.phase === 'done') return;
+            it.t += dt; if (it.t < it.delay) return;
+            const t = it.t - it.delay;
+            if (it.phase === 'wait') {
+                it.phase = 'tele';
+                const e = document.createElement('div'); e.className = 'bz-spot bm-' + ctx.type; e.style.left = Math.round(it.x) + 'px'; e.style.top = Math.round(it.y) + 'px'; e.style.setProperty('--r', BZ_SPOT_R * 2 + 'px'); e.style.setProperty('--tele-ms', Math.round(BZ_METEOR_TELE_MS / gameSpeed) + 'ms');
+                e.innerHTML = '<i class="a"></i><i class="b"></i><i class="c"></i>'; it.spot = bzAdd(e); bzSfx('tick');
+            }
+            if (it.phase === 'tele' && t >= BZ_METEOR_TELE_MS - BZ_METEOR_FALL_MS) {
+                it.phase = 'fall';
+                const e = document.createElement('div'); e.className = 'bz-meteor bm-' + ctx.type; e.style.left = Math.round(it.x) + 'px'; e.style.top = Math.round(it.y) + 'px'; e.style.setProperty('--fall-ms', Math.round(BZ_METEOR_FALL_MS / gameSpeed) + 'ms');
+                e.innerHTML = '<i></i>'; it.rock = bzAdd(e); bzSfx('fall', ctx.type);
+            }
+            if (it.phase === 'fall' && t >= BZ_METEOR_TELE_MS) {
+                it.phase = 'done';
+                if (it.rock) bzDrop(it.rock, 0); if (it.spot) bzDrop(it.spot, 0);
+                const b = document.createElement('div'); b.className = 'bz-boom bm-' + ctx.type; b.style.left = Math.round(it.x) + 'px'; b.style.top = Math.round(it.y) + 'px'; b.style.setProperty('--r', BZ_SPOT_R * 2 + 'px'); b.style.setProperty('--boom-ms', Math.round(600 / gameSpeed) + 'ms');
+                b.innerHTML = '<i class="a"></i><i class="b"></i>'; bzAdd(b); bzDrop(b, 700 / gameSpeed + 80);
+                bzSfx('boom', ctx.type);
+                try { spawnBurst(it.x, it.y, ctx.col[1]); spawnSparks(it.x, it.y, ctx.col[0], 18); triggerCameraShake(4, 300 / gameSpeed); } catch (e) {}
+                for (let k = 0; k < 6; k++) bossBeamParticle(ctx, it.x + (Math.random() - 0.5) * BZ_SPOT_R * 1.6, it.y + (Math.random() - 0.5) * BZ_SPOT_R * 1.6, false);
+                const mv = Object.assign({}, ctx.mv, { name: 'Meteoro', power: BZ_METEOR_POWER });
+                const list = bzTargets(c);
+                for (let i = 0; i < list.length; i++) {
+                    const tt = list[i], p = fxSpriteCenter(tt);
+                    if (Math.hypot(p.x - it.x, p.y - it.y) > BZ_SPOT_R + Math.min(p.rx, p.ry) * 0.6 || !bzCanHit(tt)) continue;
+                    bzMarkHit(tt, 350);
+                    try { spawnBurst(p.x, p.y, ctx.col[1]); } catch (e) {}
+                    resolveSingleHit(mv, c, tt, p.x, p.y, ctx.sound, ctx.col[0], ctx.col[1], null);
+                    if (gameOver || c.fainted || bossAtk !== a) return;
+                }
+            }
+        }
+        function bzStepShock(a, it, dt, ts) {
+            const ctx = a.ctx, c = ctx.c;
+            if (it.phase === 'done') return;
+            it.t += dt;
+            const p0 = fxSpriteCenter(c);
+            if (it.phase === 'wait') {
+                it.phase = 'tele';
+                const e = document.createElement('div'); e.className = 'bz-shock-tele bm-' + ctx.type; e.style.left = Math.round(p0.x) + 'px'; e.style.top = Math.round(p0.y + (c.bossH || 100) / 2 - 10) + 'px'; e.style.setProperty('--tele-ms', Math.round(BZ_SHOCK_TELE_MS / gameSpeed) + 'ms');
+                e.innerHTML = '<i></i><i></i><i></i>'; it.tele = bzAdd(e);
+                it.stomp = 0;
+            }
+            if (it.phase === 'tele') {
+                if (!it.stomp && it.t >= BZ_SHOCK_TELE_MS - 120) { it.stomp = 1; try { triggerCameraShake(6, 300 / gameSpeed); } catch (e) {} bzSfx('stomp'); }
+                if (it.t < BZ_SHOCK_TELE_MS) return;
+                it.phase = 'fly'; if (it.tele) { bzDrop(it.tele, 0); it.tele = null; }
+                it.cx = p0.x; it.cy = p0.y + (c.bossH || 100) / 2 - 10;
+                const e = document.createElement('div'); e.className = 'bz-shock bm-' + ctx.type; e.style.left = Math.round(it.cx) + 'px'; e.style.top = Math.round(it.cy) + 'px'; it.ring = bzAdd(e);
+                bzSfx('shock', ctx.type);
+                try { spawnBurst(it.cx, it.cy, ctx.col[1]); spawnSparks(it.cx, it.cy, ctx.col[0], 26); triggerCameraShake(9, 600 / gameSpeed); } catch (x) {}
+                it.t0 = it.t;
+            }
+            if (it.phase === 'fly') {
+                const R0 = 50, Rmax = Math.hypot(bounds.width, bounds.height) * 0.95, k = Math.min(1, (it.t - it.t0) / BZ_SHOCK_MS), r = R0 + (Rmax - R0) * (1 - Math.pow(1 - k, 1.6));
+                it.ring.style.width = it.ring.style.height = (r * 2).toFixed(1) + 'px'; it.ring.style.opacity = String(Math.max(0, 1 - k * 0.85));
+                const mv = Object.assign({}, ctx.mv, { name: 'Onda de Choque', power: BZ_SHOCK_POWER });
+                const list = bzTargets(c);
+                for (let i = 0; i < list.length; i++) {
+                    const tt = list[i]; if (it.hit.has(tt) || !bzCanHit(tt)) continue;
+                    const p = fxSpriteCenter(tt), d = Math.hypot(p.x - it.cx, p.y - it.cy);
+                    if (Math.abs(d - r) > BZ_SHOCK_BAND + Math.min(p.rx, p.ry) * 0.6) continue;
+                    it.hit.add(tt); bzMarkHit(tt, 350);
+                    try { spawnBurst(p.x, p.y, ctx.col[1]); spawnSparks(p.x, p.y, ctx.col[0], 8); } catch (e) {}
+                    resolveSingleHit(mv, c, tt, p.x, p.y, ctx.sound, ctx.col[0], ctx.col[1], null);
+                    if (gameOver || c.fainted || bossAtk !== a) return;
+                }
+                if (k >= 1) { it.phase = 'done'; bzDrop(it.ring, 0); it.ring = null; }
+            }
+        }
         function bossBeamTick(dt, ts) {
             const c = bossC;
-            if (!c || c.fainted || gameOver) { if (bossBeam) bossBeamStop(); return; }
+            if (!c || c.fainted || gameOver) { if (bossAtk || bossFx.length || bossTiredBase) bzCleanup(); return; }
             if (!c.wrapper.classList.contains('boss-form')) return;
-            if (!bossBeam) {
-                if (matchElapsedMs >= bossBeamNextAt && !c.isEvolving && !document.hidden) bossBeamStart(c);
-                return;
-            }
-            const b = bossBeam;
-            if (b.k !== gameSpeed) { b.k = gameSpeed; b.els.forEach(e => e.style.setProperty('--bm-k', String(1 / gameSpeed))); }
-            if (b.phase === 'charge') {
-                b.t += dt;
-                bossBeamPlace(b, b.angle);
-                // Energía que converge hacia el jefe
-                if (ts >= bossBeamPartAt && !document.hidden) {
-                    bossBeamPartAt = ts + 55;
-                    for (let i = 0; i < 3; i++) { const a = Math.random() * Math.PI * 2, r = (c.bossW || 150) * (0.6 + Math.random() * 0.7); bossBeamParticle(b, b.cx + Math.cos(a) * r, b.cy + Math.sin(a) * r, true); }
-                }
-                if (b.t >= BEAM_CHARGE_MS) {
-                    b.phase = 'fire'; b.t = 0;
-                    b.els.forEach(e => { e.classList.remove('bm-charging'); e.classList.add('bm-firing'); });
-                    logMessage(`💥 ¡${c.name} dispara sus Rayos Cargados y barre toda la arena!`, 'attack');
-                    try { playAttackCry(c); triggerCameraShake(8, 600 / gameSpeed); spawnBurst(b.cx, b.cy, b.col[1]); spawnSparks(b.cx, b.cy, b.col[0], 24); } catch (e) {}
-                    bossBeamParticlesAll(b, b.angle, true);
-                    if (b.snd) b.snd.stop();
-                    bossBeamImpactSfx(b.type);
-                    b.snd = bossBeamSfx(b.type, 'fire', BEAM_SWEEP_MS / gameSpeed + 0.4);
-                }
-                return;
-            }
-            // Disparo: gira 360°. Se avanza en pasos cortos para que no se "salte" a nadie con la velocidad de juego alta.
-            let step = Math.min(Math.PI * 2 - b.swept, (dt / BEAM_SWEEP_MS) * Math.PI * 2);
-            const n = Math.max(1, Math.ceil(step / 0.035));
-            const sub = step / n;
-            for (let i = 0; i < n && bossBeam === b; i++) {
-                b.angle += b.dir * sub; b.swept += sub;
-                bossBeamPlace(b, b.angle);
-                for (let k = 0; k < BEAM_ARMS && bossBeam === b; k++) bossBeamHits(b, b.angle + k * Math.PI * 2 / BEAM_ARMS);
-            }
-            if (bossBeam !== b) return;
-            if (ts >= bossBeamPartAt && !document.hidden) { bossBeamPartAt = ts + 50; bossBeamParticlesAll(b, b.angle, false); }
-            if (b.swept >= Math.PI * 2 - 1e-4) {
-                bossBeamStop();
-                bossBeamNextAt = matchElapsedMs + BEAM_COOLDOWN_MIN + Math.random() * (BEAM_COOLDOWN_MAX - BEAM_COOLDOWN_MIN);
-            }
+            if (!bossEnraged && c.hp > 0 && c.hp <= c.maxHp * BZ_ENRAGE_HP && !c.isEvolving) bzEnrage(c);
+            if (bossTiredBase && matchElapsedMs >= bossTiredUntil) bzRested(c);
+            if (!bossAtk) { if (matchElapsedMs >= bossBeamNextAt && !c.isEvolving && !document.hidden) bzStart(c); return; }
+            const a = bossAtk; a.t += dt;
+            for (let i = 0; i < a.items.length && bossAtk === a; i++) { const it = a.items[i]; if (it.k === 'beam') bzStepBeam(a, it, dt, ts); else if (it.k === 'meteor') bzStepMeteor(a, it, dt); else bzStepShock(a, it, dt, ts); }
+            if (bossAtk === a && a.items.every(it => it.phase === 'done')) bzEnd(a);
         }
-
 
         // =====================================================================================
         //  CAPTURA EN VIVO
@@ -25359,12 +25578,12 @@ const SaveSys = (() => {
 
 <style id="sh-fn-css">
 /* ===== Tienda estilo Fortnite: fondo azul, tarjetas por rareza, destacados y precio con moneda ===== */
-#shop-screen{--sh:#0b2a7a;background:radial-gradient(90% 60% at 80% 0%,rgba(90,170,255,.55),transparent 60%),radial-gradient(70% 50% at 0% 100%,rgba(30,90,230,.55),transparent 65%),linear-gradient(160deg,#0a2166 0%,#0f3fae 48%,#081a52 100%);color:#fff}
+#shop-screen{--sh:#000;background:radial-gradient(90% 60% at 80% 0%,rgba(255,255,255,.07),transparent 60%),radial-gradient(70% 50% at 0% 100%,rgba(255,255,255,.05),transparent 65%),linear-gradient(160deg,#050505 0%,#000 50%,#060606 100%);color:#fff}
 #shop-screen::before{display:block;background:repeating-linear-gradient(120deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px);opacity:1}
 #shop-screen .sh-wrap{gap:4px}
-#shop-screen .sh-back{background:rgba(5,14,48,.55);border:2px solid rgba(255,255,255,.35);border-radius:10px;transform:skewX(-8deg)}
+#shop-screen .sh-back{background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.35);border-radius:10px;transform:skewX(-8deg)}
 #shop-screen .sh-back svg{transform:skewX(8deg)}
-#shop-screen .sh-money{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(5,14,48,.62);border:2px solid rgba(255,255,255,.3);font:900 .78rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em}
+#shop-screen .sh-money{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.62);border:2px solid rgba(255,255,255,.3);font:900 .78rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em}
 #shop-screen .sh-money span{display:none}
 #shop-screen .sh-money i{display:grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;font-style:normal;font-weight:900;font-size:.8rem;color:#5a3500;background:radial-gradient(circle at 35% 30%,#fff1a8,#ffc928 55%,#c98a00);box-shadow:0 0 8px rgba(255,208,60,.7)}
 #shop-screen .sh-money b{font-weight:900;font-size:.9rem}
@@ -25373,7 +25592,7 @@ const SaveSys = (() => {
 .fn-head span{font:800 .55rem/1 'PA Chakra S',system-ui,sans-serif;letter-spacing:.22em;color:#bcd6ff}
 #shop-grid.sh-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:min-content;gap:10px;padding:8px 14px 16px;align-content:start}
 .fn-sec{grid-column:1/-1;margin-top:4px;display:flex;align-items:center;gap:10px}
-.fn-sec b{font:900 italic .72rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(5,14,48,.6);padding:6px 12px;border-left:4px solid #ffe600;transform:skewX(-8deg)}
+.fn-sec b{font:900 italic .72rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.6);padding:6px 12px;border-left:4px solid #ffe600;transform:skewX(-8deg)}
 .fn-sec::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.4),transparent)}
 #shop-screen .fn-card.sh-slot{all:unset;box-sizing:border-box;position:relative;grid-column:span 2;aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;cursor:pointer;border-radius:6px;background:linear-gradient(165deg,var(--rc) -40%,var(--rd) 95%);border:2px solid rgba(255,255,255,.55);box-shadow:0 8px 18px rgba(0,10,60,.55);-webkit-tap-highlight-color:transparent;transition:transform .15s,box-shadow .15s,filter .15s;animation:fnIn .45s cubic-bezier(.2,.9,.3,1) both;animation-delay:var(--d,0ms)}
 #shop-screen .fn-card.big{grid-column:span 3;aspect-ratio:4/5}
@@ -25385,8 +25604,8 @@ const SaveSys = (() => {
 #shop-screen .fn-card .fn-ico img{width:58%;height:auto;max-height:100%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 6px 5px rgba(0,0,0,.5));transition:transform .2s}
 #shop-screen .fn-card.big .fn-ico img{width:52%}
 #shop-screen .fn-card .fn-ico svg{width:46%;fill:#fff;filter:drop-shadow(0 4px 4px rgba(0,0,0,.5))}
-#shop-screen .fn-card .fn-own{position:absolute;right:6px;top:6px;z-index:2;font:900 .55rem/1 'PA Chakra S',system-ui,sans-serif;padding:3px 7px;border-radius:999px;background:rgba(5,14,48,.82);color:#fff;border:1px solid rgba(255,255,255,.4)}
-#shop-screen .fn-card .fn-foot{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px 7px;background:linear-gradient(180deg,rgba(4,12,46,.78),rgba(2,8,34,.94));border-top:3px solid var(--rc)}
+#shop-screen .fn-card .fn-own{position:absolute;right:6px;top:6px;z-index:2;font:900 .55rem/1 'PA Chakra S',system-ui,sans-serif;padding:3px 7px;border-radius:999px;background:rgba(0,0,0,.82);color:#fff;border:1px solid rgba(255,255,255,.4)}
+#shop-screen .fn-card .fn-foot{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px 7px;background:linear-gradient(180deg,rgba(10,10,10,.78),rgba(0,0,0,.94));border-top:3px solid var(--rc)}
 #shop-screen .fn-card .fn-nm{font:900 italic .6rem/1.1 'PA Chakra',system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 0 #000}
 #shop-screen .fn-card.big .fn-nm{font-size:.74rem}
 #shop-screen .fn-card .fn-pr{display:flex;align-items:center;gap:5px;font:900 .66rem/1 'PA Chakra',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#fff}
@@ -25401,19 +25620,19 @@ const SaveSys = (() => {
 @media (min-width:700px){#shop-screen .fn-card.big{aspect-ratio:16/10}#shop-screen .fn-card.sh-slot{aspect-ratio:1/1.05}}
 @media (prefers-reduced-motion:reduce){#shop-screen .fn-card,#shop-screen .fn-card::after{animation:none}}
 /* ventana de compra */
-#shop-pop.sh-pop{background:rgba(2,8,34,.78)}
-#shop-pop .sh-card{background:linear-gradient(165deg,var(--rc,#5cc4ff) -60%,#0a1b5a 55%,#071340);border:2px solid rgba(255,255,255,.55);border-radius:8px;box-shadow:0 16px 40px rgba(0,10,60,.7);color:#fff}
+#shop-pop.sh-pop{background:rgba(0,0,0,.82)}
+#shop-pop .sh-card{background:linear-gradient(165deg,var(--rc,#5cc4ff) -60%,#111 55%,#050505);border:2px solid rgba(255,255,255,.55);border-radius:8px;box-shadow:0 16px 40px rgba(0,0,0,.8);color:#fff}
 #shop-pop .sh-card .sh-dico{border-radius:6px;background:linear-gradient(165deg,var(--rc,#5cc4ff),var(--rd,#1b55c4));width:64px;height:64px;border:2px solid rgba(255,255,255,.6)}
 #shop-pop .sh-card .sh-dico img{width:78%;height:78%}
 #shop-pop .sh-dtxt b{font:900 italic .8rem/1.1 'PA Chakra',system-ui,sans-serif;text-transform:uppercase;letter-spacing:.04em}
-#shop-pop .sh-dtxt p{color:#cfe0ff}
+#shop-pop .sh-dtxt p{color:#d4d4d4}
 #shop-pop .sh-own{color:#bcd6ff}
-#shop-pop .sh-total{background:rgba(5,14,48,.7);border:1px solid rgba(255,255,255,.25);color:#cfe0ff}
+#shop-pop .sh-total{background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.25);color:#d4d4d4}
 #shop-pop .sh-total b{color:#ffe14a}
 #shop-pop .sh-pill.main{background:#ffe600;color:#10205a;font-weight:900;font-style:italic;letter-spacing:.1em;border-radius:6px;transform:skewX(-8deg);box-shadow:0 4px 0 #b59a00}
 #shop-pop .sh-pill.main[disabled]{opacity:.45}
 #shop-pop .sh-pill:not(.main){background:rgba(255,255,255,.12);border-radius:6px;transform:skewX(-8deg)}
-#shop-screen .sh-oak{background:rgba(5,14,48,.55);border-color:rgba(255,255,255,.3)}
+#shop-screen .sh-oak{background:rgba(0,0,0,.55);border-color:rgba(255,255,255,.3)}
 </style>
 <style id="mm-alive-css">
 #mm-alive { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
@@ -30417,10 +30636,10 @@ html.pq3 .pokemon-wrapper::before{filter:none !important}
 .tc-name span + em{margin-left:auto}
 .tc-mid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:2.2cqw;min-height:0;align-items:center}
 .tc .pf-grid.tc-grid{padding:0;gap:1.5cqw;grid-template-columns:repeat(3,minmax(0,1fr));align-content:center;position:static}
-.tc .pf-slot{padding-top:62%;border-radius:.8cqw;background:#fff;border:.6cqw solid #4a525c;box-shadow:inset 0 0 0 .3cqw #dfe7ec;overflow:hidden}
-.tc .pf-slot.on{border-style:solid;border-color:#4a525c;background:#fff}
+.tc .pf-slot{padding-top:62%;border-radius:.8cqw;background:transparent;border:.5cqw solid rgba(255,255,255,.14);box-shadow:none;overflow:hidden}
+.tc .pf-slot.on{border-style:solid;border-color:rgba(255,255,255,.14);background:transparent}
 .tc .pf-slot span{display:none}
-.tc .pf-slot .plus{color:#9aa7b2;font-size:5cqw}
+.tc .pf-slot .plus{color:rgba(255,255,255,.35);font-size:5cqw}
 .tc .pf-slot u{font-size:3cqw;left:.6cqw;top:.2cqw}
 .tc-av{all:unset;box-sizing:border-box;position:relative;display:block;height:100%;min-height:0;overflow:hidden;border-radius:1.6cqw;-webkit-tap-highlight-color:transparent}
 .tc-av.ro{cursor:default}

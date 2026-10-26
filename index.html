@@ -3018,6 +3018,31 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #countdown-overlay.cdn .cd-flash.run { animation: cdFlash .5s ease-out; }
         @media (max-width:420px) { .cn-num { font-size: 6.4rem; } .cn-num.go { font-size: 4.2rem; } .cn-stage { width: 190px; height: 190px; margin: -95px 0 0 -95px; } }
         @media (prefers-reduced-motion: reduce) { .cn-wave, .cn-glow, .cn-spark, .cn-streak { display: none; } }
+
+        /* ===== cuenta atrás v3: número en dos mitades que se ensamblan (sin círculo) ===== */
+        .cn-stage { width: 260px; height: 170px; margin: -85px 0 0 -130px; }
+        .cn-num { color: transparent; text-shadow: none; padding: 0 .06em 0 .02em; transform: none; }
+        .cn-num::before, .cn-num::after { content: attr(data-t); position: absolute; left: 0; top: 0; width: 100%; text-align: center; padding: inherit; box-sizing: border-box; color: #fff; will-change: transform, opacity;
+            text-shadow: 0 0 22px rgba(var(--glow),.8), 0 4px 0 rgba(0,0,0,.35); -webkit-text-stroke: 1.5px rgba(var(--glow),.9); }
+        .cn-num::before { clip-path: inset(0 0 48% 0); } .cn-num::after { clip-path: inset(52% 0 0 0); }
+        .cn-stage.tick .cn-num { animation: none; }
+        .cn-stage.tick .cn-num::before { animation: cnTop .85s cubic-bezier(.2,.9,.25,1) forwards; }
+        .cn-stage.tick .cn-num::after { animation: cnBot .85s cubic-bezier(.2,.9,.25,1) forwards; }
+        @keyframes cnTop { 0% { opacity: 0; transform: translateX(-90px); filter: blur(8px); } 24% { opacity: 1; transform: translateX(0); filter: blur(0); } 74% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateY(-34px); filter: blur(3px); } }
+        @keyframes cnBot { 0% { opacity: 0; transform: translateX(90px); filter: blur(8px); } 24% { opacity: 1; transform: translateX(0); filter: blur(0); } 74% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateY(34px); filter: blur(3px); } }
+        .cn-stage.tick .cn-num.go::before { animation: cnGoTop .9s cubic-bezier(.15,1.2,.3,1) forwards; }
+        .cn-stage.tick .cn-num.go::after { animation: cnGoBot .9s cubic-bezier(.15,1.2,.3,1) forwards; }
+        @keyframes cnGoTop { 0% { opacity: 0; transform: translateY(-80px) scale(1.5); filter: blur(8px); } 26% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 100% { opacity: 1; transform: scale(1.04); } }
+        @keyframes cnGoBot { 0% { opacity: 0; transform: translateY(80px) scale(1.5); filter: blur(8px); } 26% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 100% { opacity: 1; transform: scale(1.04); } }
+        .cn-split { position: absolute; left: 50%; top: 50%; width: 0; height: 2px; margin: -1px 0 0 0; background: #fff; box-shadow: 0 0 14px 2px rgba(var(--glow),.9); opacity: 0; translate: -50% 0; }
+        .cn-stage.tick .cn-split { animation: cnSplit .55s ease-out .16s forwards; }
+        @keyframes cnSplit { 0% { opacity: 1; width: 0; } 40% { opacity: 1; width: 230px; } 100% { opacity: 0; width: 260px; } }
+        .cn-timer { position: absolute; left: 50%; bottom: 4px; width: 90px; height: 3px; margin-left: -45px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+        .cn-timer i { display: block; height: 100%; width: 100%; background: rgb(var(--glow)); box-shadow: 0 0 8px rgba(var(--glow),.9); transform-origin: 0 50%; transform: scaleX(1); }
+        .cn-stage.tick .cn-timer i { animation: cnTimer .8s linear forwards; }
+        .cn-stage.go .cn-timer { opacity: 0; }
+        @keyframes cnTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+        @media (max-width:420px) { .cn-stage { width: 220px; height: 150px; margin: -75px 0 0 -110px; } }
         @keyframes cdFadeIn { from { opacity:0; } to { opacity:1; } }
         @keyframes cdFadeOut { to { opacity:0; transform:scale(1.06); } }
         @keyframes cdSpin { to { transform:rotate(360deg); } }
@@ -12936,10 +12961,16 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // Si la pantalla cambia de tamaño u orientación, recalculamos el campo y
         // reubicamos a quien haya quedado fuera de los nuevos límites.
         function onViewResize() {
+            const ow = bounds.width, oh = bounds.height;
             updateBounds();
+            // Si el campo cambia de tamaño (pantalla completa, redimensionar la ventana en PC...), el mundo se reescala: los pokémon
+            // conservan su posición RELATIVA (si no, los que salieron en círculo al centro quedarían apiñados en una esquina).
+            const kx = ow > 0 ? bounds.width / ow : 1, ky = oh > 0 ? bounds.height / oh : 1;
+            const rescale = Math.abs(kx - 1) > 0.002 || Math.abs(ky - 1) > 0.002;
             combatants.forEach(c => {
-                c.x = Math.min(c.x, bounds.width - bounds.size);
-                c.y = Math.min(c.y, bounds.height - bounds.size);
+                if (rescale && !c.duel) { c.x *= kx; c.y *= ky; if (c.wpX != null) { c.wpX *= kx; c.wpY *= ky; } }
+                c.x = Math.max(0, Math.min(c.x, bounds.width - bounds.size));
+                c.y = Math.max(0, Math.min(c.y, bounds.height - bounds.size));
             });
         }
         window.addEventListener('resize', onViewResize);
@@ -16139,6 +16170,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const secs = Math.floor(matchElapsedMs / 1000);
             let money = AE_MONEY_BASE + Math.round(secs / 60 * AE_MONEY_PER_MIN) + (w.arenaKOs || 0) * AE_MONEY_PER_KO;
             if (raidWin) money *= AE_RAID_MULT;
+            money *= 1.5; // recompensa de dinero x1.5
             money = Math.max(10, Math.round(money / 10) * 10);
             let item = aeRollItem();
             const multiOther = !!multiPlan && w.owner !== multiPlan.me; // multijugador: solo el equipo ganador cobra (los demás lo reciben desde la sala)
@@ -25030,10 +25062,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             ov.className = 'cdn';
             ov.innerHTML = '<div class="cn-bar t"></div><div class="cn-bar b"></div><div class="cd-vig"></div><div class="cd-flash"></div><div class="cn-streak"></div>' +
                 '<div class="cd-tag">' + (isRaid() ? 'RAID' : pvpDuel ? 'PVP' : 'ARENA' + ((BIOMES[window.PA_BIOME] && !multiPlan && !(window.PA_TUT && window.PA_TUT.on)) ? ' · ' + BIOMES[window.PA_BIOME].name : '')) + '</div>' +
-                '<div class="cn-stage" data-n="3"><div class="cn-glow"></div><div class="cn-wave"></div><div class="cn-wave w2"></div>' +
-                '<svg class="cn-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="47"/><circle class="fg" cx="50" cy="50" r="47" pathLength="100"/></svg>' +
-                Array.from({ length: 12 }, (_, k) => '<i class="cn-spark" style="--a:' + (k * 30 + (k % 2 ? 7 : -5)) + 'deg;--d:' + (70 + (k % 3) * 22) + 'px"></i>').join('') +
-                '<div class="cn-num"></div></div>' +
+                '<div class="cn-stage" data-n="3"><div class="cn-glow"></div><div class="cn-num"></div><div class="cn-split"></div><div class="cn-timer"><i></i></div></div>' +
                 '<div class="cd-sub">' + (isRaid() ? '¡UN POKÉMON ALFA SE ACERCA!' : '¡PREPÁRATE!') + '</div>';
             host.appendChild(ov);
             const stage = ov.querySelector('.cn-stage'), num = ov.querySelector('.cn-num'), sub = ov.querySelector('.cd-sub'), flash = ov.querySelector('.cd-flash'), streak = ov.querySelector('.cn-streak');
@@ -25048,7 +25077,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             };
             const show = () => {
                 const isGo = i === steps.length - 1;
-                num.textContent = steps[i];
+                num.textContent = steps[i]; num.setAttribute('data-t', steps[i]);
                 stage.dataset.n = isGo ? 'go' : steps[i];
                 stage.classList.toggle('go', isGo); num.classList.toggle('go', isGo);
                 stage.classList.remove('tick'); flash.classList.remove('run'); streak.classList.remove('run'); void stage.offsetWidth; // reinicia las animaciones
@@ -32914,12 +32943,12 @@ window.PALiga = (function () {
   function first(){
     if(done) return; done=true;
     var coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
-    if(coarse) go();
+    go(); // móvil y PC: pantalla completa (sin pestañas ni barra del navegador); en PC, F o Esc para salir
     document.removeEventListener('pointerup',first,true); document.removeEventListener('touchend',first,true);
   }
   document.addEventListener('pointerup',first,true); document.addEventListener('touchend',first,true);
   // si el navegador sale de pantalla completa (gesto atrás), vuelve a pedirla en el siguiente toque
-  document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement){ done=false; document.addEventListener('pointerup',first,true); } });
+  document.addEventListener('fullscreenchange',function(){ if(!document.fullscreenElement && window.matchMedia && matchMedia('(pointer:coarse)').matches){ done=false; document.addEventListener('pointerup',first,true); } }); // solo móvil: en PC, si sales con Esc no se vuelve a forzar
 })();
 </script>
 <script id="pa-hud2-js">

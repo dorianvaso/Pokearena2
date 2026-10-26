@@ -431,11 +431,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         @keyframes bzBoom { from { scale: .2; opacity: 1; } to { scale: 1.25; opacity: 0; } }
         @keyframes bzBoomRing { from { scale: .4; opacity: 1; } to { scale: 1.6; opacity: 0; } }
         .bz-shock-tele { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2; }
-        .bz-shock-tele i { position: absolute; display: block; left: 0; top: 0; translate: -50% -50%; border-radius: 50%; border: 3px solid var(--c3); box-shadow: 0 0 14px var(--c2); animation: bzCharge var(--tele-ms, 1150ms) ease-in infinite; }
+        .bz-shock-tele i { position: absolute; display: block; left: 0; top: 0; translate: -50% -50%; border-radius: 50%; border: 3px solid var(--c3); width: 230px; height: 230px; will-change: scale, opacity; animation: bzCharge var(--tele-ms, 1150ms) ease-in infinite; }
         .bz-shock-tele i:nth-child(2) { animation-delay: calc(var(--tele-ms, 1150ms) / -3); }
         .bz-shock-tele i:nth-child(3) { animation-delay: calc(var(--tele-ms, 1150ms) / -1.5); }
-        @keyframes bzCharge { from { width: 230px; height: 230px; opacity: 0; } 60% { opacity: .9; } to { width: 20px; height: 20px; opacity: 0; } }
-        .bz-shock { position: absolute; width: 100px; height: 100px; translate: -50% -50%; border-radius: 50%; pointer-events: none; z-index: 5; border: 22px solid var(--c2); box-shadow: 0 0 26px var(--c1), inset 0 0 26px var(--c1), 0 0 60px var(--c1); mix-blend-mode: screen; }
+        @keyframes bzCharge { from { scale: 1; opacity: 0; } 60% { opacity: .9; } to { scale: .087; opacity: 0; } }
+        .bz-shock { position: absolute; width: 512px; height: 512px; translate: -50% -50%; scale: .2; border-radius: 50%; pointer-events: none; z-index: 5; will-change: scale, opacity; contain: strict; background: radial-gradient(circle closest-side, transparent 86%, var(--c1) 92%, var(--c2) 97.5%, transparent 100%); }
         .bz-rage { position: absolute; width: 60px; height: 60px; translate: -50% -50%; border-radius: 50%; pointer-events: none; z-index: 5; border: 6px solid #ef4444; box-shadow: 0 0 30px #ef4444; animation: bzRage 1.2s ease-out forwards; }
         @keyframes bzRage { from { scale: .5; opacity: 1; } to { scale: 14; opacity: 0; } }
         .boss-call { position: absolute; z-index: 30; pointer-events: none; transform: translate(-50%, -100%); white-space: nowrap; font: 900 italic 1rem/1 'PA Chakra', system-ui, sans-serif; letter-spacing: .06em; color: var(--cc, #fde047); text-shadow: 0 0 10px var(--cc, #fde047), 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; animation: bzCall var(--cms, 1900ms) ease-out forwards; }
@@ -13897,12 +13897,30 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const T = '-50%,-50%';
 
                 // 1) destello del núcleo (el "flash" blanco del contacto)
-                const fs = Math.round(64 * k);
+                const fs = Math.round(64 * k * (o.lean ? 0.75 : 1));
                 anim(physFxEl('phys-flash', x, y, '--pc:' + tint + ';width:' + fs + 'px;height:' + fs + 'px'), [
                     { opacity: 1, transform: 'translate(' + T + ') scale(.35)' },
                     { opacity: 0.9, transform: 'translate(' + T + ') scale(1)', offset: 0.35 },
                     { opacity: 0, transform: 'translate(' + T + ') scale(1.5)' }], 170);
 
+                if (o.lean) { // combate normal: versión sobria (destello + onda; estrella solo en crítico/súper eficaz)
+                    const big = crit || eff > 1;
+                    if (big && !o.soft) {
+                        const sz = Math.round(56 * k), rot = (Math.random() - 0.5) * 50;
+                        anim(physFxEl('phys-star', x, y, '--pc:' + tint + ';width:' + sz + 'px;height:' + sz + 'px'), [
+                            { opacity: 1, transform: 'translate(' + T + ') rotate(' + (rot - 18) + 'deg) scale(.2)' },
+                            { opacity: 1, transform: 'translate(' + T + ') rotate(' + rot + 'deg) scale(1.1)', offset: 0.3 },
+                            { opacity: 0, transform: 'translate(' + T + ') rotate(' + (rot + 10) + 'deg) scale(.85)' }], 260, 'cubic-bezier(.2,.8,.3,1)');
+                    }
+                    if (big || Math.random() < 0.5) {
+                        const rs2 = Math.round(30 * k), re2 = (2.1 + k * 0.8).toFixed(2);
+                        anim(physFxEl('phys-ring', x, y, '--pc:' + tint + ';width:' + rs2 + 'px;height:' + rs2 + 'px;border-width:' + (crit ? 4 : 3) + 'px'), [
+                            { opacity: 0.9, transform: 'translate(' + T + ') scale(.3)' },
+                            { opacity: 0, transform: 'translate(' + T + ') scale(' + re2 + ')' }], 280);
+                    }
+                    if (o.defender && !o.mini) duelHitFlash(o.defender);
+                    return;
+                }
                 // 2) estrella de impacto: contorno de color (tipo / dorado en crítico) + interior blanco, con rebote
                 if (!o.soft) {
                     const sz = Math.round(66 * k), rot = (Math.random() - 0.5) * 50;
@@ -17077,14 +17095,14 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 if (it.t < BZ_SHOCK_TELE_MS) return;
                 it.phase = 'fly'; if (it.tele) { bzDrop(it.tele, 0); it.tele = null; }
                 it.cx = p0.x; it.cy = p0.y + (c.bossH || 100) / 2 - 10;
-                const e = document.createElement('div'); e.className = 'bz-shock bm-' + ctx.type; e.style.left = Math.round(it.cx) + 'px'; e.style.top = Math.round(it.cy) + 'px'; it.ring = bzAdd(e);
+                const e = document.createElement('div'); e.className = 'bz-shock bm-' + ctx.type; e.style.left = Math.round(it.cx) + 'px'; e.style.top = Math.round(it.cy) + 'px'; e.style.scale = String(50 / 256); it.ring = bzAdd(e);
                 bzSfx('shock', ctx.type);
-                try { spawnBurst(it.cx, it.cy, ctx.col[1]); spawnSparks(it.cx, it.cy, ctx.col[0], 26); triggerCameraShake(9, 600 / gameSpeed); } catch (x) {}
+                try { spawnBurst(it.cx, it.cy, ctx.col[1]); spawnSparks(it.cx, it.cy, ctx.col[0], 10); triggerCameraShake(7, 450 / gameSpeed); } catch (x) {}
                 it.t0 = it.t;
             }
             if (it.phase === 'fly') {
                 const R0 = 50, Rmax = Math.hypot(bounds.width, bounds.height) * 0.95, k = Math.min(1, (it.t - it.t0) / BZ_SHOCK_MS), r = R0 + (Rmax - R0) * (1 - Math.pow(1 - k, 1.6));
-                it.ring.style.width = it.ring.style.height = (r * 2).toFixed(1) + 'px'; it.ring.style.opacity = String(Math.max(0, 1 - k * 0.85));
+                it.ring.style.scale = (r / 256).toFixed(3); it.ring.style.opacity = String(Math.max(0, 1 - k * 0.85));
                 const mv = Object.assign({}, ctx.mv, { name: 'Onda de Choque', power: BZ_SHOCK_POWER });
                 const list = bzTargets(c);
                 for (let i = 0; i < list.length; i++) {
@@ -17092,7 +17110,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     const p = fxSpriteCenter(tt), d = Math.hypot(p.x - it.cx, p.y - it.cy);
                     if (Math.abs(d - r) > BZ_SHOCK_BAND + Math.min(p.rx, p.ry) * 0.6) continue;
                     it.hit.add(tt); bzMarkHit(tt, 350);
-                    try { spawnBurst(p.x, p.y, ctx.col[1]); spawnSparks(p.x, p.y, ctx.col[0], 8); } catch (e) {}
+                    try { spawnSparks(p.x, p.y, ctx.col[0], 4); } catch (e) {}
                     resolveSingleHit(mv, c, tt, p.x, p.y, ctx.sound, ctx.col[0], ctx.col[1], null);
                     if (gameOver || c.fainted || bossAtk !== a) return;
                 }
@@ -18945,20 +18963,75 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function ncPoseCalc(P, k) { // k = 0..1 -> {ox, oy, r, sx, sy}
             const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1 }, sn = Math.sin(Math.PI * k);
             switch (P.type) {
-                case 'dodge': { const e = Math.sin(Math.PI * Math.min(1, k / 0.85)); o.ox = P.dir * 26 * P.amp * e; o.oy = -12 * Math.sin(Math.PI * Math.min(1, k / 0.6)); o.r = -P.dir * 14 * e; o.sx = 0.92; o.sy = 1.08; break; }
+                case 'dodge': {
+                    const e = Math.sin(Math.PI * Math.min(1, k / 0.85)), sm = k * k * (3 - 2 * k), v = P.v || 0;
+                    if (v === 1) { o.ox = P.dir * 16 * e; o.oy = -38 * sn; o.r = -P.dir * 360 * sm; o.sx = 0.94; o.sy = 1.06; }                       // voltereta
+                    else if (v === 2) { o.ox = P.dir * 10 * e; o.sy = 1 - 0.4 * e; o.sx = 1 + 0.2 * e; o.r = P.dir * 5 * e; }                         // agacharse
+                    else if (v === 3) { o.ox = P.dir * 14 * e; o.oy = -24 * sn; o.sx = Math.cos(4 * Math.PI * k) * 0.95; o.sy = 1.06; }                // pirueta
+                    else if (v === 4) { const kk = Math.min(1, k / 0.35), back = Math.max(0, (k - 0.55) / 0.45); o.ox = P.dir * 46 * Math.sin(Math.PI / 2 * kk) * (1 - back * back); o.r = -P.dir * 20 * Math.sin(Math.PI * kk); o.sx = 1.15; o.sy = 0.9; } // paso relámpago
+                    else if (v === 5) { o.ox = P.dir * 8 * e; o.oy = -46 * sn; o.r = P.dir * 16 * e; o.sx = 0.9; o.sy = 1.14; }                         // salto
+                    else if (v === 6) { o.ox = -P.dir * 20 * e; o.oy = -6 * sn; o.r = P.dir * 22 * e; o.sx = 0.9; o.sy = 1.1; }                        // paso atrás
+                    else { o.ox = P.dir * 26 * P.amp * e; o.oy = -12 * Math.sin(Math.PI * Math.min(1, k / 0.6)); o.r = -P.dir * 14 * e; o.sx = 0.92; o.sy = 1.08; }
+                    break; }
                 case 'flinch': o.ox = P.dir * 9 * P.amp * sn; o.r = P.dir * 11 * P.amp * sn; o.sx = 1 + 0.1 * P.amp * sn; o.sy = 1 - 0.1 * P.amp * sn; break;
-                case 'crit': o.ox = P.dir * 15 * sn; o.oy = -9 * sn; o.r = P.dir * 26 * Math.sin(k * Math.PI * 3) * (1 - k); o.sx = 1 + 0.2 * sn; o.sy = 1 - 0.2 * sn; break;
+                case 'crit': if (P.v === 1) { o.ox = P.dir * 22 * sn; o.oy = -22 * sn; o.r = P.dir * 300 * k; o.sx = 1 + 0.12 * sn; o.sy = 1 - 0.12 * sn; break; } o.ox = P.dir * 15 * sn; o.oy = -9 * sn; o.r = P.dir * 26 * Math.sin(k * Math.PI * 3) * (1 - k); o.sx = 1 + 0.2 * sn; o.sy = 1 - 0.2 * sn; break;
                 case 'stumble': o.ox = P.dir * 8 * sn; o.r = P.dir * 17 * sn; o.sx = 1 + 0.08 * sn; o.sy = 1 - 0.12 * sn; break;
+            }
+            return o;
+        }
+        // ----- Variedad de movimiento (solo visual: no toca hitboxes ni mecánicas) -----
+        // Estilos de embestida; cada embestida sortea uno. Todo va en función del PROGRESO hacia el rival, así
+        // que termina siempre en offset 0 (sin saltos al impactar).
+        function ncChaseStyle(c, ts, dx, dy, wind) {
+            const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1 };
+            if (!c._dsOn) {
+                c._dsOn = true; c._dsB = 0; c._dsSide = Math.random() < 0.5 ? -1 : 1;
+                const w = Math.random();
+                c._dsS = w < 0.18 ? 'lunge' : w < 0.34 ? 'zig' : w < 0.5 ? 'arc' : w < 0.64 ? 'hop' : w < 0.76 ? 'spin' : w < 0.88 ? 'skid' : 'weave';
+            }
+            const side = c._dsSide, st = c._dsS, px = -dy, py = dx;
+            if (wind) {
+                const p = Math.min(1, (c.dashT || 0) / DASH_WINDUP);
+                if (st === 'spin') o.r += -side * 40 * p;
+                else if (st === 'hop') { o.sy *= 0.9; o.oy += 3 * p; }
+                else if (st === 'zig') o.ox += side * 6 * p;
+                else if (st === 'arc') o.ox += -side * 8 * p;
+                else if (st === 'skid') { o.sy *= 0.88; o.sx *= 1.06; }
+                else if (st === 'weave') o.r += side * 10 * Math.sin(p * 9);
+                return o;
+            }
+            const tg = combatantsById[c.chaseTargetId]; if (!tg) return o;
+            const dist = Math.hypot(tg.x - c.x, tg.y - c.y);
+            if (!c._dsB) c._dsB = Math.max(40, dist);
+            const prog = Math.max(0, Math.min(1, 1 - dist / c._dsB)), rest = 1 - prog;
+            switch (st) {
+                case 'zig': { const lat = Math.sin(prog * Math.PI * 4) * 15 * Math.min(1, rest * 2.5) * side; o.ox += px * lat; o.oy += py * lat * 0.6; o.r += Math.cos(prog * Math.PI * 4) * 8 * side; break; }
+                case 'arc': { const lat = 26 * Math.sin(Math.PI * prog) * side; o.ox += px * lat; o.oy += py * lat * 0.6; o.r += side * 12 * Math.cos(Math.PI * prog); break; }
+                case 'hop': { const h = Math.abs(Math.sin(prog * Math.PI * 3)); o.oy -= 22 * h; o.sy *= 1 + 0.1 * h - 0.16 * Math.pow(1 - h, 5); o.sx *= 1 - 0.05 * h + 0.1 * Math.pow(1 - h, 5); break; }
+                case 'spin': { const e = prog * prog * (3 - 2 * prog); o.r += (dx >= 0 ? 1 : -1) * 360 * e; o.sx *= 0.93; o.oy -= 6 * Math.sin(Math.PI * prog); break; }
+                case 'skid': { o.sy *= 0.84; o.sx *= 1.16; o.r *= 0; if (ts - (c._dsDust || 0) > 55) { c._dsDust = ts; const ft = feetOf(c); dashDust(ft.x, ft.y, 1, dx); } break; }
+                case 'weave': { const w = Math.sin(prog * Math.PI * 2.5) * 20 * Math.min(1, rest * 3) * side; o.ox += px * w; o.oy += py * w * 0.6 - 8 * Math.sin(Math.PI * prog); o.r += side * 16 * Math.cos(prog * Math.PI * 2.5); break; }
+            }
+            return o;
+        }
+        function ncStrideStyle(c, m, mdx) { // zancadas al deambular
+            const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1, rset: null }, q = Math.min(1, (c.strideQ || 0) / 0.78);
+            switch (c.strideStyle) {
+                case 'hop': { const h = Math.sin(Math.PI * q); o.oy -= 22 * h; o.sx *= 1 - 0.1 * h; o.sy *= 1 + 0.12 * h; break; }
+                case 'slide': o.sy *= 0.88; o.sx *= 1.12; o.rset = 0.25; break;
+                case 'sway': o.ox += Math.sin(q * Math.PI * 4) * 7; o.r += Math.cos(q * Math.PI * 4) * 9; break;
+                case 'flip': { const e = q * q * (3 - 2 * q); o.rset = 0; o.r = mdx * 360 * e; o.oy -= 18 * Math.sin(Math.PI * q); break; }
+                case 'lean': o.r += mdx * 6; o.sx *= 1.05; o.oy -= 4 * Math.sin(Math.PI * q); break;
             }
             return o;
         }
         function ncDodgeFx(def, att, tx, ty) {
             try {
-                const dir = (def.x >= att.x ? 1 : -1) * (Math.random() < 0.35 ? -1 : 1);
-                ncPose(def, 'dodge', dir, 1, 420);
-                for (let i = 0; i < 3; i++) { const t = setTimeout(() => { if (def.wrapper && !def.fainted) spawnDashTrail(def, true); }, (i * 70) / gameSpeed); activeTimers.push(t); }
+                const dir = (def.x >= att.x ? 1 : -1) * (Math.random() < 0.35 ? -1 : 1), v = Math.floor(Math.random() * 7);
+                ncPose(def, 'dodge', dir, 1, [420, 560, 380, 560, 340, 560, 440][v]); if (def.pose) def.pose.v = v;
+                const nTr = (v === 0 || v === 4) ? 3 : (v === 6 ? 2 : 1);
+                for (let i = 0; i < nTr; i++) { const t = setTimeout(() => { if (def.wrapper && !def.fainted) spawnDashTrail(def, true); }, (i * 70) / gameSpeed); activeTimers.push(t); }
                 const f = feetOf(def); dashDust(f.x, f.y, 3, dir);
-                duelRing(tx, ty, '#bae6fd', 80, 0, true);
                 ncSfx('dodge');
             } catch (e) {}
         }
@@ -18966,10 +19039,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             try {
                 if (!att || !def || att.duel || def.duel || !(damage > 0)) return;
                 const ratio = damage / Math.max(1, def.maxHp), dir = (def.x >= att.x) ? 1 : -1;
-                if (crit) { ncPose(def, 'crit', dir, 1, 480); ncSfx('crit'); duelRing(x, y, '#fde047', 110, 0, true); }
+                if (crit) { ncPose(def, 'crit', dir, 1, 480); if (def.pose && Math.random() < 0.4) def.pose.v = 1; ncSfx('crit'); }
                 else if (ratio >= 0.1) ncPose(def, 'flinch', dir, Math.min(2, 0.6 + ratio * 4), 300);
                 if (ratio >= 0.1 || crit) { const f = feetOf(def); dashDust(f.x, f.y, crit ? 4 : 2, dir); }
-                if (eff > 1) duelRing(x, y, '#fbbf24', 90, 0, true); else if (eff > 0 && eff < 1) spawnSparks(x, y, '#94a3b8', 4);
                 ncSfx('hit', ratio, eff);
             } catch (e) {}
         }
@@ -19197,15 +19269,16 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // encima este destello se veía como un elemento pegado de más.
             const isPhysicalHit = move.category === 'physical' || forcePhysHit; // en duelo, todo choque cuenta como golpe físico
 
+            const leanFx = !forcePhysHit && !(attacker && attacker.duel) && !(defender && defender.duel); // combate normal: menos efectos, más movimiento
             if (isCritical) {
                 // Golpe crítico: destello dorado más grande e intenso que el impacto normal.
                 if (isPhysicalHit) spawnBurst(targetX, targetY, '#fff7ae');
-                spawnSparks(targetX, targetY, '#fde047', 18);
+                spawnSparks(targetX, targetY, '#fde047', leanFx ? 7 : 18);
                 if (move.bite) playBiteCritPing(); // mordida crítica (solo sonido)
                 if (move.slash) { spawnSlashFx(targetX, targetY, move, attacker, true); playSlashCritPing(); } // corte crítico: tajo dorado extra
             } else {
-                if (isPhysicalHit) spawnBurst(targetX, targetY, burstColor);
-                spawnSparks(targetX, targetY, sparkColor, 10);
+                if (isPhysicalHit && (!leanFx || effectiveness > 1 || Math.random() < 0.35)) spawnBurst(targetX, targetY, burstColor);
+                if (!leanFx) spawnSparks(targetX, targetY, sparkColor, 10); else if (effectiveness > 1 || Math.random() < 0.4) spawnSparks(targetX, targetY, sparkColor, 3);
             }
             // Los golpes físicos de tipo fuego suman su propia llamarada
             // radiante encima del destello (ver spawnFireBurst).
@@ -19215,7 +19288,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // (spawnPhysicalHitFx) + capa grave del puñetazo en los críticos (el sonido base ya sonó en playMoveHitSound).
             if (isPhysicalHit) {
                 spawnPhysicalHitFx(targetX, targetY, { power: move.power, crit: isCritical, eff: effectiveness, type: move.type,
-                    attacker, defender, scale: (move.ranged && !forcePhysHit) ? 0.8 : 1, soft: !!(move.slash || move.bite) });
+                    attacker, defender, scale: (move.ranged && !forcePhysHit) ? 0.8 : 1, soft: !!(move.slash || move.bite), lean: leanFx });
                 if (isCritical && isPhysContactHit(move) && !move.slash && !move.bite) playPhysicalHitSfx(move.power, { layer: true });
             }
 
@@ -22495,9 +22568,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             };
             ring(0, 2.4 * (0.6 + 0.5 * p), Math.max(2, Math.min(7, 2 + p)));
             if (p > 1.8) ring(70, 2.4 * (0.6 + 0.5 * p) * 1.35, 2);
-            dashDust(f.x, f.y, Math.max(2, Math.min(14, Math.round(5 * Math.pow(p, 0.8)))), dx);
+            dashDust(f.x, f.y, Math.max(1, Math.min(8, Math.round(2.4 * Math.pow(p, 0.8)))), dx);
             if (p >= 1.5) { // nube de polvo que se abre en todas direcciones
-                const n = Math.min(14, Math.round(4 + p * 2));
+                const n = Math.min(8, Math.round(3 + p * 1.2));
                 for (let i = 0; i < n; i++) {
                     const ang = (i / n) * Math.PI * 2 + Math.random() * 0.5, dist = 16 + p * 9 + Math.random() * 14, sz = 8 + Math.random() * 9;
                     const d = fxPool.get('dash-fx dash-dust');
@@ -22511,7 +22584,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 }
             }
             if (p >= 2.4) { // escombros que saltan y caen
-                const n = Math.min(8, Math.round(p * 1.6));
+                const n = Math.min(5, Math.round(p * 1.1));
                 for (let i = 0; i < n; i++) {
                     const sz = 4 + Math.random() * 4, vx = (Math.random() - 0.5) * 70 + dx * 18, up = 18 + Math.random() * 26;
                     const d = fxPool.get('dash-fx');
@@ -22527,7 +22600,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 }
             }
             if (p >= 2) { // líneas de velocidad: el rival sale disparado
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 2; i++) {
                     const t = setTimeout(() => { if (gameRunning && !target.fainted) dashStreak(target, dx, dy); }, (i * 40) / gameSpeed);
                     activeTimers.push(t);
                 }
@@ -22873,6 +22946,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const ph = (((now * gameSpeed) + c.strideOff) % STRIDE_MS) / STRIDE_MS, A = 0.2;
                 let m = 0, dm = 0;
                 if (ph >= A) { const q = (ph - A) / (1 - A); m = 3.5 * (1 - q) * (1 - q); dm = 10 * (1 - q) * (1 - q) * (1 - q); }
+                if (c._lph != null && ph < c._lph) { const w = Math.random(); c.strideStyle = w < 0.3 ? 'dash' : w < 0.52 ? 'hop' : w < 0.66 ? 'slide' : w < 0.8 ? 'sway' : w < 0.9 ? 'lean' : 'flip'; }
+                c._lph = ph; c.strideQ = ph >= A ? (ph - A) / (1 - A) : 0;
                 if (c.strideCrouch && ph >= A) playDashSwoosh(0.55); // arranca el dash
                 c.strideM = m; c.strideCrouch = ph < A;
                 // no se pasa del punto de destino: el dash se corta justo al llegar
@@ -24915,6 +24990,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     const dirX = c.dashDirX || 0, dirY = c.dashDirY || 0;
                     let sx = 1, sy = 1, ox = jx, oy = 0, rot = 0;
                     c.trailAccum += scaledDt;
+                    if (!c.isChasing) c._dsOn = false;
                     if (c.isChasing && !c.digPhase && !c.flyPhase) {
                         if (c.dashPhase === 'windup') {
                             const p = Math.min(1, (c.dashT || 0) / DASH_WINDUP);
@@ -24922,6 +24998,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                             ox += -dirX * 7 * p + (Math.random() - 0.5) * 1.8 * p;
                             rot = (dirX >= 0 ? -1 : 1) * 7 * p;
                             c.trailAccum = 0;
+                            if (!c.duel) { const Q = ncChaseStyle(c, timestamp, dirX, dirY, true); ox += Q.ox; oy += Q.oy; rot += Q.r; sx *= Q.sx; sy *= Q.sy; }
                         } else {
                             const v = c.dashV || 0;
                             sx = 1.1 + 0.32 * v; sy = 0.94 - 0.16 * v;
@@ -24929,6 +25006,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                             if (c.trailAccum >= 40) { c.trailAccum = 0; spawnDashTrail(c); dashStreak(c, dirX, dirY); }
                             c.dustAccum = (c.dustAccum || 0) + scaledDt;
                             if (c.dustAccum >= 95) { c.dustAccum = 0; const ft = feetOf(c); dashDust(ft.x, ft.y, 1, dirX); }
+                            if (!c.duel) { const Q = ncChaseStyle(c, timestamp, dirX, dirY, false); ox += Q.ox; oy += Q.oy; rot += Q.r; sx *= Q.sx; sy *= Q.sy; }
                         }
                     } else if (c.duel) {
                         const dp = c.duelP;
@@ -24944,6 +25022,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     } else if (c.isMoving && c.strideM > 0.05 && !kmag) {
                         const m = Math.min(1, c.strideM / 3.5), mdx = Math.sign(moveDx) || c.facing;
                         sx = 1 + 0.2 * m; sy = 1 - 0.12 * m; rot = mdx * 9 * m;
+                        { const Q = ncStrideStyle(c, m, mdx); ox += Q.ox; oy += Q.oy; sx *= Q.sx; sy *= Q.sy; rot = Q.rset == null ? rot + Q.r : rot * Q.rset + Q.r; }
                         if (m > 0.6 && c.trailAccum >= 60) { c.trailAccum = 0; spawnDashTrail(c); }
                         if (m > 0.6 && !c.strideBurst) { c.strideBurst = true; const ft = feetOf(c); dashDust(ft.x, ft.y, 3, mdx); }
                     } else {
@@ -32439,7 +32518,7 @@ window.PAPvp = (function () {
 #lg-tw .lt-pn .lt-row span img{max-width:92%;max-height:92%}
 #lg-tw .lt-pn .lt-row span.q{color:rgba(255,255,255,.55)}
 #lg-tw .lt-medal{left:6px;top:32px;width:34px;height:34px}
-#lg-tw .lt-stage{grid-template-rows:auto auto}
+#lg-tw .lt-stage{grid-template-rows:minmax(0,640px) auto;align-content:center}
 #lg-tw .lt-vs{display:none}
 #lg-tw .lt-dif{font:900 1rem/1 'PA Chakra',system-ui,sans-serif;color:#fde047;letter-spacing:.12em;text-shadow:0 2px 0 rgba(0,0,0,.5)}#lg-tw .lt-dif s{text-decoration:none;color:rgba(255,255,255,.25)}
 #lg-tw .lt-vsx{top:30%}

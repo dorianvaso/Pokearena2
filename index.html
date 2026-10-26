@@ -30413,19 +30413,78 @@ window.PAProfile = (function () {
     }
     const AV_COST = 2500;
     function medalSrcs(h) { const o = []; String(h || '').replace(/src="([^"]+)"/g, (_, s) => { o.push(s); return ''; }); return o; }
-    // recorte de CARA: el sprite se amplía y se ancla arriba para ver solo la cabeza del pokémon
-    function faceFit(img, tries) {
-        const slot = img && img.parentElement; if (!slot || !img.getAttribute('src') || typeof getSpriteBounds !== 'function') return;
-        const W = slot.clientWidth; if (!W) { if ((tries | 0) < 8) setTimeout(() => faceFit(img, (tries | 0) + 1), 250); return; }
-        const src = img.src;
-        getSpriteBounds(src, b => {
-            if (!b || !img.isConnected || img.src !== src) return;
-            const cw = Math.max(1, Math.min(b.bw, 0.75 * b.bh)), S = W / cw, st = img.style;
-            st.width = (b.nw * S).toFixed(1) + 'px'; st.height = 'auto'; st.maxWidth = 'none'; st.transform = 'none'; st.padding = '0';
-            st.left = (W / 2 - (b.bx + b.bw / 2) * S).toFixed(1) + 'px'; st.top = (0.05 * W - b.by * S).toFixed(1) + 'px';
-        });
+    // ---- recorte de CARA: analiza la silueta del sprite, localiza la cabeza (hasta el "cuello") y la encuadra igual para todos ----
+    const FACE_CACHE = {};
+    function faceAnalyze(img, nw, nh) {
+        const cv = document.createElement('canvas'); cv.width = nw; cv.height = nh;
+        const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
+        const d = cx.getImageData(0, 0, nw, nh).data; cv.width = cv.height = 0;
+        const op = (x, y) => x >= 0 && y >= 0 && x < nw && y < nh && d[(y * nw + x) * 4 + 3] > 128;
+        let x0 = nw, y0 = nh, x1 = -1, y1 = -1;
+        for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) if (op(x, y)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (x1 < x0) return null;
+        const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+        // anchura por fila (suavizada)
+        const w = []; for (let y = 0; y < bh; y++) { let c = 0; for (let x = x0; x <= x1; x++) if (op(x, y0 + y)) c++; w.push(c); }
+        const ws = w.map((_, i) => { let s = 0, n = 0; for (let k = -2; k <= 2; k++) if (w[i + k] != null) { s += w[i + k]; n++; } return s / n; });
+        // fin de la cabeza: primer "cuello" (la anchura baja y luego vuelve a subir) en el 62% superior
+        let hb = -1, mx = 0; const lim = Math.floor(bh * 0.62), minRow = Math.max(3, Math.floor(bh * 0.16));
+        for (let y = 0; y <= lim; y++) {
+            mx = Math.max(mx, ws[y]);
+            if (y >= minRow && ws[y] <= mx * 0.85 && ws[y] <= (ws[y - 1] || 1e9) && ws[y] <= (ws[y + 1] || 1e9)) {
+                let after = 0; for (let k = y; k < Math.min(bh, y + Math.ceil(bh * 0.35)); k++) after = Math.max(after, ws[k]);
+                if (after >= ws[y] * 1.2) { hb = y; break; }
+            }
+        }
+        if (hb < 0) hb = Math.round(bh * (bw > bh * 1.15 ? 0.6 : 0.5));
+        hb = Math.max(hb, Math.round(bh * 0.2));
+        // caja de la cabeza
+        let hx0 = nw, hx1 = -1; for (let y = 0; y <= hb; y++) for (let x = x0; x <= x1; x++) if (op(x, y0 + y)) { if (x < hx0) hx0 = x; if (x > hx1) hx1 = x; }
+        let hw = hx1 - hx0 + 1; const hh = hb + 1;
+        // criaturas alargadas: se queda con la zona del extremo más alto en vez de toda la anchura
+        if (hw > hh * 1.5) {
+            let sx = 0, n = 0; const tr = Math.max(2, Math.round(hh * 0.3));
+            for (let y = 0; y < tr; y++) for (let x = hx0; x <= hx1; x++) if (op(x, y0 + y)) { sx += x; n++; }
+            const c = n ? sx / n : (hx0 + hx1) / 2, half = hh * 0.75;
+            hx0 = Math.max(hx0, Math.round(c - half)); hx1 = Math.min(hx1, Math.round(c + half)); hw = hx1 - hx0 + 1;
+        }
+        // ojos: manchas oscuras pequeñas rodeadas de sprite (no el contorno) dentro de la cabeza
+        const lum = (x, y) => { const i = (y * nw + x) * 4; return 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; };
+        const inner = (x, y) => { let n = 0, t = 0; for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) { t++; if (op(x + i, y + j)) n++; } return n / t >= 0.9; };
+        const seen = new Set(), eyes = [];
+        for (let y = y0; y <= y0 + hb; y++) for (let x = hx0; x <= hx1; x++) {
+            const k = y * nw + x; if (seen.has(k) || !op(x, y) || lum(x, y) > 70 || !inner(x, y)) continue;
+            const st = [[x, y]]; seen.add(k); let sx = 0, sy = 0, n = 0;
+            while (st.length && n < 60) { const [a, b] = st.pop(); sx += a; sy += b; n++; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const q = (b + j) * nw + (a + i); if (!seen.has(q) && op(a + i, b + j) && lum(a + i, b + j) <= 70) { seen.add(q); st.push([a + i, b + j]); } } }
+            if (n >= 2 && n < 60) eyes.push({ x: sx / n, y: sy / n });
+        }
+        let cxh = (hx0 + hx1) / 2;
+        if (eyes.length) { const xs = eyes.map(e => e.x).sort((a, b) => a - b); cxh = 0.5 * cxh + 0.5 * xs[xs.length >> 1]; }
+        return { nw, nh, cx: cxh, cy: y0 + hh / 2, hw, hh };
     }
-    function faceAll(root) { root.querySelectorAll('.pf-slot img').forEach(im => { if (im.complete) faceFit(im); else im.addEventListener('load', () => faceFit(im), { once: true }); faceFit(im); }); }
+    function faceFit(img, tries) {
+        const slot = img && img.parentElement; if (!slot || !img.getAttribute('src')) return;
+        const W = slot.clientWidth, H = slot.clientHeight; if (!W || !H) { if ((tries | 0) < 8) setTimeout(() => faceFit(img, (tries | 0) + 1), 250); return; }
+        const src = img.src;
+        const apply = f => {
+            if (!img.isConnected || img.src !== src) return;
+            const pad = 1.22, S = Math.min(6, Math.min(W / (f.hw * pad), H / (f.hh * pad))), st = img.style;
+            st.width = (f.nw * S).toFixed(1) + 'px'; st.height = 'auto'; st.maxWidth = 'none'; st.transform = 'none'; st.padding = '0';
+            st.left = (W / 2 - f.cx * S).toFixed(1) + 'px'; st.top = (H / 2 - f.cy * S).toFixed(1) + 'px';
+        };
+        if (FACE_CACHE[src]) return apply(FACE_CACHE[src]);
+        const probe = new Image(); probe.crossOrigin = 'anonymous';
+        probe.onload = () => {
+            let f = null; try { f = faceAnalyze(probe, probe.naturalWidth, probe.naturalHeight); } catch (e) {}
+            if (!f) { const nw = probe.naturalWidth, nh = probe.naturalHeight; f = { nw, nh, cx: nw / 2, cy: nh * 0.3, hw: nw * 0.8, hh: nh * 0.4 }; }
+            const ov = (window.PA_FACE_OV || {})[(src.match(/(\d+)\.(?:gif|png)/) || [])[1]]; // ajuste manual opcional por nº de pokédex: { cx, cy, hw, hh } en px del sprite
+            if (ov) f = Object.assign({}, f, ov);
+            FACE_CACHE[src] = f; apply(f);
+        };
+        probe.onerror = () => {};
+        probe.src = src;
+    }
+    function faceAll(root) { root.querySelectorAll('.pf-slot img').forEach(im => faceFit(im)); }
     function cardHTML(o) {
         let bd = ''; const mm = o.medals || []; for (let i = 0; i < Math.max(8, mm.length); i++) bd += '<i>' + (mm[i] ? '<img alt="" draggable="false" src="' + esc(mm[i]) + '">' : '') + '</i>';
         const st = o.status;

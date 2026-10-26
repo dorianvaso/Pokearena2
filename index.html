@@ -33042,23 +33042,20 @@ window.PAMis = (function () {
         if (tab === '2' && load().m2) return draw2();
         const s = load(), m = s[MID] || { n: 0 }, left = END - (Date.now() + offset), over = left <= 0;
         const rows = (board && board.board) || [], meAcc = board && board.me;
-        let h = '<div class="ms-art"></div><div class="ms-wrap"><div class="ms-top"><button type="button" class="ms-back">‹ VOLVER</button></div>' + tabsHtml('1')
-            + '<div class="ms-card"><small>MISIÓN 1 · PROFESOR OAK</small><h2>OPERACIÓN JOHTO</h2>'
-            + '<p>Captura más Pokémon originarios de Johto que ningún otro Aspirante a Campeón.</p>'
-            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'MISIÓN TERMINADA' : 'TIEMPO RESTANTE · hasta el domingo 25 de octubre') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
-            + '<div class="ms-me"><span>TUS CAPTURAS DE JOHTO</span><b>' + (m.n | 0) + '</b></div></div>';
+        let h = shellHtml('1')
+            + '<div class="ms-card"><small>PROFESOR OAK</small><h2>OPERACIÓN JOHTO</h2>'
+            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'TERMINADA' : 'TIEMPO RESTANTE') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
+            + '<div class="ms-me"><span>TUS CAPTURAS</span><b>' + (m.n | 0) + '</b></div></div>';
         const iWon = over && rows.length && rows[0].acc === meAcc, claimed = (m.claimed || (board && board.claim)) || '';
         const rw = k => REW.find(x => x.k === k);
         const rewImgs = REW.map(r => '<button type="button" class="ms-pk' + (sel === r.k ? ' sel' : '') + '" data-k="' + r.k + '"' + (iWon && !claimed ? '' : ' disabled') + '><img alt="" draggable="false" src="' + BWU + r.d + '.gif"><span>' + r.n + '</span></button>').join('');
-        h += '<div class="ms-card ms-rw"><small>RECOMPENSA</small><p>' + (iWon && !claimed ? '¡Has ganado! Elige tu Pokémon exclusivo de Johto:' : claimed ? 'Recompensa reclamada: <b>' + esc((rw(claimed) || { n: claimed }).n) + '</b>' : 'El ganador de la misión elegirá <b>uno</b> de estos Pokémon exclusivos de Johto:') + '</p><div class="ms-pks">' + rewImgs + '</div>'
+        h += '<div class="ms-card ms-rw"><small>RECOMPENSA</small><p>' + (iWon && !claimed ? '¡Ganaste! Elige uno:' : claimed ? 'Reclamado: <b>' + esc((rw(claimed) || { n: claimed }).n) + '</b>' : 'Premio al #1 · elige uno') + '</p><div class="ms-pks">' + rewImgs + '</div>'
             + (iWon && !claimed ? '<button type="button" class="ms-claim"' + (sel && !claiming ? '' : ' disabled') + '>' + (claiming ? 'RECLAMANDO…' : 'RECLAMAR') + '</button>' : '') + '</div>';
         if (over && rows.length) h += '<div class="ms-win"><small>GANADOR</small><b>' + esc(rows[0].name || 'Entrenador') + '</b><span>' + rows[0].n + ' capturas</span></div>';
         h += '<div class="ms-card"><small>CLASIFICACIÓN</small><div class="ms-bd">' + (rows.length ? rows.map((r, i) =>
             '<div class="ms-r' + (r.acc === meAcc ? ' me' : '') + (i === 0 ? ' first' : '') + '"><i>' + (i + 1) + '</i>' + (r.avatar && av(r.avatar) ? '<img alt="" draggable="false" src="' + av(r.avatar) + '">' : '<em></em>') + '<span>' + esc(r.name || 'Entrenador') + '</span><b>' + r.n + '</b></div>').join('')
-            : '<div class="ms-empty">' + (canNet() ? 'Aún nadie ha capturado Pokémon de Johto. ¡Sé el primero!' : 'Sin conexión al servidor: solo ves tu marcador.') + '</div>') + '</div></div></div>';
-        const top = panel.querySelector('.ms-wrap'), sc = top ? top.scrollTop : 0;
-        panel.innerHTML = h; const w2 = panel.querySelector('.ms-wrap'); if (w2) w2.scrollTop = sc;
-        panel.querySelector('.ms-back').addEventListener('click', close); bindTabs();
+            : '<div class="ms-empty">' + (canNet() ? 'Sin capturas aún' : 'Sin conexión') + '</div>') + '</div></div></div>';
+        mount(h);
         panel.querySelectorAll('.ms-pk:not([disabled])').forEach(b => b.addEventListener('click', () => { sel = b.dataset.k; sfx('tick'); draw(); }));
         const cb = panel.querySelector('.ms-claim'); if (cb) cb.addEventListener('click', claim);
     }
@@ -33090,7 +33087,7 @@ window.PAMis = (function () {
     }
     function lockedView() {
         const el = document.createElement('div'); el.id = 'ms-panel'; el.style.setProperty('--ms-art', MM_MIS_ART);
-        el.innerHTML = '<div class="ms-art"></div><div class="ms-wrap"><div class="ms-card ms-lock"><small>MISIONES</small><h2>SOLO ASPIRANTES</h2><p>Las misiones de la Liga y del Profesor Oak son para los <b>Aspirantes a Campeón</b>. Derrota a los líderes de la Liga y consigue el rango para recibirlas.</p><button type="button" class="ms-back">ENTENDIDO</button></div></div>';
+        el.innerHTML = '<div class="ms-art"></div><div class="ms-wrap"><div class="ms-card ms-lock"><small>MISIONES</small><h2>SOLO ASPIRANTES</h2><p>Derrota a la Liga para desbloquearlas.</p><button type="button" class="ms-back">ENTENDIDO</button></div></div>';
         document.body.appendChild(el); el.querySelector('.ms-back').addEventListener('click', () => { el.remove(); sfx('close'); });
     }
     function open() {
@@ -33120,6 +33117,49 @@ window.PAMis = (function () {
         specs.sort((a, b) => b.score - a.score);
         if (sel2 >= specs.length) sel2 = -1;
     }
+    // Lista de misiones tipo CARRUSEL: la elegida al centro y más grande; las demás detrás, más pequeñas y apagadas. Los elementos
+    // son persistentes (no se redibujan cada segundo) para que la transición entre misiones sea fluida.
+    let lastTab = null;
+    function listData() {
+        const s = load(), now = Date.now() + offset, out = [];
+        const m1 = s[MID] || { n: 0 }, left1 = END - now, over1 = left1 <= 0, cl1 = !!(m1.claimed || (board && board.claim));
+        out.push({ t: '1', img: PALiga._oak(), title: 'OPERACIÓN JOHTO', sub: 'PROFESOR OAK', st: over1 ? 'FIN' : fmt(left1), isNew: !over1 && !cl1, d1: (m1.n | 0) > 0, d2: cl1 });
+        if (s.m2) { const m2 = s.m2, left2 = END2 - now, over2 = left2 <= 0, cl2 = !!(m2.claimed || (board2 && board2.claim));
+            out.push({ t: '2', img: FARMER, title: 'EL MEJOR MILTANK', sub: 'CRIAPOKÉMON MARTA', st: over2 ? 'FIN' : fmt(left2), isNew: !over2 && !cl2, d1: (m2.best | 0) > 0, d2: cl2 }); }
+        return out;
+    }
+    const DIA = on => '<svg class="ms-dm' + (on ? ' on' : '') + '" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1l9 9-9 9-9-9z"/></svg>';
+    function updateList(cur) {
+        const list = panel.querySelector('.ms-list'); if (!list) return;
+        const data = listData();
+        if (list.querySelectorAll('.ms-it').length !== data.length) {
+            list.innerHTML = data.map(d => '<button type="button" class="ms-it ms-tab" data-t="' + d.t + '"><span class="ms-cv"><img alt="" draggable="false" src="' + d.img + '"></span><span class="ms-tx"><b>' + d.title + '</b><em>' + d.sub + '</em></span><span class="ms-bg"></span><span class="ms-st"></span><i class="ms-new">NEW!</i></button>').join('');
+            bindTabs();
+        }
+        const si = Math.max(0, data.findIndex(d => d.t === cur));
+        data.forEach((d, i) => {
+            const el = list.querySelector('.ms-it[data-t="' + d.t + '"]'); if (!el) return;
+            const k = i - si, ak = Math.abs(k), on = k === 0;
+            el.classList.toggle('on', on);
+            el.style.setProperty('--k', k); el.style.setProperty('--sc', on ? 1.1 : Math.max(.7, 1 - ak * .14)); el.style.setProperty('--tx', on ? '-8px' : '20px');
+            el.style.opacity = on ? 1 : Math.max(.35, .72 - (ak - 1) * .25); el.style.zIndex = 10 - ak; el.style.filter = on ? 'none' : 'saturate(.7) brightness(.85)';
+            el.querySelector('.ms-st').textContent = d.st; el.querySelector('.ms-new').style.display = d.isNew ? '' : 'none';
+            const bg = el.querySelector('.ms-bg'), hh = DIA(d.d1) + DIA(d.d2); if (bg.dataset.h !== hh) { bg.dataset.h = hh; bg.innerHTML = hh; }
+        });
+    }
+    function mount(h) {
+        const det = h.slice(h.indexOf('<!--DET-->') + 10);
+        let wrap = panel.querySelector('.ms-wrap');
+        if (!wrap || !panel.querySelector('.ms-list')) {
+            panel.innerHTML = '<div class="ms-art"></div><div class="ms-wrap"><div class="ms-top"><button type="button" class="ms-back">‹ VOLVER</button><span class="ms-ttl">MISIONES</span></div><div class="ms-grid"><div class="ms-list"></div><div class="ms-det"></div></div></div>';
+            panel.querySelector('.ms-back').addEventListener('click', close); wrap = panel.querySelector('.ms-wrap'); lastTab = null;
+        }
+        updateList(tab || '1');
+        const d = panel.querySelector('.ms-det'), sc = wrap.scrollTop;
+        d.innerHTML = det; wrap.scrollTop = sc;
+        if (lastTab !== (tab || '1')) { const dir = (lastTab === '2' ? -1 : 1); lastTab = tab || '1'; d.style.setProperty('--sw', dir * 40 + 'px'); d.classList.remove('swap'); void d.offsetWidth; d.classList.add('swap'); }
+    }
+    function shellHtml(cur) { return '<!--DET-->'; }
     function tabsHtml(cur) {
         if (!load().m2) return '';
         return '<div class="ms-tabs"><button type="button" class="ms-tab' + (cur === '1' ? ' on' : '') + '" data-t="1">OPERACIÓN JOHTO</button><button type="button" class="ms-tab' + (cur === '2' ? ' on' : '') + '" data-t="2">MARTA</button></div>';
@@ -33129,31 +33169,29 @@ window.PAMis = (function () {
         if (!panel) return;
         const s = load(), m = s.m2 || {}, left = END2 - (Date.now() + offset), over = left <= 0;
         const rows = (board2 && board2.board) || [], meAcc = board2 && board2.me, best = m.best | 0;
-        let h = '<div class="ms-art ms-art2"></div><div class="ms-wrap"><div class="ms-top"><button type="button" class="ms-back">‹ VOLVER</button></div>' + tabsHtml('2')
-            + '<div class="ms-card ms-fm"><img class="ms-fi" alt="" draggable="false" src="' + FARMER + '"><div><small>MISIÓN 2 · CRIAPOKÉMON MARTA</small><h2>EL MEJOR MILTANK</h2></div></div>'
-            + '<div class="ms-card"><p>Marta quiere conocer al mejor ejemplar de Miltank posible. Elige uno de tu PC y ella lo calificará del 1 al 100 según sus <b>IVs</b>, su <b>tamaño</b> y su <b>peso</b>. La nota es global: se compara con la de todos los Aspirantes.</p>'
-            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'MISIÓN TERMINADA' : 'TIEMPO RESTANTE · hasta el lunes 26 de octubre, 12:00 md') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
+        let h = shellHtml('2')
+            + '<div class="ms-card ms-fm"><img class="ms-fi" alt="" draggable="false" src="' + FARMER + '"><div><small>MARTA · CRIAPOKÉMON</small><h2>EL MEJOR MILTANK</h2></div></div>'
+            + '<div class="ms-card"><div class="ms-chips"><span>IVs</span><span>TAMAÑO</span><span>PESO</span><em>nota 1–100</em></div>'
+            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'TERMINADA' : 'TIEMPO RESTANTE') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
             + '<div class="ms-me"><span>TU MEJOR NOTA</span><b>' + (best ? best + '<small class="ms-of">/100</small>' : '—') + '</b></div>'
-            + (m.last ? '<div class="ms-say"><b>' + esc(m.last.name) + ': ' + m.last.score + '/100.</b> ' + esc(verdict(m.last.score)) + (m.last.best > m.last.score ? ' <i>Ya tenías un ejemplar con mejor nota (' + m.last.best + '): me quedo con ese.</i>' : '') + '</div>' : '') + '</div>';
-        if (over && rows.length) h += '<div class="ms-win"><small>MEJOR MILTANK DE LA REGIÓN</small><b>' + esc(rows[0].name || 'Entrenador') + '</b><span>' + rows[0].n + '/100</span></div>';
+            + (m.last ? '<div class="ms-say"><b>' + esc(m.last.name) + ': ' + m.last.score + '/100</b></div>' : '') + '</div>';
+        if (over && rows.length) h += '<div class="ms-win"><small>GANADOR</small><b>' + esc(rows[0].name || 'Entrenador') + '</b><span>' + rows[0].n + '/100</span></div>';
         { const iWon2 = over && rows.length && rows[0].acc === meAcc, got = m.claimed || (board2 && board2.claim);
-          h += '<div class="ms-card ms-rw2"><small>RECOMPENSA PARA EL MEJOR MILTANK</small><div class="ms-rwl"><span><b>25.000</b> Pokémonedas</span><span><b>10</b> Ultra Ball</span><span><b>2</b> Tiquetes de Raid</span></div>'
-            + (iWon2 && !got ? '<p>¡Tu Miltank es el mejor de la región! Marta te entrega tu premio.</p><button type="button" class="ms-claim ms-claim2"' + (claiming ? ' disabled' : '') + '>' + (claiming ? 'RECLAMANDO…' : 'RECLAMAR RECOMPENSA') + '</button>'
-              : got ? '<p>Recompensa reclamada. ¡Gracias por la ayuda!</p>' : '<p>' + (over ? 'La recompensa es solo para el ganador.' : 'Solo el Aspirante con la nota más alta cuando termine la misión se lleva el premio.') + '</p>') + '</div>'; }
+          h += '<div class="ms-card ms-rw2"><small>PREMIO AL MEJOR</small><div class="ms-rwl"><span><b>25.000</b> Pokémonedas</span><span><b>10</b> Ultra Ball</span><span><b>2</b> Tiquetes de Raid</span></div>'
+            + (iWon2 && !got ? '<button type="button" class="ms-claim ms-claim2"' + (claiming ? ' disabled' : '') + '>' + (claiming ? 'RECLAMANDO…' : 'RECLAMAR RECOMPENSA') + '</button>'
+              : got ? '<p>Reclamado</p>' : '') + '</div>'; }
         if (!over) {
             h += '<div class="ms-card"><small>ELIGE TU EJEMPLAR</small>';
-            if (!specs.length) h += '<div class="ms-empty">No tienes ningún Miltank en tu PC. ¡Captura uno en la arena y vuelve!</div>';
+            if (!specs.length) h += '<div class="ms-empty">Sin Miltank en tu PC</div>';
             else h += '<div class="ms-sp">' + specs.map((p, i) => '<button type="button" class="ms-spr' + (sel2 === i ? ' sel' : '') + '" data-i="' + i + '"><img alt="" draggable="false" src="' + esc(p.sprite) + '"><span><b>' + esc(p.name) + '</b><em>IVs ' + p.sum + '/186 · ' + p.h.toFixed(2) + ' m · ' + p.w.toFixed(1) + ' kg</em></span><i>' + p.score + '</i></button>').join('') + '</div>'
-                + '<button type="button" class="ms-claim ms-send"' + (sel2 >= 0 && !sending && canNet() ? '' : ' disabled') + '>' + (sending ? 'MARTA ESTÁ EXAMINANDO…' : canNet() ? 'ENVIAR A MARTA' : 'SIN CONEXIÓN AL SERVIDOR') + '</button>'
-                + (msg2 ? '<div class="ms-empty">' + esc(msg2) + '</div>' : '') + '<p class="ms-hint">El número de cada ejemplar es la nota estimada. Puedes enviar otro más adelante: se queda tu mejor nota.</p>';
+                + '<button type="button" class="ms-claim ms-send"' + (sel2 >= 0 && !sending && canNet() ? '' : ' disabled') + '>' + (sending ? 'EXAMINANDO…' : canNet() ? 'ENVIAR' : 'SIN CONEXIÓN') + '</button>'
+                + (msg2 ? '<div class="ms-empty">' + esc(msg2) + '</div>' : '') + '';
             h += '</div>';
         }
         h += '<div class="ms-card"><small>CLASIFICACIÓN GLOBAL</small><div class="ms-bd">' + (rows.length ? rows.map((r, i) =>
             '<div class="ms-r' + (r.acc === meAcc ? ' me' : '') + (i === 0 ? ' first' : '') + '"><i>' + (i + 1) + '</i>' + (r.avatar && av(r.avatar) ? '<img alt="" draggable="false" src="' + av(r.avatar) + '">' : '<em></em>') + '<span>' + esc(r.name || 'Entrenador') + '</span><b>' + r.n + '<small class="ms-of">/100</small></b></div>').join('')
-            : '<div class="ms-empty">' + (canNet() ? 'Aún nadie ha enviado un Miltank. ¡Sé el primero!' : 'Sin conexión al servidor.') + '</div>') + '</div></div></div>';
-        const top = panel.querySelector('.ms-wrap'), sc = top ? top.scrollTop : 0;
-        panel.innerHTML = h; const w2 = panel.querySelector('.ms-wrap'); if (w2) w2.scrollTop = sc;
-        panel.querySelector('.ms-back').addEventListener('click', close); bindTabs();
+            : '<div class="ms-empty">' + (canNet() ? 'Sin envíos aún' : 'Sin conexión') + '</div>') + '</div></div></div>';
+        mount(h);
         panel.querySelectorAll('.ms-spr').forEach(b => b.addEventListener('click', () => { sel2 = +b.dataset.i; msg2 = ''; sfx('tick'); draw(); }));
         const sb = panel.querySelector('.ms-send'); if (sb) sb.addEventListener('click', submit2);
         const c2 = panel.querySelector('.ms-claim2'); if (c2) c2.addEventListener('click', claim2);
@@ -33166,8 +33204,8 @@ window.PAMis = (function () {
             const r = await SaveSys.call('POST', '/api/f/mission', { mid: 'm2', iv: sp.iv, hf: sp.hf, wf: sp.wf, name: t.name || '', avatar: t.avatar || '' });
             await new Promise(res => setTimeout(res, Math.max(0, 1600 - (Date.now() - t0))));
             if (r && r.ok) { const s = load(), m = s.m2 || (s.m2 = { start: Date.now() }); m.best = r.best; m.last = { score: r.score, best: r.best, name: sp.name }; save(s); sfx('levelup'); }
-            else if (r && r.closed) msg2 = 'La misión ya terminó.'; else msg2 = 'No se pudo enviar el ejemplar.';
-        } catch (e) { msg2 = 'No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.'; }
+            else if (r && r.closed) msg2 = 'Misión terminada'; else msg2 = 'No se pudo enviar';
+        } catch (e) { msg2 = 'Sin conexión: reintenta'; }
         sending = false; fetchBoard(); draw();
     }
     async function claim2() {
@@ -33293,6 +33331,72 @@ window.PAMis = (function () {
 #lg-dlg .dl-spr img[src^="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcUAAAFNCAYAAABxInQxAAEAAElEQVR42uz9"]{width:100%;height:100%;object-fit:contain;object-position:50% 100%}
 #ms-call .cl-no{background:#c0392b}#ms-call .cl-ok{background:#2fa84f;animation:clWob .9s ease-in-out infinite}
 @keyframes clWob{50%{transform:scale(1.06)}}
+/* ===== MISIONES v2: selector estilo "elige tu canción" (lista inclinada + panel de detalle) ===== */
+#ms-panel{background:radial-gradient(70% 50% at 12% 0%,rgba(255,255,255,.2),transparent 60%),repeating-linear-gradient(135deg,rgba(255,255,255,.055) 0 16px,transparent 16px 32px),linear-gradient(160deg,#17bccb 0%,#0e93ab 52%,#0a5d86 100%);color:#fff}
+#ms-panel::before{content:"";position:absolute;left:-8%;top:-6%;width:46%;height:44%;background:#ff4f9a;transform:skewX(-14deg) rotate(-4deg);opacity:.9;pointer-events:none}
+#ms-panel .ms-art{display:none}
+#ms-panel .ms-wrap{max-width:1100px;padding:12px 16px 40px}
+#ms-panel .ms-top{align-items:center;gap:12px;padding-bottom:12px}
+#ms-panel .ms-back{background:#111;border:2px solid #fff;color:#fff;border-radius:6px;transform:skewX(-10deg);padding:9px 18px;letter-spacing:.12em}
+#ms-panel .ms-ttl{font:900 italic 1.3rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.14em;color:#fff;text-shadow:3px 3px 0 #0a3d57}
+#ms-panel .ms-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
+#ms-panel .ms-list{display:flex;flex-direction:column;gap:10px}
+#ms-panel .ms-sort{font:800 .7rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.22em;color:#e6fbff;padding:2px 6px;opacity:.9}
+#ms-panel .ms-it{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;cursor:pointer;color:#fff;background:linear-gradient(100deg,#1b1a29,#2a2740);border-radius:4px;transform:skewX(-8deg) translateX(14px);transition:transform .18s cubic-bezier(.2,.9,.3,1.2),background .18s;box-shadow:0 4px 0 rgba(0,0,0,.28);touch-action:manipulation}
+#ms-panel .ms-it>*{transform:skewX(8deg)}
+#ms-panel .ms-it:hover{transform:skewX(-8deg) translateX(6px)}
+#ms-panel .ms-it.on{background:linear-gradient(100deg,#d9f23c,#bfe21d);color:#12140a;transform:skewX(-8deg) translateX(-4px) scale(1.03);box-shadow:0 6px 0 rgba(0,0,0,.3),0 0 22px rgba(217,242,60,.55)}
+#ms-panel .ms-it.on::before{content:"";position:absolute;left:-22px;top:50%;margin-top:-13px;border-left:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-right:26px solid #fff;transform:skewX(8deg);filter:drop-shadow(0 2px 0 rgba(0,0,0,.3))}
+#ms-panel .ms-cv{flex:none;width:58px;height:58px;border-radius:4px;overflow:hidden;background:#0d3550;border:2px solid rgba(255,255,255,.7);display:grid;place-items:end center}
+#ms-panel .ms-cv img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+#ms-panel .ms-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+#ms-panel .ms-tx b{font:900 1.02rem/1.1 'PA Chakra',system-ui,sans-serif;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ms-panel .ms-tx em{font:700 .62rem/1.1 'PA Chakra',system-ui,sans-serif;font-style:normal;letter-spacing:.1em;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ms-panel .ms-bg{display:flex;gap:3px;flex:none}
+#ms-panel .ms-dm{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;opacity:.55}
+#ms-panel .ms-dm.on{fill:#ff4f9a;stroke:#ff4f9a;opacity:1}
+#ms-panel .ms-it.on .ms-dm{stroke:#12140a}#ms-panel .ms-it.on .ms-dm.on{fill:#12140a}
+#ms-panel .ms-st{flex:none;min-width:70px;text-align:right;font:900 .8rem/1 'PA Chakra',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.04em;opacity:.85}
+#ms-panel .ms-new{position:absolute;right:6px;top:-9px;font:900 .6rem/1 'PA Chakra',system-ui,sans-serif;font-style:italic;color:#fff;background:#ff4f9a;padding:3px 8px;border-radius:2px;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+#ms-panel .ms-det{min-width:0}
+#ms-panel .ms-card{background:rgba(16,14,28,.93);border:0;border-left:6px solid #ff4f9a;border-radius:2px 18px 2px 18px;box-shadow:0 6px 0 rgba(0,0,0,.25);backdrop-filter:none}
+#ms-panel .ms-card>small,#ms-panel .ms-cd small,#ms-panel .ms-win small{color:#ff8cc0;font-weight:800;letter-spacing:.2em}
+#ms-panel h2{font:900 italic 1.7rem/1.05 'PA Chakra',system-ui,sans-serif;letter-spacing:.05em;text-shadow:3px 3px 0 #ff4f9a}
+#ms-panel p{color:#d6dcef}
+#ms-panel .ms-cd{background:rgba(217,242,60,.1);border:1px solid rgba(217,242,60,.35);border-radius:2px 12px 2px 12px}
+#ms-panel .ms-cd b{color:#d9f23c}
+#ms-panel .ms-me{color:#9fe9f5}
+#ms-panel .ms-win{background:linear-gradient(135deg,#ff4f9a,#ff9d2e);border-radius:2px 18px 2px 18px}
+#ms-panel .ms-r{border-bottom:1px solid rgba(255,255,255,.1)}#ms-panel .ms-r i{color:#ff8cc0}#ms-panel .ms-r.first i{color:#d9f23c}
+#ms-panel .ms-r.me{background:rgba(217,242,60,.16)}
+#ms-panel .ms-pk,#ms-panel .ms-spr{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);color:#fff}
+#ms-panel .ms-pk.sel,#ms-panel .ms-spr.sel{background:rgba(217,242,60,.22);border-color:#d9f23c}
+#ms-panel .ms-spr i{color:#d9f23c}
+#ms-panel .ms-claim{background:#d9f23c;border-color:#d9f23c;color:#12140a;border-radius:4px;transform:skewX(-8deg);font-weight:900}
+#ms-panel .ms-say{background:rgba(217,242,60,.1);border-color:rgba(217,242,60,.4);color:#f3fbb5}
+#ms-panel .ms-rwl span{background:rgba(255,79,154,.14);border-color:rgba(255,79,154,.5);color:#ffe3f0}#ms-panel .ms-rwl b{color:#ff8cc0}
+
+/* carrusel */
+#ms-panel .ms-list{position:relative;display:block;height:calc(var(--step) * 2 + 92px);--step:88px;perspective:800px}
+#ms-panel .ms-it{position:absolute;left:10px;right:40px;top:var(--step);margin:0;transform:translateY(calc(var(--k,0) * var(--step))) translateX(var(--tx,20px)) skewX(-8deg) scale(var(--sc,1));transform-origin:0 50%;
+  transition:transform .55s cubic-bezier(.2,.9,.25,1.08),opacity .4s,background .3s,box-shadow .3s,filter .4s}
+#ms-panel .ms-it:hover{transform:translateY(calc(var(--k,0) * var(--step))) translateX(calc(var(--tx,20px) - 6px)) skewX(-8deg) scale(var(--sc,1))}
+#ms-panel .ms-it.on{transform:translateY(calc(var(--k,0) * var(--step))) translateX(var(--tx,-8px)) skewX(-8deg) scale(var(--sc,1.1))}
+#ms-panel .ms-sort{display:none}
+#ms-panel .ms-det.swap{animation:msSwap .5s cubic-bezier(.2,.9,.25,1) both}
+@keyframes msSwap{from{opacity:0;transform:translateX(var(--sw,40px)) scale(.97)}to{opacity:1;transform:none}}
+#ms-panel .ms-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+#ms-panel .ms-chips span{font:900 .68rem/1 'PA Chakra',system-ui,sans-serif;letter-spacing:.12em;padding:5px 9px;background:rgba(255,79,154,.2);border:1px solid rgba(255,79,154,.55);color:#ffe3f0;transform:skewX(-10deg)}
+#ms-panel .ms-chips em{font-style:normal;margin-left:auto;font-size:.68rem;letter-spacing:.12em;color:#9fe9f5}
+@media (max-width:520px){#ms-panel .ms-list{--step:76px;height:calc(var(--step) * 2 + 84px)}}
+#ms-panel .ms-lock{margin-top:24vh;max-width:520px;margin-left:auto;margin-right:auto}
+@media (min-width:820px){
+  #ms-panel .ms-grid{grid-template-columns:minmax(320px,430px) 1fr;gap:26px}
+  #ms-panel .ms-det{order:1}#ms-panel .ms-list{order:2;position:sticky;top:8px}
+  #ms-panel .ms-wrap{padding-top:18px}
+}
+@media (max-width:520px){ #ms-panel .ms-st{display:none} #ms-panel .ms-it{padding-right:10px} #ms-panel .ms-tx b{font-size:.9rem} }
+
 
 /* ===== PC: la interfaz se escala con el tamaño del monitor (--pz lo calcula un script según ancho y alto) ===== */
 @media (min-width:900px) and (min-aspect-ratio:5/4) {

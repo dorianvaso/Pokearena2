@@ -26086,6 +26086,13 @@ const SaveSys = (() => {
         get active() { return settings.active; },
         get canGlobal() { return API !== null; },
         async call(method, p, body) { if (API === null) { const e = new Error('local'); e.status = 0; throw e; } await ensureToken(); return http(method, p, body); },
+        async callRaw(p, text) { // POST de texto sin tocar (para copiar/pegar partidas enteras desde la consola de desarrollador)
+            if (API === null) { const e = new Error('local'); e.status = 0; throw e; } await ensureToken();
+            const r = await fetch(API + p, { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'text/plain' }, body: text, cache: 'no-store' });
+            let j = null; try { j = await r.json(); } catch (e) {}
+            if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; e.msg = j && j.error; throw e; }
+            return j;
+        },
         get net() { return net; },                 // 'ok' | 'sync' | 'offline' | 'local'
         get pending() { return dirty.size; },
         get token() { return token; },
@@ -31009,6 +31016,8 @@ const DV = (() => {
         let h = '<div class="dv-prev" style="margin-top:14px"><div class="im">' + (src ? '<img src="' + src + '" alt="">' : '') + '</div><div class="tx"><b>' + esc((g.name || 'Sin nombre').toUpperCase()) + '</b>'
             + '<span>' + esc(g.id) + (g._acc ? ' · cuenta ' + esc(g._acc) : '') + ' · ranura ' + esc(g.slot || '—') + '</span><span>Pokédex ' + (g.dex | 0) + lv + ' · creada ' + esc(fmtDate(g.created)) + (g.status === 'eliminada' && g.deleted ? ' · eliminada ' + esc(fmtDate(g.deleted)) : '') + '</span></div></div>';
         if (g._acc) h += '<div class="dv-row2" style="margin-top:12px"><button type="button" class="dv-btn pri" data-gift="' + esc(g._acc) + '" style="flex:1">🎁 ENVIAR REGALO A ESTA CUENTA</button></div>';
+        if (g._acc && g.slot) h += '<div class="dv-row2" style="margin-top:10px"><button type="button" class="dv-btn" data-svcp="copy" style="flex:1">COPIAR DATOS</button><button type="button" class="dv-btn" data-svcp="paste" style="flex:1">PEGAR AQUÍ</button></div><div class="dv-sv-sum" id="dv-cpmsg" style="margin:8px 2px 0;text-align:center">' + (svClip ? 'Copiada: ' + esc(svClip.name) : '') + '</div>';
+        svCur = g;
         h += '<div class="dv-h3">Caja (PC)' + (g.status === 'eliminada' ? ' · último estado conocido' : '') + '</div>';
         if (!mons.length) {
             h += '<div class="dv-empty">' + ((g.box | 0) > 0 ? 'Aún no hay datos de la Caja de esta partida.<br>Se actualizan cuando esa cuenta vuelve a abrir el juego.' : 'La Caja de esta partida está vacía.') + '</div>';
@@ -31275,6 +31284,36 @@ const DV = (() => {
         const q = Math.max(1, Math.min(99, parseInt($('dv-iqty').value, 10) || 1)); $('dv-iqty').value = q;
         postGift({ items: [{ id: it.id, n: q }] }, q + ' × ' + it.name);
     }
+    let svClip = null, svCur = null;
+    async function svAdmin(op, acc, slot, text) { // ruta de administrador del servidor: lee o escribe una ranura entera de cualquier cuenta
+        let key = ''; try { key = localStorage.getItem('pokearena.adminkey') || ''; } catch (e) {}
+        if (!key) { key = window.prompt('Clave de administrador (ADMIN_KEY del servidor):') || ''; if (!key) return null; }
+        try { const r = await SaveSys.callRaw('/api/g/slotcopy', op + '\n' + key + '\n' + acc + '\n' + slot + '\n' + (text || '')); try { localStorage.setItem('pokearena.adminkey', key); } catch (e) {} return r; }
+        catch (e) { if (e.status === 403) { try { localStorage.removeItem('pokearena.adminkey'); } catch (x) {} } throw e; }
+    }
+    async function svCopyPaste(kind) {
+        const g = svCur, msg = $('dv-cpmsg'), say = t => { if (msg) msg.textContent = t; };
+        if (!g || !g._acc || !g.slot) return;
+        const err = e => e && e.status === 403 ? 'Clave incorrecta o el servidor sin ADMIN_KEY.' : e && e.status === 404 ? ((e.msg || 'No existe') + '.') : e && e.status === 400 ? 'El servidor no tiene la versión nueva (redespliega worker.js).' : 'Sin conexión con el servidor.';
+        try {
+            if (kind === 'copy') {
+                say('Copiando…'); const r = await svAdmin('get', g._acc, g.slot); if (!r) return say('');
+                if (!r.slot || !r.slot.data) return say('La partida está vacía.');
+                const text = JSON.stringify(r.slot); svClip = { name: (g.name || 'Sin nombre') + ' · ' + g.id, text };
+                let ok = false; try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+                say(ok ? 'Copiada: ' + svClip.name : 'Copiada en memoria: ' + svClip.name); sfx('pop'); return;
+            }
+            let text = ''; try { text = await navigator.clipboard.readText(); } catch (e) {}
+            let o = null; try { o = JSON.parse(text); } catch (e) {}
+            if (!(o && o.data && typeof o.data === 'object')) { if (svClip) { text = svClip.text; try { o = JSON.parse(text); } catch (e) {} } }
+            if (!(o && o.data && typeof o.data === 'object')) return say('No hay ninguna partida copiada.');
+            if (!window.confirm('¿Reemplazar TODA la partida "' + (g.name || 'Sin nombre') + '" (' + g.id + ') por la copiada' + (svClip ? ' (' + svClip.name + ')' : '') + '?\nEsta acción no se puede deshacer.')) return;
+            const d = o.data; d['pokearena.saveid'] = g.id; if (/^[A-Z0-9]{12}$/.test(g.code || '')) d['pokearena.savecode'] = g.code; // conserva la identidad de la partida destino
+            say('Pegando…'); const r = await svAdmin('set', g._acc, g.slot, JSON.stringify({ data: d, ts: Date.now() })); if (!r) return say('');
+            say('Pegada. Los dispositivos con este código la cargarán al abrir el juego.'); sfx('confirm');
+            try { PAGlobal.refresh(); } catch (e) {}
+        } catch (e) { say(err(e)); }
+    }
     function giftTo(acc) { // atajo desde el detalle de una cuenta (GUARDADOS)
         setTab('gen'); fillDest(acc); sfx('pop');
         const m = $('dv-gen'); if (m) m.scrollTop = 0;
@@ -31320,7 +31359,7 @@ const DV = (() => {
         $('dv-send').addEventListener('click', sendMon);
         $('dv-isend').addEventListener('click', sendItem);
         $('dv-to').addEventListener('change', () => { $('dv-to-id').hidden = $('dv-to').value !== '__id'; if (!$('dv-to-id').hidden) $('dv-to-id').focus(); sMsg(''); });
-        $('dv-detail').addEventListener('click', e => { const g = e.target.closest('[data-gift]'); if (g) giftTo(g.dataset.gift); });
+        $('dv-detail').addEventListener('click', e => { const g = e.target.closest('[data-gift]'); if (g) giftTo(g.dataset.gift); const c = e.target.closest('[data-svcp]'); if (c) svCopyPaste(c.dataset.svcp); });
     }
     bind();
     return { open, close };

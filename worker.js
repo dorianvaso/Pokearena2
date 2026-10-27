@@ -596,6 +596,30 @@ export default {
                 if (ids.length) await db.batch(ids.map(id => db.prepare('INSERT OR IGNORE INTO gift_claims (gid, h) VALUES (?1, ?2)').bind(id, h)));
                 return reply({ ok: true });
             }
+            if (route === '/api/g/slotcopy' && req.method === 'POST') { // consola de desarrollador: lee ('get') o reemplaza ('set') una ranura ENTERA de cualquier cuenta. Cuerpo de texto: op\nclave\ncuenta\nranura\n[partida]
+                const key = env.ADMIN_KEY;
+                if (!key) return reply({ error: 'falta configurar ADMIN_KEY en Cloudflare' }, 403);
+                const t = await req.text(); if (t.length > MAX_BODY + 1000) return reply({ error: 'demasiado grande' }, 413);
+                const head = []; let p = 0;
+                for (let i = 0; i < 4; i++) { const j = t.indexOf('\n', p); if (j < 0) return reply({ error: 'petición no válida' }, 400); head.push(t.slice(p, j)); p = j + 1; }
+                const op = head[0], acc = head[2], slot = head[3], body = t.slice(p);
+                if (head[1] !== key) return reply({ error: 'clave incorrecta' }, 403);
+                if (!/^[a-f0-9]{8}$/.test(acc) || !/^[123]$/.test(slot) || (op !== 'get' && op !== 'set')) return reply({ error: 'petición no válida' }, 400);
+                const row = await db.prepare('SELECT h FROM accounts WHERE substr(h, 1, 8) = ?1').bind(acc).first();
+                if (!row) return reply({ error: 'esa cuenta no existe' }, 404);
+                if (op === 'get') {
+                    const txt = await readKey(db, row.h, 'slot' + slot);
+                    return txt ? reply('{"ok":true,"slot":' + txt + '}') : reply({ error: 'esa ranura está vacía' }, 404);
+                }
+                if (body[0] !== '{' || !body.includes('"data"')) return reply({ error: 'partida no válida' }, 400);
+                await writeKey(db, row.h, 'slot' + slot, body);
+                const cm = /"pokearena\.savecode"\s*:\s*"([A-Z0-9]{12})"/.exec(body);
+                if (cm) await db.batch([
+                    db.prepare('DELETE FROM save_codes WHERE h = ?1 AND slot = ?2 AND code <> ?3').bind(row.h, +slot, cm[1]),
+                    db.prepare('INSERT OR REPLACE INTO save_codes (code, h, slot, ts) VALUES (?1, ?2, ?3, ?4)').bind(cm[1], row.h, +slot, Date.now()),
+                ]);
+                return reply({ ok: true });
+            }
             if (route === '/api/g/clear' && req.method === 'POST') {
                 const key = env.ADMIN_KEY;
                 if (!key) return reply({ error: 'falta configurar ADMIN_KEY en Cloudflare' }, 403);

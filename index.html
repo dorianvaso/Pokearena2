@@ -25872,6 +25872,35 @@ const SaveSys = (() => {
             backoff = Math.min(60000, (backoff || 3000) * 2); scheduleSync(backoff);
         } finally { syncing = false; fireNet(); }
     }
+    // El código de la partida apunta en el servidor a la ÚLTIMA copia guardada (de cualquier dispositivo). Si esa copia es más reciente
+    // que la de este dispositivo, se adopta: así todos los dispositivos con el mismo código quedan con la partida más reciente.
+    async function adoptNewer(only) {
+        let changed = false;
+        await Promise.all(SLOTS.filter(n => (only == null || n === only) && slots[n] && slots[n].data).map(async n => {
+            const code = slots[n].data['pokearena.savecode'];
+            if (!/^[A-Z0-9]{12}$/.test(code || '')) return;
+            let r; try { r = await http('POST', '/api/loadcode', { code }); } catch (e) { return; }
+            const rem = r && r.slot; if (!rem || !rem.data || typeof rem.data !== 'object') return;
+            if ((rem.ts || 0) <= ((slots[n] && slots[n].ts) || 0) + 1000) return; // la de aquí es igual o más reciente
+            const d = clone(rem.data); if (slots[n].data['pokearena.saveid']) d['pokearena.saveid'] = slots[n].data['pokearena.saveid']; d['pokearena.savecode'] = code;
+            slots[n] = { data: d, ts: rem.ts }; dirty.delete('slot:' + n); await putLocalOnly('slot:' + n, slots[n]); changed = true;
+        }));
+        if (changed) putLocalOnly('dirty', [...dirty]);
+        return changed;
+    }
+    let lastAdopt = 0;
+    async function refreshFromOthers() { // al volver a la pestaña/app: si otro dispositivo avanzó la partida activa, se recarga con ella
+        if (API === null || net === 'local' || Date.now() - lastAdopt < 8000) return;
+        try { if (typeof gameRunning !== 'undefined' && gameRunning) return; } catch (e) {}
+        lastAdopt = Date.now();
+        try {
+            if (timer) await flushNow(); // lo que se hizo aquí sin guardar cuenta como lo más reciente
+            await syncNow();
+            if (await adoptNewer(settings.active)) location.reload();
+        } catch (e) {}
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshFromOthers(); });
+    window.addEventListener('focus', () => refreshFromOthers());
     function fireNet() { try { window.dispatchEvent(new CustomEvent('pa-net', { detail: net })); } catch (e) {} }
     window.addEventListener('online', () => scheduleSync(300));
 
@@ -25969,6 +25998,7 @@ const SaveSys = (() => {
                     }
                 }
                 net = 'ok';
+                try { await adoptNewer(); } catch (e) {} // otro dispositivo pudo avanzar la misma partida (mismo código)
             } catch (e) { net = 'offline'; }
             fireNet();
         }

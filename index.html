@@ -3126,7 +3126,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #lt-sun { position:absolute; inset:0; z-index:16; pointer-events:none; mix-blend-mode:screen; overflow:hidden; contain:layout paint style;
             background:radial-gradient(circle at var(--sun-px,50%) var(--sun-py,0px), rgba(var(--sun-rgb,255,244,205), var(--sun-a,.3)) 0%, rgba(var(--sun-rgb,255,244,205), calc(var(--sun-a,.3) * .38)) 26%, rgba(var(--sun-rgb,255,244,205), 0) 64%); }
         /* Sombras bajo los pokémon: dirección, largo, opacidad y desenfoque según la posición del sol/luna */
-        .pokemon-wrapper::before { transform:translateX(calc(-50% + var(--sh-dx, 0px))) scaleX(var(--sh-sx, 1)); opacity:var(--sh-op, 1); }
+        .pokemon-wrapper::before { transform:translateX(calc(-50% + var(--sh-dx, 0px))) scaleX(calc(var(--sh-sx, 1) * var(--jk, 1))) scaleY(var(--jk, 1)); opacity:calc(var(--sh-op, 1) * var(--jo, 1)); }
         #camera-layer.sh-blur .pokemon-wrapper::before { filter:blur(var(--sh-bl, 0px)); } /* solo hay filtro cuando el desenfoque es > 0 (atardecer/noche): con blur(0px) cada sombra creaba igualmente una capa de filtro */
         /* Indicador de momento del día */
         #lt-chip { position:absolute; left:8px; top:8px; z-index:30; display:flex; align-items:center; gap:6px; padding:4px 9px 7px; border-radius:9px; background:rgba(10,15,28,.62); border:1px solid rgba(255,255,255,.18); color:#f1f5f9; font:700 11px/1 'PA Chakra S', system-ui,sans-serif; pointer-events:none; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); box-shadow:0 0 10px -2px var(--lt-c,#fbbf24); }
@@ -19249,22 +19249,84 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (!c || !c.wrapper || c.duel) return;
             c.pose = { type, dir: dir || 1, amp: amp || 1, t0: performance.now(), dur: Math.max(120, ms / gameSpeed) };
         }
+        // ===== MOTOR DE MOVIMIENTO (solo visual) =====
+        // Principios: anticipación -> acción -> seguimiento; aplastar/estirar según la velocidad; arcos parabólicos con sombra que reacciona a la altura;
+        // inclinación hacia donde se mueve (nunca giros de 360°); y asentamiento con rebote amortiguado. Todo pasa además por un filtro de resorte
+        // (ncSmooth) que elimina los saltos bruscos entre estados.
+        const moC = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x;
+        const moSm = t => { t = moC(t); return t * t * (3 - 2 * t); };
+        const moOut = t => { t = moC(t); return 1 - (1 - t) * (1 - t) * (1 - t); };
+        const moExp = t => { t = moC(t); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
+        const moWob = (u, f, d) => u <= 0 ? 0 : Math.sin(6.2832 * f * u) * Math.exp(-d * u); // oscilación amortiguada
+        const moLat = (k, a, h) => k < a ? moExp(k / a) : k < a + h ? 1 : 1 - moSm((k - a - h) / Math.max(0.001, 1 - a - h)); // sale en seco, se mantiene y vuelve suave
+        const moBank = (f, k, g) => moC((f(Math.min(1, k + 0.025)) - f(Math.max(0, k - 0.025))) * g, -1, 1) * moSm(k / 0.1); // velocidad lateral normalizada (para inclinarse)
+        function moJump(k, H, A, F) { // salto completo: agacha (A) -> vuelo parabólico (F) -> aterriza con rebote
+            const o = { oy: 0, sx: 1, sy: 1 };
+            if (k < A) { const u = moSm(k / A); o.sy = 1 - 0.24 * u; o.sx = 1 + 0.15 * u; return o; }
+            if (k < A + F) {
+                const u = (k - A) / F, v = Math.abs(1 - 2 * u); o.oy = -H * 4 * u * (1 - u);
+                const sy = 1 + 0.17 * v - 0.03 * (1 - v), sx = 1 - 0.1 * v + 0.05 * (1 - v), b = moSm(u / 0.14);
+                o.sy = 0.76 + (sy - 0.76) * b; o.sx = 1.15 + (sx - 1.15) * b; return o;
+            }
+            const w = (k - A - F) / Math.max(0.001, 1 - A - F), q = Math.exp(-4.2 * w) * Math.cos(6.2832 * 1.1 * w);
+            o.sy = 1 - 0.24 * q; o.sx = 1 + 0.16 * q; return o;
+        }
+        const MO_W = [70, 70, 52, 64, 64], MO_Z = [0.9, 0.9, 0.7, 0.65, 0.65];
+        function ncSmooth(c, ts, ox, oy, rot, sx, sy) { // filtro de resorte por canal: sin tirones al cambiar de estado, con un pequeño rebote natural
+            const T = [ox, oy, rot, sx, sy]; let m = c._ms;
+            if (!m || ts - m.t > 200 || ts < m.t) { m = c._ms = { t: ts, p: T.slice(), v: [0, 0, 0, 0, 0] }; return m.p; }
+            const dt = Math.min(0.04, (ts - m.t) / 1000); m.t = ts; if (dt <= 0) return m.p;
+            const g = Math.max(1, Math.min(3, gameSpeed || 1));
+            for (let i = 0; i < 5; i++) {
+                const w = MO_W[i] * g, z = MO_Z[i], n = Math.min(8, Math.ceil(w * dt / 0.45)), h = dt / n; let p = m.p[i], v = m.v[i];
+                for (let q = 0; q < n; q++) { v += (w * w * (T[i] - p) - 2 * z * w * v) * h; p += v * h; }
+                m.p[i] = p; m.v[i] = v;
+            }
+            return m.p;
+        }
         function ncPoseCalc(P, k) { // k = 0..1 -> {ox, oy, r, sx, sy}
-            const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1 }, sn = Math.sin(Math.PI * k);
+            const o = { ox: 0, oy: 0, r: 0, sx: 1, sy: 1 }, d = P.dir, A = P.amp || 1;
+            const cp = j => { o.oy = j.oy; o.sx = j.sx; o.sy = j.sy; };
             switch (P.type) {
                 case 'dodge': {
-                    const e = Math.sin(Math.PI * Math.min(1, k / 0.85)), sm = k * k * (3 - 2 * k), v = P.v || 0;
-                    if (v === 1) { o.ox = P.dir * 16 * e; o.oy = -38 * sn; o.r = -P.dir * 360 * sm; o.sx = 0.94; o.sy = 1.06; }                       // voltereta
-                    else if (v === 2) { o.ox = P.dir * 10 * e; o.sy = 1 - 0.4 * e; o.sx = 1 + 0.2 * e; o.r = P.dir * 5 * e; }                         // agacharse
-                    else if (v === 3) { o.ox = P.dir * 14 * e; o.oy = -24 * sn; o.sx = Math.cos(4 * Math.PI * k) * 0.95; o.sy = 1.06; }                // pirueta
-                    else if (v === 4) { const kk = Math.min(1, k / 0.35), back = Math.max(0, (k - 0.55) / 0.45); o.ox = P.dir * 46 * Math.sin(Math.PI / 2 * kk) * (1 - back * back); o.r = -P.dir * 20 * Math.sin(Math.PI * kk); o.sx = 1.15; o.sy = 0.9; } // paso relámpago
-                    else if (v === 5) { o.ox = P.dir * 8 * e; o.oy = -46 * sn; o.r = P.dir * 16 * e; o.sx = 0.9; o.sy = 1.14; }                         // salto
-                    else if (v === 6) { o.ox = -P.dir * 20 * e; o.oy = -6 * sn; o.r = P.dir * 22 * e; o.sx = 0.9; o.sy = 1.1; }                        // paso atrás
-                    else { o.ox = P.dir * 26 * P.amp * e; o.oy = -12 * Math.sin(Math.PI * Math.min(1, k / 0.6)); o.r = -P.dir * 14 * e; o.sx = 0.92; o.sy = 1.08; }
+                    const v = P.v || 0;
+                    if (v === 0) { // paso lateral: se agacha, sale en seco inclinado hacia donde va y vuelve suave
+                        const kk = moC((k - 0.08) / 0.92), f = x => moLat(x, 0.3, 0.14), b = moBank(f, kk, 3.4), cr = k < 0.08 ? moSm(k / 0.08) : 0;
+                        o.ox = d * 32 * f(kk); o.r = d * 13 * b; o.sx = 1 + 0.13 * Math.abs(b) + 0.08 * cr; o.sy = 1 - 0.07 * Math.abs(b) - 0.14 * cr;
+                    } else if (v === 1) { // salto sobre el golpe
+                        cp(moJump(k, 40, 0.2, 0.46)); o.ox = d * 10 * moSm(k / 0.66) * (1 - moSm((k - 0.66) / 0.34)); o.r = d * 7 * Math.sin(Math.PI * moC((k - 0.2) / 0.46));
+                    } else if (v === 2) { // agacharse y levantarse con un pequeño rebote
+                        const cr = moSm(k / 0.22) * (1 - moSm((k - 0.52) / 0.3)), w = moC((k - 0.52) / 0.48), wb = k > 0.52 ? moWob(w, 1.5, 3.5) : 0;
+                        o.sy = 1 - 0.4 * cr + 0.07 * wb; o.sx = 1 + 0.22 * cr - 0.04 * wb; o.ox = d * 9 * cr; o.r = -d * 5 * cr;
+                    } else if (v === 3) { // saltito lateral en diagonal
+                        const f = x => moLat(x, 0.64, 0.1); cp(moJump(k, 24, 0.14, 0.5)); o.ox = d * 26 * f(k); o.r = d * 14 * moBank(f, k, 3);
+                    } else if (v === 4) { // paso relámpago
+                        const kk = moC((k - 0.05) / 0.95), f = x => moLat(x, 0.2, 0.1), b = moBank(f, kk, 3.6), sp = Math.abs(b);
+                        o.ox = d * 48 * f(kk); o.r = d * 11 * b; o.sx = 1 + 0.22 * sp; o.sy = 1 - 0.1 * sp;
+                    } else if (v === 5) { // salto alto
+                        cp(moJump(k, 54, 0.17, 0.5)); o.ox = d * 6 * Math.sin(Math.PI * k); o.r = d * 8 * Math.sin(Math.PI * moC((k - 0.17) / 0.5));
+                    } else { // salto atrás
+                        const f = x => moLat(x, 0.62, 0.06); cp(moJump(k, 16, 0.12, 0.5)); o.ox = -d * 22 * f(k); o.r = -d * 12 * moBank(f, k, 3);
+                    }
                     break; }
-                case 'flinch': o.ox = P.dir * 9 * P.amp * sn; o.r = P.dir * 11 * P.amp * sn; o.sx = 1 + 0.1 * P.amp * sn; o.sy = 1 - 0.1 * P.amp * sn; break;
-                case 'crit': if (P.v === 1) { o.ox = P.dir * 22 * sn; o.oy = -22 * sn; o.r = P.dir * 300 * k; o.sx = 1 + 0.12 * sn; o.sy = 1 - 0.12 * sn; break; } o.ox = P.dir * 15 * sn; o.oy = -9 * sn; o.r = P.dir * 26 * Math.sin(k * Math.PI * 3) * (1 - k); o.sx = 1 + 0.2 * sn; o.sy = 1 - 0.2 * sn; break;
-                case 'stumble': o.ox = P.dir * 8 * sn; o.r = P.dir * 17 * sn; o.sx = 1 + 0.08 * sn; o.sy = 1 - 0.12 * sn; break;
+                case 'flinch': {
+                    const prof = moOut(k / 0.18) * (1 - moSm((k - 0.18) / 0.82)), wb = k > 0.18 ? moWob(moC((k - 0.18) / 0.82), 2, 4) : 0;
+                    o.ox = d * 9 * A * prof; o.r = d * 11 * A * prof + d * 3 * A * wb; o.sx = 1 + 0.1 * A * prof; o.sy = 1 - 0.11 * A * prof; break; }
+                case 'crit': {
+                    if (P.v === 1) { // golpe lanzado: sale despedido en arco, se inclina hacia atrás y rebota al caer
+                        const f = x => moLat(x, 0.6, 0); cp(moJump(k, 32, 0.1, 0.52));
+                        o.ox = d * 24 * f(k); o.r = d * 24 * Math.sin(Math.PI * moC(k / 0.6)) + (k > 0.62 ? d * 7 * moWob(moC((k - 0.62) / 0.38), 1.5, 3.5) : 0); break; }
+                    const prof = moOut(k / 0.22) * (1 - moSm((k - 0.22) / 0.78)), wb = k > 0.22 ? moWob(moC((k - 0.22) / 0.78), 2.5, 3.5) : 0;
+                    o.ox = d * 17 * prof; o.r = d * 22 * prof + d * 6 * wb; o.oy = -7 * prof; o.sx = 1 + 0.16 * prof; o.sy = 1 - 0.18 * prof; break; }
+                case 'stumble': {
+                    const base = moSm(k / 0.3) * (1 - moSm((k - 0.3) / 0.4));
+                    o.ox = d * 8 * base; o.r = d * 20 * base + (k > 0.3 ? d * 5 * moWob((k - 0.3) / 0.7, 2, 3.2) : 0); o.sy = 1 - 0.1 * base; o.sx = 1 + 0.06 * base; o.oy = -4 * Math.sin(Math.PI * moC(k / 0.5)); break; }
+                case 'strike': { // contacto del golpe cuerpo a cuerpo: extensión, parada breve y vuelta con asentamiento
+                    const prof = k < 0.16 ? moOut(k / 0.16) : k < 0.26 ? 1 : 1 - moSm((k - 0.26) / 0.34), wb = k > 0.6 ? moWob((k - 0.6) / 0.4, 1.5, 3.5) : 0;
+                    o.ox = d * 14 * A * prof; o.r = d * 9 * prof; o.sx = 1 + 0.15 * prof - 0.03 * wb; o.sy = 1 - 0.1 * prof + 0.05 * wb; break; }
+                case 'cast': { // ataque a distancia: se echa atrás, suelta hacia delante y se asienta
+                    const p1 = moSm(k / 0.2) * (1 - moSm((k - 0.2) / 0.1)), p2 = moSm((k - 0.22) / 0.1) * (1 - moSm((k - 0.34) / 0.4)), wb = k > 0.6 ? moWob((k - 0.6) / 0.4, 1.5, 3.5) : 0;
+                    o.ox = -d * 5 * p1 + d * 9 * p2; o.r = -d * 7 * p1 + d * 8 * p2; o.sy = 1 - 0.14 * p1 - 0.05 * p2 + 0.04 * wb; o.sx = 1 + 0.08 * p1 + 0.1 * p2; break; }
             }
             return o;
         }
@@ -19276,7 +19338,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (!c._dsOn) {
                 c._dsOn = true; c._dsB = 0; c._dsSide = Math.random() < 0.5 ? -1 : 1;
                 const w = Math.random();
-                c._dsS = w < 0.18 ? 'lunge' : w < 0.34 ? 'zig' : w < 0.5 ? 'arc' : w < 0.64 ? 'hop' : w < 0.76 ? 'spin' : w < 0.88 ? 'skid' : 'weave';
+                c._dsS = w < 0.18 ? 'lunge' : w < 0.34 ? 'zig' : w < 0.5 ? 'arc' : w < 0.64 ? 'hop' : w < 0.76 ? 'leap' : w < 0.88 ? 'skid' : 'weave';
             }
             { const mvR = movesData[c.attackKey]; if (mvR && mvR.roll) c._dsS = 'spin'; } // Desenrollar: embiste rodando
             const side = c._dsSide, st = c._dsS, px = -dy, py = dx;
@@ -19284,6 +19346,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const p = Math.min(1, (c.dashT || 0) / DASH_WINDUP);
                 if (st === 'spin') o.r += -side * 40 * p;
                 else if (st === 'hop') { o.sy *= 0.9; o.oy += 3 * p; }
+                else if (st === 'leap') { o.sy *= 0.88; o.sx *= 1.06; o.oy += 3 * p; }
                 else if (st === 'zig') o.ox += side * 6 * p;
                 else if (st === 'arc') o.ox += -side * 8 * p;
                 else if (st === 'skid') { o.sy *= 0.88; o.sx *= 1.06; }
@@ -19299,6 +19362,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 case 'arc': { const lat = 26 * Math.sin(Math.PI * prog) * side; o.ox += px * lat; o.oy += py * lat * 0.6; o.r += side * 12 * Math.cos(Math.PI * prog); break; }
                 case 'hop': { const h = Math.abs(Math.sin(prog * Math.PI * 3)); o.oy -= 22 * h; o.sy *= 1 + 0.1 * h - 0.16 * Math.pow(1 - h, 5); o.sx *= 1 - 0.05 * h + 0.1 * Math.pow(1 - h, 5); break; }
                 case 'spin': { const e = prog * prog * (3 - 2 * prog), rl = (movesData[c.attackKey] || {}).roll ? 2 : 1; o.r += (dx >= 0 ? 1 : -1) * 360 * rl * e; o.sx *= 0.93; o.oy -= 6 * Math.sin(Math.PI * prog); break; }
+                case 'leap': { const H = Math.max(16, Math.min(46, c._dsB * 0.3)), v = Math.abs(1 - 2 * prog), sg = dx >= 0 ? 1 : -1; o.oy -= H * 4 * prog * rest; o.sy *= 1 + 0.12 * v; o.sx *= 1 - 0.06 * v; o.r += sg * 11 * (2 * prog - 1) * Math.min(1, H / 30); break; } // salto en arco hasta el rival: aterriza al llegar
                 case 'skid': { o.sy *= 0.84; o.sx *= 1.16; o.r *= 0; if (ts - (c._dsDust || 0) > 55) { c._dsDust = ts; const ft = feetOf(c); dashDust(ft.x, ft.y, 1, dx); } break; }
                 case 'weave': { const w = Math.sin(prog * Math.PI * 2.5) * 20 * Math.min(1, rest * 3) * side; o.ox += px * w; o.oy += py * w * 0.6 - 8 * Math.sin(Math.PI * prog); o.r += side * 16 * Math.cos(prog * Math.PI * 2.5); break; }
             }
@@ -19310,7 +19374,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 case 'hop': { const h = Math.sin(Math.PI * q); o.oy -= 22 * h; o.sx *= 1 - 0.1 * h; o.sy *= 1 + 0.12 * h; break; }
                 case 'slide': o.sy *= 0.88; o.sx *= 1.12; o.rset = 0.25; break;
                 case 'sway': o.ox += Math.sin(q * Math.PI * 4) * 7; o.r += Math.cos(q * Math.PI * 4) * 9; break;
-                case 'flip': { const e = q * q * (3 - 2 * q); o.rset = 0; o.r = mdx * 360 * e; o.oy -= 18 * Math.sin(Math.PI * q); break; }
+                case 'leap': { const hh = Math.sin(Math.PI * q), v = Math.abs(Math.cos(Math.PI * q)); o.oy -= 28 * hh; o.sy *= 1 + 0.12 * v; o.sx *= 1 - 0.06 * v; o.r += mdx * 9 * (2 * q - 1); break; }
                 case 'lean': o.r += mdx * 6; o.sx *= 1.05; o.oy -= 4 * Math.sin(Math.PI * q); break;
             }
             return o;
@@ -23254,6 +23318,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     const nMelee = (move.minHits && move.visual === 'melee') ? move.minHits + Math.floor(Math.random() * (move.hits - move.minHits + 1)) : (move.hits || 1); // Golpes Furia: 2-5
                     resolveSingleHit(move, c, target, impactX, impactY, sndHit, '#e5e7eb', '#f1f5f9', nMelee > 1 ? 'golpe 1' : null);
                     dashImpactFx(c, target);
+                    try { ncPose(c, 'strike', Math.sign(target.x - c.x) || c.facing || 1, 1, 440); } catch (e) {}
                     for (let hn = 2; hn <= nMelee && move.visual === 'melee'; hn++) { // Ala Bis: golpes extra seguidos
                         setTimeout(() => { if (!gameRunning || c.fainted || target.fainted || target.isEvolving || c.isEvolving) return; resolveSingleHit(move, c, target, target.x + 35, target.y + 35, sndHit, '#e5e7eb', '#f1f5f9', 'golpe ' + hn); dashImpactFx(c, target); }, (hn - 1) * 260 / gameSpeed);
                     }
@@ -23314,7 +23379,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const ph = (((now * gameSpeed) + c.strideOff) % STRIDE_MS) / STRIDE_MS, A = 0.2;
                 let m = 0, dm = 0;
                 if (ph >= A) { const q = (ph - A) / (1 - A); m = 3.5 * (1 - q) * (1 - q); dm = 10 * (1 - q) * (1 - q) * (1 - q); }
-                if (c._lph != null && ph < c._lph) { const w = Math.random(); c.strideStyle = w < 0.3 ? 'dash' : w < 0.52 ? 'hop' : w < 0.66 ? 'slide' : w < 0.8 ? 'sway' : w < 0.9 ? 'lean' : 'flip'; }
+                if (c._lph != null && ph < c._lph) { const w = Math.random(); c.strideStyle = w < 0.3 ? 'dash' : w < 0.52 ? 'hop' : w < 0.66 ? 'slide' : w < 0.8 ? 'sway' : w < 0.9 ? 'lean' : 'leap'; }
                 c._lph = ph; c.strideQ = ph >= A ? (ph - A) / (1 - A) : 0;
                 if (c.strideCrouch && ph >= A) playDashSwoosh(0.55); // arranca el dash
                 c.strideM = m; c.strideCrouch = ph < A;
@@ -23639,7 +23704,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         const DUEL_RECS = { dashout: 210, spinout: 260, hopout: 250 };
         const DUEL_REACT = ['stagger', 'spin', 'bounce', 'skid', 'flip', 'tumble', 'shake'];
         const DUEL_HVP = { // perfil base de la reacción del rival: d = empuje, lift = altura, lf = fracción en el aire, spin = giro, bounce = rebotes, jit = temblor, sq = aplastamiento
-            bump: { d: 48 }, clash: { d: 44 }, upper: { d: 26, lift: 100, lf: 0.55, spin: 360 }, slam: { d: 14, lift: 78, lf: 0.45, bounce: 2, sq: 1 }, whiff: { d: 0 } };
+            bump: { d: 48 }, clash: { d: 44 }, upper: { d: 26, lift: 100, lf: 0.55, spin: 30 }, slam: { d: 14, lift: 78, lf: 0.45, bounce: 2, sq: 1 }, whiff: { d: 0 } };
         const dEase = { out: t => 1 - Math.pow(1 - t, 3), in: t => t * t, io: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2 };
         const dClamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
         const dLerp = (a, b, t) => a + (b - a) * t;
@@ -23779,11 +23844,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             else if (K.hit === 'slam') K.react = 'slam';
             else if (K.hit !== 'clash') {
                 K.react = dPick(DUEL_REACT); const sgn = Math.random() < 0.5 ? 1 : -1;
-                if (K.react === 'spin') { vp.spin = 720 * sgn; vp.d *= 1.2; } // vueltas completas: el rival termina de pie, sin "salto" al acabar el giro
+                if (K.react === 'spin') { vp.spin = 26 * sgn; vp.lift = Math.max(vp.lift || 0, 14); vp.lf = vp.lf || 0.4; vp.d *= 1.2; } // vueltas completas: el rival termina de pie, sin "salto" al acabar el giro
                 else if (K.react === 'bounce') { vp.lift = Math.max(vp.lift || 0, 38); vp.lf = vp.lf || 0.4; vp.bounce = (vp.bounce || 0) + 2; }
                 else if (K.react === 'skid') { vp.d *= 1.8; vp.sq = 0.8; vp.skid = 1; }
-                else if (K.react === 'flip') { vp.lift = Math.max(vp.lift || 0, 62); vp.lf = vp.lf || 0.5; vp.spin = 360 * sgn; }
-                else if (K.react === 'tumble') { vp.d *= 1.4; vp.lift = Math.max(vp.lift || 0, 30); vp.lf = vp.lf || 0.4; vp.spin = 1080 * sgn; vp.bounce = 1; }
+                else if (K.react === 'flip') { vp.lift = Math.max(vp.lift || 0, 62); vp.lf = vp.lf || 0.5; vp.spin = 30 * sgn; }
+                else if (K.react === 'tumble') { vp.d *= 1.4; vp.lift = Math.max(vp.lift || 0, 30); vp.lf = vp.lf || 0.4; vp.spin = 36 * sgn; vp.bounce = 1; }
                 else if (K.react === 'shake') { vp.jit = 5; vp.d *= 0.6; }
             }
             if (fin) { vp.d *= 1.5; if (vp.lift) vp.lift *= 1.25; }
@@ -23807,7 +23872,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 else { const w = (u - lf) / (1 - lf), nb = P.bounce || 0;
                     for (let b = 0; b < nb; b++) { const w0 = b / nb * 0.8, w1 = (b + 1) / nb * 0.8; if (w >= w0 && w < w1) o.l = -(P.lift * 0.42 / (b + 1)) * Math.sin(Math.PI * (w - w0) / (w1 - w0)); } }
             }
-            if (P.spin) o.r = P.spin * dEase.io(dClamp(u / (P.lift ? lf : 0.55)));
+            if (P.spin) { const ue = P.lift ? lf : 0.55, w = dClamp(u / ue), sgs = P.spin < 0 ? -1 : 1; o.r = sgs * Math.min(Math.abs(P.spin), 38) * Math.sin(Math.PI * w) * (1 - 0.15 * w) + (u > ue ? sgs * 7 * moWob((u - ue) / 0.4, 1.5, 3.5) : 0); } // se inclina hacia atrás y se recompone
             if (P.sq) { const q = Math.sin(Math.PI * dClamp(u / 0.6)); o.sx = 1 + 0.3 * P.sq * q; o.sy = 1 - 0.35 * P.sq * q; }
             if (P.jit) o.dx = Math.sin(tau * 0.9) * P.jit * (1 - u);
             if (P.dodge) { o.s = P.sd * Math.sin(Math.PI * dClamp(u / 0.85)); o.l = -16 * Math.sin(Math.PI * dClamp(u / 0.6)); o.sx = 0.9; o.sy = 1.1; o.tr = u < 0.55 ? 1 : 0; }
@@ -23822,9 +23887,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 case 'ram': if (q < 0.2) { const k = q / 0.2; o.a = -26 * dEase.out(k); o.sx = 1 + 0.12 * k; o.sy = 1 - 0.2 * k; o.r = -sg * 12 * k; }
                     else { const e = dEx((q - 0.2) / 0.8); o.a = dLerp(-26, C, e); o.s = dr * 14 * Math.sin(Math.PI * e * 2); o.sx = 1.5; o.sy = 0.74; o.r = sg * (14 + 10 * Math.sin(Math.PI * e)); o.tr = 1; } break;
                 case 'spinram': if (q < 0.2) { const k = q / 0.2; o.a = -30 * dEase.out(k); o.sx = 1 + 0.12 * k; o.sy = 1 - 0.2 * k; o.r = -sg * 16 * k; }
-                    else { const k = (q - 0.2) / 0.8, e = dEx(k); o.a = dLerp(-30, C, e); o.sx = 1.38; o.sy = 0.8; o.r = dLerp(-sg * 16, sg * 360, dEase.io(k)); o.tr = 1; } break; // una vuelta completa mientras embiste
+                    else { const k = (q - 0.2) / 0.8, e = dEx(k); o.a = dLerp(-30, C, e); o.sx = 1.38; o.sy = 0.8; o.r = sg * (12 + 8 * Math.sin(Math.PI * k)); o.l = -26 * Math.sin(Math.PI * k); o.tr = 1; } break; // salto en embestida
                 case 'curve': if (q < 0.15) { const k = q / 0.15; o.a = -16 * dEase.out(k); o.s = -dr * 20 * k; o.sx = 1 + 0.1 * k; o.sy = 1 - 0.16 * k; o.r = -dr * 10 * k; }
-                    else { const k = (q - 0.15) / 0.85, e = dEx(k); o.a = dLerp(-16, C, e); o.s = dLerp(-dr * 20, 0, e) + dr * 72 * Math.sin(Math.PI * e); o.sx = 1.42; o.sy = 0.78; o.r = dLerp(-dr * 10, dr * 360, dEase.io(k)); o.tr = 1; } break; // llega en curva, girando
+                    else { const k = (q - 0.15) / 0.85, e = dEx(k); o.a = dLerp(-16, C, e); o.s = dLerp(-dr * 20, 0, e) + dr * 72 * Math.sin(Math.PI * e); o.sx = 1.42; o.sy = 0.78; o.r = dr * (-10 + 26 * Math.sin(Math.PI * e)); o.l = -10 * Math.sin(Math.PI * e); o.tr = 1; } break; // llega en curva, inclinándose hacia el giro
                 case 'meet': if (q < 0.2) { const k = q / 0.2; o.a = -14 * dEase.out(k); o.sx = 1.1; o.sy = 0.88; }
                     else { o.a = dLerp(-14, C, dEx((q - 0.2) / 0.8)); o.sx = 1.35; o.sy = 0.82; o.r = sg * 10; o.tr = 1; } break; // los dos embisten a la vez
             }
@@ -23856,8 +23921,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const o = DO(), sg = X.sg; let e = dEase.io(q);
             switch (n) {
                 case 'dashout': e = dEx(q); o.sx = 1.35; o.sy = 0.84; o.r = -sg * 12 * (1 - q); o.tr = 1; break;                       // retroceso recto de un dash
-                case 'spinout': e = dEx(q); o.sx = 1.3; o.sy = 0.86; o.r = -sg * 360 * dEase.io(q); o.tr = 1; break;                   // retrocede girando una vuelta
-                case 'hopout': e = dEx(q); o.s = X.dir * 44 * Math.sin(Math.PI * q); o.l = -24 * Math.sin(Math.PI * q); o.sx = 1.25; o.sy = 0.9; o.r = X.dir * 26 * Math.sin(Math.PI * q * 2); o.tr = 1; break; // retrocede en arco
+                case 'spinout': e = dEx(q); o.sx = 1.3; o.sy = 0.86; o.r = -sg * 14 * Math.sin(Math.PI * q); o.l = -14 * Math.sin(Math.PI * q); o.tr = 1; break;                   // retrocede girando una vuelta
+                case 'hopout': e = dEx(q); o.s = X.dir * 44 * Math.sin(Math.PI * q); o.l = -24 * Math.sin(Math.PI * q); o.sx = 1.25; o.sy = 0.9; o.r = X.dir * 14 * Math.sin(Math.PI * q); o.tr = 1; break; // retrocede en arco
             }
             o.a += f.a * (1 - e); o.s += f.s * (1 - e); o.l += f.l * (1 - e);
             return o;
@@ -24494,6 +24559,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
             logMessage(`¡${c.name} usa ${move.name}! (${categoryLabel(move)})`, 'attack');
             registerAttackUsed(c);
+            try { ncPose(c, 'cast', Math.sign(target.x - c.x) || c.facing || 1, 1, 420); } catch (e) {}
             // El ataque sale de la "boca" del pokémon (borde del sprite hacia el rival) y apunta al centro real del sprite objetivo.
             const fxT = fxSpriteCenter(target), fxM = fxMuzzle(c, fxT.x, fxT.y);
             let startX = fxM.x, startY = fxM.y;
@@ -25410,6 +25476,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (kmag > 1.2) { rot += -Math.sign(c.kx || 1) * Math.min(hPow > 1.5 ? 24 : 14, kmag * 2.2); sy *= 0.95; }
                     if (hitAge < 170 && hPow > 1.4) { const hs = Math.sin(hitAge / 170 * Math.PI) * Math.min(2, hPow - 1); sx *= 1 + 0.09 * hs; sy *= 1 - 0.1 * hs; }
                     if (impP >= 0 && impP < 1) { const sq = Math.sin(impP * Math.PI) * (c.impactAmp || 1); sx *= 1 + 0.22 * sq; sy *= 1 - 0.24 * sq; }
+                    if (!c.duel) { const S = ncSmooth(c, timestamp, ox - jx, oy, rot, sx, sy); ox = S[0] + jx; oy = S[1]; rot = S[2]; sx = S[3]; sy = S[4]; } else c._ms = null;
+                    { const lift = oy < 0 ? -oy : 0, jk = 1 - Math.min(0.4, lift / 150); // la sombra se encoge y se aclara con la altura
+                      if (Math.abs((c._jk == null ? 1 : c._jk) - jk) > 0.012 || (lift < 0.5 && c._jk != null && c._jk !== 1)) { c._jk = lift < 0.5 ? 1 : jk; const wr0 = c.wrapper; wr0.style.setProperty('--jk', c._jk.toFixed(3)); wr0.style.setProperty('--jo', (1 - Math.min(0.55, lift / 110) * (c._jk === 1 ? 0 : 1)).toFixed(3)); } }
                     const pel = c.pokemonEl;
                     if (c.duel && c.dop < 1) { pel.style.opacity = c.dop; pel._op = 1; } else if (pel._op) { pel.style.opacity = ''; pel._op = 0; } // desvanecer/aparecer (blink)
                     if (pel._tfo !== 1) { pel._tfo = 1; pel.style.transformOrigin = '50% 100%'; }

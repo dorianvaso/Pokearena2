@@ -3129,9 +3129,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         /* ===== ILUMINACIÓN HD-2D (estilo Octopath Traveler) =====
            Profundidad de campo tipo tilt-shift (arriba y abajo desenfocados), gradación de color cálido/frío, rayos de luz volumétricos desde la fuente,
            partículas flotantes (polvo, brasas, luciérnagas) con distintos planos de enfoque y un fondo más saturado y suave que resalta los sprites. */
-        #game-container { --hd-hi: 255,196,110; --hd-lo: 60,104,190; --hd-go: .34; --hd-ro: .32; --hd-mc: 255,244,205; }
-        #game-container[data-time="dusk"] { --hd-hi: 255,118,72; --hd-lo: 96,58,176; --hd-go: .62; --hd-ro: .95; --hd-mc: 255,168,88; }
-        #game-container[data-time="night"] { --hd-hi: 120,170,255; --hd-lo: 24,24,92; --hd-go: .6; --hd-ro: .6; --hd-mc: 170,255,190; }
+        #game-container { --hd-hi: 255,196,110; --hd-lo: 60,104,190; --hd-go: .5; --hd-ro: .4; --hd-mc: 255,244,205; }
+        #game-container[data-time="dusk"] { --hd-hi: 255,118,72; --hd-lo: 96,58,176; --hd-go: .8; --hd-ro: 1; --hd-mc: 255,168,88; }
+        #game-container[data-time="night"] { --hd-hi: 120,170,255; --hd-lo: 24,24,92; --hd-go: .75; --hd-ro: .7; --hd-mc: 170,255,190; }
         #arena-bg { filter: saturate(1.16) contrast(1.05); }
         #hd2d { position:absolute; inset:0; z-index:17; pointer-events:none; overflow:hidden; contain:layout paint style; }
         #hd2d .hd-grade { position:absolute; inset:0; mix-blend-mode:soft-light; opacity:var(--hd-go);
@@ -3150,8 +3150,15 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         @keyframes hdRay { from { opacity:.2; } to { opacity:1; } }
         html.pq1 #hd2d .hd-tilt, html.ios-lite #hd2d .hd-tilt { display:none; }
         html.pq1 #hd2d .hd-m:nth-child(odd) { display:none; }
-        html.pq1 #arena-bg, html.pq2 #arena-bg, html.ios-lite #arena-bg { filter:none; }
-        html.pq2 #hd2d, html.pq2 #lt-sun .hd-rays { display:none; }
+        html.pq3 #arena-bg, html.ios-lite #arena-bg { filter:none; }
+        html.pq3 #hd2d .hd-m { display:none; }
+        html.pq2 #hd2d .hd-m:nth-child(n+7) { display:none; }
+        /* viñeta + bordes oscuros/saturados: sustituto barato del tilt-shift, visible en todas las calidades */
+        #hd2d .hd-vig { position:absolute; inset:0;
+            background:radial-gradient(ellipse 80% 72% at 50% 52%, rgba(0,0,0,0) 52%, rgba(var(--hd-lo),.34) 100%),
+                       linear-gradient(to bottom, rgba(var(--hd-lo),.30) 0%, rgba(0,0,0,0) 17%, rgba(0,0,0,0) 80%, rgba(var(--hd-lo),.34) 100%); }
+        #hd2d .hd-bloom { position:absolute; inset:0; mix-blend-mode:screen; opacity:calc(var(--hd-go) * .55);
+            background:radial-gradient(ellipse 70% 55% at var(--sun-px, 30%) 0%, rgba(var(--hd-hi),.55) 0%, rgba(var(--hd-hi),0) 70%); }
         @media (prefers-reduced-motion:reduce) { #hd2d .hd-m, #lt-sun .hd-rays i { animation:none; } }
         /* Sombras bajo los pokémon: dirección, largo, opacidad y desenfoque según la posición del sol/luna */
         .pokemon-wrapper::before { transform:translateX(calc(-50% + var(--sh-dx, 0px))) scaleX(calc(var(--sh-sx, 1) * var(--jk, 1))) scaleY(var(--jk, 1)); opacity:calc(var(--sh-op, 1) * var(--jo, 1)); }
@@ -7939,7 +7946,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
       <!-- Barra de controles compacta: iconos pequeños en la esquina del campo,
            en vez de la lista larga de botones de texto. -->
       <div id="lt-sun" aria-hidden="true"><div class="hd-rays"></div></div>
-      <div id="hd2d" aria-hidden="true"><div class="hd-grade"></div><div class="hd-motes"></div><div class="hd-tilt t"></div><div class="hd-tilt b"></div></div>
+      <div id="hd2d" aria-hidden="true"><div class="hd-grade"></div><div class="hd-bloom"></div><div class="hd-vig"></div><div class="hd-motes"></div><div class="hd-tilt t"></div><div class="hd-tilt b"></div></div>
       <div id="lt-chip" aria-hidden="true"><span class="lt-cell" id="lt-day"><span class="lt-ico">☀︎</span><span class="lt-bar"><b></b></span></span><span class="lt-sep">/</span><span class="lt-cell" id="lt-wx"><span class="lt-ico"></span><span class="lt-bar"><b></b></span></span></div>
       <div id="weather-sun" aria-hidden="true">
         <div class="ws-tint"></div>

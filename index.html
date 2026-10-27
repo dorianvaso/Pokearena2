@@ -3125,41 +3125,6 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         /* Luz clave (sol / luna) y rayos: se suman en "screen" */
         #lt-sun { position:absolute; inset:0; z-index:16; pointer-events:none; mix-blend-mode:screen; overflow:hidden; contain:layout paint style;
             background:radial-gradient(circle at var(--sun-px,50%) var(--sun-py,0px), rgba(var(--sun-rgb,255,244,205), var(--sun-a,.3)) 0%, rgba(var(--sun-rgb,255,244,205), calc(var(--sun-a,.3) * .38)) 26%, rgba(var(--sun-rgb,255,244,205), 0) 64%); }
-
-        /* ===== ILUMINACIÓN HD-2D (estilo Octopath Traveler) =====
-           Profundidad de campo tipo tilt-shift (arriba y abajo desenfocados), gradación de color cálido/frío, rayos de luz volumétricos desde la fuente,
-           partículas flotantes (polvo, brasas, luciérnagas) con distintos planos de enfoque y un fondo más saturado y suave que resalta los sprites. */
-        #game-container { --hd-hi: 255,196,110; --hd-lo: 60,104,190; --hd-go: .5; --hd-ro: .4; --hd-mc: 255,244,205; }
-        #game-container[data-time="dusk"] { --hd-hi: 255,118,72; --hd-lo: 96,58,176; --hd-go: .8; --hd-ro: 1; --hd-mc: 255,168,88; }
-        #game-container[data-time="night"] { --hd-hi: 120,170,255; --hd-lo: 24,24,92; --hd-go: .75; --hd-ro: .7; --hd-mc: 170,255,190; }
-        #arena-bg { filter: saturate(1.16) contrast(1.05); }
-        #hd2d { position:absolute; inset:0; z-index:17; pointer-events:none; overflow:hidden; contain:layout paint style; }
-        #hd2d .hd-grade { position:absolute; inset:0; mix-blend-mode:soft-light; opacity:var(--hd-go);
-            background:linear-gradient(158deg, rgba(var(--hd-hi),.95) 0%, rgba(var(--hd-hi),.25) 34%, rgba(0,0,0,0) 52%, rgba(var(--hd-lo),.4) 76%, rgba(var(--hd-lo),.95) 100%); }
-        #hd2d .hd-tilt { position:absolute; left:0; right:0; height:21%; -webkit-backdrop-filter:blur(2.2px) saturate(1.12); backdrop-filter:blur(2.2px) saturate(1.12); }
-        #hd2d .hd-tilt.t { top:0; -webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.62) 42%,transparent 100%); mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.62) 42%,transparent 100%); }
-        #hd2d .hd-tilt.b { bottom:0; -webkit-mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,.62) 42%,transparent 100%); mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,.62) 42%,transparent 100%); }
-        #hd2d .hd-m { position:absolute; left:var(--x); top:var(--y); width:var(--s); height:var(--s); margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius:50%; opacity:0; filter:blur(var(--b)); mix-blend-mode:screen;
-            background:radial-gradient(circle, rgba(var(--hd-mc),.95) 0%, rgba(var(--hd-mc),.35) 38%, rgba(var(--hd-mc),0) 72%); animation:hdMote var(--d) linear var(--dl) infinite; will-change:transform, opacity; }
-        #game-container[data-time="night"] #hd2d .hd-m { animation-name:hdFly; }
-        @keyframes hdMote { 0% { transform:translate(0,0) scale(.6); opacity:0; } 14% { opacity:var(--o); } 86% { opacity:var(--o); } 100% { transform:translate(var(--dx),var(--dy)) scale(1.1); opacity:0; } }
-        @keyframes hdFly { 0% { transform:translate(0,0) scale(.7); opacity:0; } 12% { opacity:var(--o); } 28% { opacity:calc(var(--o) * .25); } 44% { opacity:var(--o); } 62% { opacity:calc(var(--o) * .3); } 80% { opacity:var(--o); } 100% { transform:translate(var(--dx),var(--dy)) scale(1); opacity:0; } }
-        #lt-sun .hd-rays { position:absolute; left:var(--sun-px, 30%); top:var(--sun-py, -10%); width:0; height:0; opacity:var(--hd-ro); }
-        #lt-sun .hd-rays i { position:absolute; left:calc(var(--w) / -2); top:0; width:var(--w); height:150vmax; transform-origin:50% 0; transform:rotate(var(--a)); filter:blur(var(--b)); opacity:.35;
-            background:linear-gradient(to bottom, rgba(var(--sun-rgb, 255,244,205), .55) 0%, rgba(var(--sun-rgb, 255,244,205), .2) 38%, rgba(var(--sun-rgb, 255,244,205), 0) 76%); animation:hdRay var(--d) ease-in-out var(--dl) infinite alternate; will-change:opacity; }
-        @keyframes hdRay { from { opacity:.2; } to { opacity:1; } }
-        html.pq1 #hd2d .hd-tilt, html.ios-lite #hd2d .hd-tilt { display:none; }
-        html.pq1 #hd2d .hd-m:nth-child(odd) { display:none; }
-        html.pq3 #arena-bg, html.ios-lite #arena-bg { filter:none; }
-        html.pq3 #hd2d .hd-m { display:none; }
-        html.pq2 #hd2d .hd-m:nth-child(n+7) { display:none; }
-        /* viñeta + bordes oscuros/saturados: sustituto barato del tilt-shift, visible en todas las calidades */
-        #hd2d .hd-vig { position:absolute; inset:0;
-            background:radial-gradient(ellipse 80% 72% at 50% 52%, rgba(0,0,0,0) 52%, rgba(var(--hd-lo),.34) 100%),
-                       linear-gradient(to bottom, rgba(var(--hd-lo),.30) 0%, rgba(0,0,0,0) 17%, rgba(0,0,0,0) 80%, rgba(var(--hd-lo),.34) 100%); }
-        #hd2d .hd-bloom { position:absolute; inset:0; mix-blend-mode:screen; opacity:calc(var(--hd-go) * .55);
-            background:radial-gradient(ellipse 70% 55% at var(--sun-px, 30%) 0%, rgba(var(--hd-hi),.55) 0%, rgba(var(--hd-hi),0) 70%); }
-        @media (prefers-reduced-motion:reduce) { #hd2d .hd-m, #lt-sun .hd-rays i { animation:none; } }
         /* Sombras bajo los pokémon: dirección, largo, opacidad y desenfoque según la posición del sol/luna */
         .pokemon-wrapper::before { transform:translateX(calc(-50% + var(--sh-dx, 0px))) scaleX(calc(var(--sh-sx, 1) * var(--jk, 1))) scaleY(var(--jk, 1)); opacity:calc(var(--sh-op, 1) * var(--jo, 1)); }
         #camera-layer.sh-blur .pokemon-wrapper::before { filter:blur(var(--sh-bl, 0px)); } /* solo hay filtro cuando el desenfoque es > 0 (atardecer/noche): con blur(0px) cada sombra creaba igualmente una capa de filtro */
@@ -7945,8 +7910,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
       <!-- Barra de controles compacta: iconos pequeños en la esquina del campo,
            en vez de la lista larga de botones de texto. -->
-      <div id="lt-sun" aria-hidden="true"><div class="hd-rays"></div></div>
-      <div id="hd2d" aria-hidden="true"><div class="hd-grade"></div><div class="hd-bloom"></div><div class="hd-vig"></div><div class="hd-motes"></div><div class="hd-tilt t"></div><div class="hd-tilt b"></div></div>
+      <div id="lt-sun" aria-hidden="true"></div>
       <div id="lt-chip" aria-hidden="true"><span class="lt-cell" id="lt-day"><span class="lt-ico">☀︎</span><span class="lt-bar"><b></b></span></span><span class="lt-sep">/</span><span class="lt-cell" id="lt-wx"><span class="lt-ico"></span><span class="lt-bar"><b></b></span></span></div>
       <div id="weather-sun" aria-hidden="true">
         <div class="ws-tint"></div>
@@ -25119,17 +25083,17 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         const DAY_BLEND_MS = 5000; // duración de cada transición (centrada en el cambio de fase)
         const DAY_PHASES = [
             { id: 'day',   name: 'Día',       ico: '☀\uFE0E', ms: 30000, c: '#fbbf24',
-              amb: [255, 250, 236], vig: 0.28, vigCol: [50, 34, 14],
-              sunRgb: [255, 238, 190], sunA: 0.42, sunX: 0.24, sunY: -0.12, rays: 0.55,
-              keyRgb: [255, 232, 180], keyA: 0.2, keyR: 0.9,
+              amb: [255, 252, 240], vig: 0.20, vigCol: [40, 28, 10],
+              sunRgb: [255, 244, 205], sunA: 0.30, sunX: 0.30, sunY: -0.10, rays: 0.55,
+              keyRgb: [255, 240, 200], keyA: 0.0, keyR: 0.8,
               shDx: 5, shSx: 1.05, shOp: 0.95, shBl: 0.0, pl: 0.0 },
             { id: 'dusk',  name: 'Atardecer', ico: '◐', ms: 15000, c: '#fb923c',
-              amb: [244, 152, 118], vig: 0.46, vigCol: [80, 20, 70],
-              sunRgb: [255, 140, 60], sunA: 0.66, sunX: 1.10, sunY: 0.36, rays: 0.85,
+              amb: [240, 150, 108], vig: 0.40, vigCol: [70, 18, 58],
+              sunRgb: [255, 140, 60], sunA: 0.58, sunX: 1.10, sunY: 0.36, rays: 0.85,
               keyRgb: [255, 168, 88], keyA: 0.55, keyR: 0.95,
               shDx: -17, shSx: 2.2, shOp: 0.78, shBl: 0.6, pl: 0.35 },
             { id: 'night', name: 'Noche',     ico: '☾', ms: 30000, c: '#93c5fd',
-              amb: [58, 74, 148], vig: 0.56, vigCol: [4, 6, 30],
+              amb: [60, 76, 140], vig: 0.52, vigCol: [4, 6, 28],
               sunRgb: [165, 192, 255], sunA: 0.20, sunX: 0.24, sunY: -0.06, rays: 0.12,
               keyRgb: [140, 170, 235], keyA: 0.55, keyR: 0.85,
               shDx: 6, shSx: 1.2, shOp: 0.38, shBl: 1.0, pl: 0.8 }
@@ -25295,30 +25259,6 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const barS = 'scaleX(' + Math.max(0, 1 - local / ph.ms).toFixed(3) + ')';
             if (barS !== ltBarLast) { ltBarLast = barS; ltChip.querySelector('.lt-bar b').style.transform = barS; }
         }
-
-        // ===== HD-2D: partículas flotantes y rayos de luz (los estilos están en el CSS de #hd2d) =====
-        (function () {
-            const rnd = (a, b) => a + Math.random() * (b - a);
-            const mo = document.querySelector('#hd2d .hd-motes'); if (mo) {
-                let h = ''; for (let i = 0; i < 18; i++) {
-                    const big = i % 6 === 0, d = big ? rnd(16, 26) : rnd(9, 18); // los grandes y desenfocados hacen de "bokeh" en primer plano
-                    h += '<i class="hd-m" style="--x:' + rnd(3, 97).toFixed(1) + '%;--y:' + rnd(8, 95).toFixed(1) + '%;--s:' + (big ? rnd(14, 24) : rnd(3, 8)).toFixed(1) + 'px;--b:' + (big ? 2.6 : rnd(0, 0.8)).toFixed(1) + 'px;--o:' + (big ? 0.28 : rnd(0.5, 0.9)).toFixed(2)
-                        + ';--d:' + d.toFixed(1) + 's;--dl:-' + rnd(0, d).toFixed(1) + 's;--dx:' + rnd(-40, 40).toFixed(0) + 'px;--dy:-' + rnd(50, 150).toFixed(0) + 'px"></i>';
-                }
-                mo.innerHTML = h;
-            }
-            function rays() {
-                const el = document.querySelector('#lt-sun .hd-rays'); if (!el) return;
-                let P = null; try { P = dayParamsAt(dayMs).P; } catch (e) {} if (!P) return;
-                const W = ltBoxW() || 400, H = ltBoxH() || 700, base = Math.atan2(-(0.5 - P.sunX) * W, (0.5 - P.sunY) * H) * 180 / Math.PI; // el haz apunta del sol hacia el centro del campo
-                let h = ''; for (let i = 0; i < 7; i++) {
-                    const d = rnd(5, 10);
-                    h += '<i style="--a:' + (base + (i - 3) * rnd(7, 11) + rnd(-3, 3)).toFixed(1) + 'deg;--w:' + rnd(34, 120).toFixed(0) + 'px;--b:' + rnd(5, 13).toFixed(0) + 'px;--d:' + d.toFixed(1) + 's;--dl:-' + rnd(0, d).toFixed(1) + 's"></i>';
-                }
-                el.innerHTML = h;
-            }
-            document.addEventListener('timeofday', rays);
-        })();
         // API pública para que el resto del juego "reconozca" el momento del día.
         window.GameTime = { phase: 'day', get elapsedMs() { return dayMs; }, isDay: () => window.GameTime.phase === 'day', isDusk: () => window.GameTime.phase === 'dusk', isNight: () => window.GameTime.phase === 'night' };
         function updateDayCycle(dtMs) {

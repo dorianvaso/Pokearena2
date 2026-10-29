@@ -2274,6 +2274,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             pointer-events: none;
         }
         .fx-beam svg { display: block; }
+        .fx-beam image { image-rendering: pixelated; }
 
         .ice-shard, .ice-sparkle {
             position: absolute;
@@ -14141,7 +14142,147 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             return mult;
         }
 
+
+        // ===== SpritePilot FX (CC0): sprites animados en pixel art incrustados (packs effects / magic / combat) =====
+        const SPFX_DATA = {'arrow':[4,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAADaInAlAAABN0lEQVR42u2YPQ4BQRSAHUDNAdA4gai2FhKNKyglOnEBjVJD6wxql9DqFVr1yGwyITKzY8b8CN+XvMg2vvfmze781GoAAAAAAAAAAAAAWRnVu8IUjE7GwXdpwHCyEDJ8cxCbqTbezcHX/y31R/fv9gchY75clxG6AbYkdN53cojVBDUeqeo39aHKHbN+bQOuRU8bLm/h6XzzfhP/1V/ljupfjR9/bPsU+iRhSwR/Xn/JoN0Ql8MsWKgEVKy3R4H/C/1qLZIJyJkYKlqdopSqkM9Va2Aqv2kPlMpv2gOlHv/onyCVgPytlOPP7g++CXqW59gE+fpz15/dLwX7Zl8bLscQ51lncafw567flkMwv2kNCnUR4lr86zk8lV93Dk/ht93DfDoBP5l8wFU4AAAAAAAAAAAA/AR3pBUp6msltVkAAAAASUVORK5CYII=',12,1],'claw-slash':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAACuklEQVR42u2bzU3DQBCFc6cBuuBOD9TClQspgErSSnqgl6CNtJETyTuzP4+Jvd8ncQHjR+yZNz82hwMAAAAAAAAAgMHv2/clfb2/fFzQB9ghVnCnBEioEmF2fa8R/bx+YUSgq3JrAZa+tyQdh/5YrHOmnyv1MaHJO4Ab59N6EpxPd0E4KhCi9ZdVPko/nas0bqj18zUonfN2n1auESa0dRN4CDDrmMvncawJ5HOfT9PpP5pQhH5O8JIRXDuR9DcITcA0IbG+p1uL6sI83eIwE0iB0GIUI03o8Sajr9O/GzUKnZDaBKwq/wwmkLu1yLH9X0zA047W3AT3zfV2IpVBEK0/vBNT6H8ezXMrTcCT4GoTsMaMrK/sBKzPlfRlwtnh1pym1QQel1neeXdUEiz3DRH67qWj2ATM4K4wAUU1qjEBVRLme2TlCXuDlXHBYwKupZt1TGUQROtXLz0H67tNqMIEWqqwa+mYPl9h19Gj743vqHk/f6bIfUNVt9A0aw5MgpogmF3ffe5kAkYSXpeXjV2IlWCeY9LPWiux9XvRJiBf/IV3EBVJsHYRWm8S+nUmMFp/WcGtBLcMpidBPJ2IstX3mNAUY4QnCax5sLUK7UK/ciHbYgIl/ZYkWT5V6DWB3hjk3YItmIAxj7ZUAvTtXUI+ppTkPS/oeBJc+ehNaTBeZFv9rZlAT6vZGiDox2/drSTMXYYqSXt2CTB4J9C69e0JDm+VnVlfOQ97uoyD8iWYzi5m5HWY1gTydrx0k5WtYDYhq8qqquBT6Du6jEh9mMAESgmu3sp6W9G96nuWYmp9WnEIDRKry8jb673qR//DCxt56E6g3q1q5CzqMTh1laQKw/RdRk8l6k0gdZWnCgOIkzi9QEMVBgAAAABgVACAbSV46anC1O9xAwBdBgCIsZ4q9D51AACAHfEH1dSSQYVzKbYAAAAASUVORK5CYII=',18,0],'critical-hit':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAAFUElEQVR42u1dy43cMAydc45pIA0ECHJNA3tJb2kjhWwJW0kOc3WghSk8UZQsmZRle0hggPX8SHv4Hn+S9/FwcXFxcXFxOZ/8/fpr+ffzx+JXokN+f/nuF8zFRGaDLxDA8vHm/twDfieA+0S/MxCAR+ALgT/8WLMJ4AwEZGGDFoDLn2+LVn/4Do0d2nMI/mQRgc9AZrdP8c8Q/a1s0IDHwoagnx69Tk3A1RJAtOP5vvReJ0sb7pBBBBK7RCbT4rzSe8Jx+LGtCKDFBuk5KxvCD1a7FqXXPm1YP6vVjyCSwC49v/WZXgKsEQDpqhHHbAK4DPDOSAI158dUn46tCaBmQ3A+fI3AbwK+8D1BKt8nlTsEfovUPeovAKkUYT+fD+9/vusIoCHtJttEclpt9tT7onUvOjh3ckqrCIQEfksCqEV0eh7tqzljF/A+3pZEwvHqyEh49N7EhvDe5/vua1DTz6NwJIbC83uvQ2LDqntkn6H4vcvixHF03SsRAAcazUXJ+SP4V8a3toPGMBkAg3OiDSsYrOp/isAIbMoG6PzpnOOxkgAk/bV6XwJ6rV63zgBcJjfcSumwdQSmSJAAniIT/Q0pH6bvWnKSAIjRL/4dxIgAOABiWr0STjxn9ngYdptnA3B27e6yEeERaJaOXySBFQBJXQpRLzyIIHjmYGIDgDzqpGNIlyUC0gKAoj5Pkwmo+DdmSxo7LADo9ffNSCCrNwGA6PhDSQABSA+sVckm43LgMwpvCYvIlgREpLaZurPsQGNDOOe9II5Zy86JQMsYstkObwYag4AcTHD8UQQQ69ySICEMaAZm+hHski1KGzBy87S/lrZHe5Q21CYATZ+H32IP+HCaoColgIQcwSMjoXEZUANAlQTW1F/bl8CmY9JnWMGfAc8Q/BnpFPTWwGuRfSRZ1w4gajIIa5915BoBMnFIDj6hBtXoyoAv6ZWyAGgaamxJmpCs1hejr3AdzEigMYJZj0MdPC7tBLD2Aqz6AXzG30QCnAiUZJDYsBGJs0yANQXVJNCaAQhrB1xchpcAI6JFlgm0NOGggWTREY/EB+DfLAMEElLp3jGWO6JBe6VS4IxyqWXC2JjJGmJGy2Cb0nCeBbAGoEUPQAQ/ni8jA3ytNIrr1UuLkHoifzIKXY8JgC3XBLvmFqBN1ktslDGjO/al7+3NsF6SAHAMiI45Mspk4MeIikSAzxuNAHGNA0/rRTIwbIYmY08SWvEngAgdl5c73QSvbPwVg8bGWE87dWglIWnzku/5bwQDd9CRC4ES8LO0Hlfm8QhDD00TjuvO9hxg1gEAxRWJw3TTLjlhARCS8S6gsmtomjk2RP+W9+0mgQHn9RKl0IylwNIGH74PIFn4w5YBa3YG0ueljCZblYjRf9VHTrxXd6lsSHTDUmju3FbrMYrbfDeyglKknb60+ARLm7Eku3WGYFVqlHYCZvsCWNTdW3u3bENGUoqbgJYls3NE0y2WXnD+D9iXjzsTrXWXdv+1EIC0uWhvGdGS7mfko9RvRUBnAP4wO6wabi33AUCCwDn56C43B9fWFtwRBIDXqBTxR5BPy5JeqYwobS8elb7jONpKv0Xkn6E7sWPd3nzpuwwXb4Ix4F4ArZnO6M1QLbpHLcGulQQIuK33W2QAvf0GS/13KEFuVW5sReaj7TkCgDXds1LLnpt/HA2A0/UgfC/CsZnB0c42Szc1Hmecc8/YbgQAesaUDsAXIIGZIHxF3RY3/1QR0Alu+uniBFAsTe6ue+Tcfk+t7zW9k4ATwAQgvmJdfct5vosT35UIYKbuWaM0/1+BLi4vLpbE9x/A7b52OkDe7wAAAABJRU5ErkJggg==',15,0],'ground-slam':[9,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAAgCAYAAACy9KU0AAAErUlEQVR42u2brXIUQRSFV2EQCCxVeFQECotB8QBA8QDIyLwCLwAahUVFwhNgg6XAg0YsdbdyUmfv3p7umenpnmTOqepKMrvTp+fnfn37zmS3kyRJkiRJkiRJkiRJkiRJkiRJ8rr6+nH/+f35XmdCkqTmunj7av/y2YtuABIAJUnaLAAlSVqRDAYCgiRtSGtZhhh4MBaBSJI2tgxpEfRD/dtnBh8ASFdGkjay7OHMY8ml1ZAHQ7AngFqOQ0VwaXOw8cHFcFiqKBt5rvkctcrEVASXNgcgDq4IRC0AaDP/Gus8PlMTHCRpwSBrXW/h5V4r7ykgEXgkqUEW1GOmbwm/XN1JkgSEDsHByy8foEsXRlN1KP+9GuNYQ1Fbkla9FOpRD+HA9wBqXRhNZSlLjENAklahNw/v7a1dPr1/aPi7dS2kxSPwXGbRMhhfPz/bo+06vPvT43wLltIReAw4+y+PwwYYtby5+EXAFsHf69Gvef/99f3QGEAtgyyqf60ZQKpf3TH4HAHn97vjRp/VgpCf8fG7fxK1RN2Fva39+PbpEPz20xrG1AJ6OD77/fLDRRPvoaC+De/fCEB3TDeZjwdPACL7bs0ZH7O+BR8gwMuBJQKC/QEdtFIIeIBO9cfxjQWQh+iUMaSyzzF91JogxnjXzg59X3oLu0f2A8j8+xk3gtDcLMgDCIGPetOf8wc3gWm/+zrUnOCL4GPeCP5S+HAfU8bA0OMscOr5mzKGuWDgZesYf98nJhzU/vx3l5oIUt6lk14NENYC6dwxrCf7KQDQnCwoCh4GkAHH158AoVrB7zOfsUufmgBi+M2B6BJLt9xSh49jLID4PavUC5glT0LHACjqJ1fsH/r/t7lLwdLCfw5St7Ygf1T7GYIPQyioBQFOQ14MFJ8BnMAnWPoBQj547W9fp0Jjf9vfWhT8DABczCePzg4turjRGNA/N97HZlVuqSyuxD81Bjy5hEfqWvix8ITC/qUAgj/3WQIffDf6Nxj2zwVoznMINJG3bTf/HGTGACi1rEtdX/jXBFBqWZnbd+7nN5mObycBXwIgAkLUJ9/MKSCwPxo//veBzK8D+O3+yV0EHQ8E1FsYPrYvlnxRs89w7NH+Oej4rNEfAzwAHt8O/tfnHSD1Y0gFoQ9Qrq+hfxuD9/ezv7/ODNAcADgAGT7ea8jfg5NbFODRaxX+vS7vE533lD8/qc3BJres4/6wP0NwCO41sx+ckxQMc9c5K85WUgGfawCCz1Sy3pRt+QzAtvFjYHjxNvj4/QAG9oj8OXiP+rjep8ifsjjeH/CJQBSBNwIxe0WNAeSPA4AbygZ88DB8rOX8PYA4m8vdmBxg+C78sS3nPwSgKMBzQe/9MQb8RNbA23Oeu4kvinp/7J/yX2JFhH59/357NX8Er7+xsG0oe/LZTuny66RV9E9lXEMwRU2rhn8q44qWPAyfE39XZyv1ZyiUQAhj8bM+tvlAjdrYpVAUxL5PPwuX+k8JuJ7+EQyjfpf07f74PYJIjUftc/xTGUwr/1QGc9fOf+pmXmqGLfVvFWC9/aWBwOjhy29d9/DnJWbPCaGXP2cEPe+/rftLkiRJkiRJt1X/AWYVAMmT7b4iAAAAAElFTkSuQmCC',14,0],'laser-bolt':[6,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAgCAYAAABEmHeFAAABRUlEQVR42u3awU3DMBgG0F45MANDcOTImQ0YgxPrsAlDsI6RD5aMcdI0TmIrfU+yUFuqz7H/2knTywUAAAAAAACAE3v6fguyYcJHeA+9iuUes0c+5p/wFeL/9FiQ9sxu0rNj95g9bCHw18PLc8ibfPmnyy9D8ha3tLzt0Ykl+XG1jO3o/JSbVuxe+T2Pf4T5b8ovP0Fzgxwneq6tOa8tO31tklOx5blJy3l1bYAfP1//5ZdjkVubPzXBR+TPFVhtkZmrg9jfvfNruen5m/LLAU5vjn9rRVYOds3SCYgZeStfm5vklvy8sMrsWu5UW5NfFvbUMR+R35Ldkl+rgy2Ou2kBumUHKDtZPj7bDlDLH3UHaBn/Jac5PXeAa9mrdgDXAK4BXAP4FkC+fN9Dj859mI25EznWZLsTz6n5LRYAAAAAAACwiV8hJq18BdvEXAAAAABJRU5ErkJggg==',14,1],'muzzle-flash':[5,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAAgCAYAAACVf3P1AAAB+klEQVR42u2cPU7DQBBGU9FQUHCAHICChoor0FHT0aWDkjNwAlpuEAmJE1BxAOpI7ulTDBrDmPGysR2ymVmY70kj4ojsrrzPM+vNz2wGwvB+e0T8l5ZzwtkIADULTDRwkg9ZBgBgk23WK2QbgFIHAACgNBeX1yQReQzAcKL18cvrGz08PtHN3b2bANUIeHV8QBGlsOpHiybHEtYCuAiXCsbHHM9nh+Qhn2WfuewjEux7IrR8HCKdHHtkIO7LNOvyZPNdpZaOj+U5S+kkLE+2lDotHj+nJbC4AGQcOhuenJ638W8FbGVrFp/B0qnHFiJo6ayF1xkoXXNpAayyYCqfVf9u675OvvXqO0TE5Zz4TWwtyD7k6LJts+j6sy71ErnsY7kOTMuuh3ym8IT35NMS6qyoIhVyFzF72TfJvL9pe9vXSdbl8yBr3ZLybTN2XfZCyJfNfmORyqKk4fZkEqdK0I5hqP0v6dO203ba/8tcOEOv6WXfzAVWQr4pY5BxSJ96zQcBJ8q3k4B6DANtj7X5I5tWJCCPZ4qAblsgVZfgpAznJCtWgjeUecsSXHLyI+6dFrsJ4UmxuAkRCTy2fby2fsCGu9CI2zARkY/oV0PkjWhQUSbMyRDhrTjwB4AQAAAAAADAG/lSEr4ZBwAAAAAAalmbAuAnIX4da5QPYm0qk/wfDGoAAAAASUVORK5CYII=',20,0],'parry-flash':[7,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAAAgCAYAAAALxXRVAAADMUlEQVR42u1cMW7dMAzVDbJ1zQEy9Ai9SIfMGXOIHKhAr9C1dyiQNeiSKYMCGqFB69v6blC+Z0PvAcKPh4CEzMcnUpJLEQRBEAThRPj69FI1C4JAwt23n5VJQrPP9MHt21A0CPDg+/67ToMVgLdf7qk+mH0jP3MOhAPi7+NNRQa/DbQKefA7AdA+RPsiobBAfX6AEDCS8NerSCgSqilSUQTcWgbaM2sZyPChTQKMOVirS4uaZPhmiKsQkoAehP7iWUrItm82vS5m18TRPnouhiS9v3gLvgkEArp9G4gatKfETBLGpTDTBwYJh1LeGOR7CJhNioUPzw+U4NsiYH37U9E+uP2FH8mJMRKQRQK3az4M1Wzx5dcaAVFNmZaAqMBfSwKLwP9xW1lJwIf5gPBjLQlcxE2yH54Ehlh+OrlaAqIaMq0StwqIXI4ukkCtc+AfIQmgFOkaAVF+DENAJ1k8lWHKYy8CVQu6HW+G2DPSfhuARnrvRqIDITaEGN3QPfazSei1YK8ZlZkY3S703VuwG/HiYCSBSX3MfiBf+5z98qe5+FBAfwm+BMyelz0KmBl8e5agUsAsEhAJOCcBTwT+N1gFTf3Mvv0yapEtAq6RMGtu3IctAmYT0+fd5oDBgxQFnAIrBPXFaMi3GJ3/+2yNturPDttZNeHsT2MbvSXSIyDaBymgFLAW4DbAmRSQuQRFKKD9nkEB/1uCtmCfu6DAmqtXAzKWob0akEnAo3RBpYCJwc/ugs72QxcUTT4bsQuK6rxFArRdSOSpGHYXtjTnUYcgX+lsxKP2Adc24gtxH3DeBw2km5QZ1IGMG/HIeGDvA1K2AI5Avt5RNIQKHfooGuEkTDwFg1LhaxeEUe9kyLOgfhCacRa0DX7WBjzzLOjaYezNxJlEwt5ZUJEvWX3Y15GYtyH2BH+28sRPdFwLwqw9wHgtikm+IbcgCvlC7hHu4jF8aO1vLf/aBJCVENgNEF0CBn+SIirPyLfh3Y8t++hD4cIABGR9i6VsfA8Gmfk/8z0YkXAQIGqwf6l5ED6c4bOEjOaUMEDzh2mfWfPETe/TrpakyueFCm5BEARBEISz4h0TGFL08jR6dQAAAABJRU5ErkJggg==',18,0],'shockwave':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAAC/0lEQVR42u2aPY7UQBBGfYpNOQDBcgMCbkDKBhyBmAOQkZPvGVYiJSHdeHNiJAJio17pQ6VStfvfw6D3pJZn7Omqaru/qm5rtg0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAArpUXN+/3l68fdu7Etr1782r//OHtPttmamf3V79Z/lvtjPrNxcAsnUwS/7+QAFaIb2QC9U46L5hfPx73p2/3zb7TvfD9j2KK/Krv1y8f//a5/fRzzzV7XTZlIzXFVHNv0jU7bms/OgofT2Sr5T7OnENn9PlvE4CfOJpMKyqXt5EE4Cdxqb8ElFrLpPfC836PBGibF5+Nx4vBx2t9p6N8R8/66JyEJzulGOx3jUF+Z8wdnxRK/XxygcxNWnmjfCX0EydtQVKzlc9O+N4qbP1JDLUiVBylSX8kfvm1Auy5d+of2ZbNaLy6PuJbfdMxiiHyv7rq6flEvi5dca9qi6K9//ff+3NLnyXE2TfFViVNJolNcei7Fb+f6C0+IzH0bAFqY4lEqLH2CjFKnr6qH4131qSM4vA+ouS+UmilFQhkBK8m4ftmfzMjIehheUEoprvH/bnZVUBuMvf47OkfVeFSJbe/i8Y68l7Ej8fbjXyvEIP1E1XfM0XIi+sBwZeIEoJdqvdUD/W3Fd/Gkj6nc97fyIs4+9JqtPrV2Jrpt9W2XaqvFGG0H7/Ufps9fsfLvlwyyIl+5sOyvmwysIK3jD5g+dSYontix5y73hKLtjI5myPPT0kyF8sKv0dxnO3bknyRDCatDmYv+2sEUmorEo9PdLnz/nprPHZ1k45pi2PftutzOi9fNb+piUW+Za8kZm3Ban6rOEoJKNlrLUyt4o9i0LmzkhBJ54qwyaXErERkVyC5Vnu9JRYJ0SaXXFMlja7pvOzUTHrr24oxKjayr2N03f/OV35ECdNWI5de9cxeDdntyEjrjcP3sTatmGuPrTHkkkVuhdKycgG42oS3uX/ird6GbZl/+EXJovRPQQAAMPwBv1oWJn1p4aMAAAAASUVORK5CYII=',15,0],'sword-slash':[7,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAAAgCAYAAAALxXRVAAACCUlEQVR42u2dMU4EMQxF5xS0HICCI3ARCk7DjbgCLTeho95VQAErckYU2N/C70nRdutoxy9OMjPZ4wAAAADD/fP7Zdc6xAcoId3j2+W7vX58tWgRxnff3jx9trUfGfF/+zuRMRDGFGC0u4cXmQhnfVCKYAcHsgUOhQS2Imb04WwgUP0ucyAgSyBdxGwJ1PF3gwISglzE7EpYScLZDyQE2Toxc01UScJ1IEJCaCO/tyYdZEqwCpgdH0Aq4DoNVlZBuzvLFYJWVZBp6A8MANB6Gqq8NXKYjSEyBFpMQxEQ2groJT8CIiA0qYDKe6Jn8iEgtKiAu0EAAYEKmDz9VAu49oUMAUnyZ+2CVno2lSdyQCqgTf4MASu8IYKAUErAmfxZAu6eR+1+HxIaC6iQr8oOLNUPJAJmVp+dfOr1J/cgQXaxO8lnxUM+KCFg1trv7FiM6PjrGT1ePxSvQtl+8SpWQwGzq5+35ptEyrdK5w0AWdXXO7CLtWdTATPkG8nl7XZGy+et8zIrryebbbM/VL7GZDz1MZL8TLyo5LcHPnnns0YdDbkT3xsE/jq+V2VnI9sbMtdWdqobKZ43vfZapPhW9l2LEn8V3VbcjPOHkL6QeFa4wayE0RV33dm1cSPFt98/485PK31W/J30WfHtCe0YUaACKqbWqqP41f/JUS0+JggZEigHAK7A/+UK0bs83S7PUOUAAAAASUVORK5CYII=',18,0],'explosion':[10,'data:image/png;base64,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',14,0],'fire':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAAFWElEQVR42u1bu43dQAx8DThxaBhw7hocOHZpbsMNuA134twFPEOH24cVH3+SOMPDSQJecBGX5HA45O7dbu/ou//8cr+d4DuLn5fv13d913cR0hWIy+fL77f5/fjw6byx+PXx6335ndX+kvxOAPz9/vm+/M7s/0JGXYR06vgvhhfnz0oAi/+L7a4ELLYH+Lti0On/UCJd/g/8L7+OGHTj7yX5nQw47Hclf/a/IwndBNBdAA///3xr8X/Of5f9tgY4F0B3AXYmfwFg9xmGfXYRzjHo8n8QIJuEZANgx38UflfuWzugtM22Pwd/BiCzCDQAdtgfHbgDA53xl/hjFqGGfyoBjwN0EIBme/zNOMNsf4D/5UfuglIBMWOwIoBX/ztIWCMAVg668Cdz36JAZQEyDzDb1ZKPTMLYuGoE0N2BmES8AmATAWoE0IVDJvlo3Z+KPa34WQeQzo/kzySALgCpQNj2tQ7Qal8QAMv+jAF2EUoMdsW+RQFoxhkdWGM+KcFZHdAiQUYingiooQBX5CPizyJhiT+WApLkw95BWE2QQgCe82gSkEX3sK8AsGMGYxHAUxwaO/Aj/mQZri0AGQpAU17sWwitDmgKwHJeJqE6ENbc8wA/kQAsEDAJ4EkB/ftNBUKEA1YMZOzRts0m1IA9aR+edzPpBAk4y161AMjgiyRwi/3XRSSjE3ldEG3fs/3eFYClwOHY05ZeK/AtHQgoQ+X23QoCOhEqA0/+tykA8hw+P8BhKSC1+ITfI/co3806IBFAiwL3ZMcD/CQCsDbwTAJ4isPkP6v4VgUoCIABRkkAcjSDLz4lBicZjIy/13zQMV89vHIIoJyEPdmjEQCiC7gKQAE/qguZ3R/sf7iBn/xnkaAsvrkI0TsgjfxYCqBr9+EqcAX/ZTEwF3DGIVCByIDgLREADYRK8aPsrxSQAT4U+WQVAIoAzEZIUCCq8pzjjxoBrc7rdSAGAbAVyE17AqzZJ5BApABQCszdPQi/W4oAfA0qrx419YnIvev3wB6qAcntu9mBFRlIJYDlI91EWAtA5m2INf4gCMCcvw0CQG3j3SUggQBM4lXwX5mD8PZt4F9cBZfYD7fvhgyhdoDhvALCSjnoApCkANR/QgLPgCoBBPITQQCZGRiZdzPuYBXm1t1c/IirYLl9VyWgkCAIAnBBKIMABoI6A7/RIqxewGYUAIIAttiv9D8VdwX/Vfk3n78n6g+mAMziUwrwaBGG23/NPqgLm/IbvIgJlYcSe4T9sAhABGDuXggEHOY8wP8R++7uTZ4FhX1NAagANDrw0YWQ9gIwI4OoBADeAYTKy+hAVTI0VABCflYSQJp8HBIuv3HRcOco0KPjXkoBIEahzcU3LeKquoG2gHQViNEJoeOHoz6quoBLAAb5VRLAXgVyxL6q/DS70n8mAWgkULQHCBfvgQI+rMDN4tPktyKDKubR8PFPUASVCsQdP4JFJJQADPBRyQ+gQDblHaAAU8/fE/Yrml86/5X7mJCBrCQ4u4DSIEj7ju0jSTCDb/ld2IVD3524wzpQZF95m18aeyv+DgmXxN1SPwkFeuQM6fg7/m8+Q+rxz8YkQAggycBHCSBMvmK/ugul4l8EvlD5RORf0IVTY0dSgR6Ne2r8DQhg6zmONt/DOEhLkGQQ4B2wuAhCEAbkVykD0/4XyvDN4AsUYNnDm8h+QfxTs3dyDNlLgpvJ32lCu3Gw+RDAAtjLgKUjQGS/+EFIlf8ltjPgK9yGhyOAZb8o/7s6cGET6rbvJyLJQG0duPBRTHoBWjiDHirCok34ZuVXHP9Nt0/gRdym+CNJOIO/Hfb/A+jMnpaVzoh2AAAAAElFTkSuQmCC',10,1],'hit-spark':[6,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAgCAYAAABEmHeFAAACMUlEQVR42u2c0W3EIAyG770rdJeu0sW6TEe4ty7S11REIeJcCBCMDfi3hHTSSTjA/4Ht4/J4TGrb1/vmmpb/n8+3zTXN8WvOv+bYYQBAHYCRANR+FpMAqPt/fugCEPjXfhacAADAnH8AYByA/Rl+vzfXVl5jKB0AXAKAnR4AmPC/8k4Pu3EMSgkwVemR8o8wAOKPisAdzbnjuVWkXvxR/wV9u+9bS6WtIQgAWiTUoQuZA4Brh977cb6o/wLxc4nvbviD+H2hTD0U1P75qIBQQOjn3ifRFbCqOcqAOcOSQEoC8E/8tLnvnHUQX01/o4UdSKA7ro9oJYSK3xuBAEsMEzvSREMgKnxqghCMEurANMXvTSC2qwLAtSNJpkLlEO6ZGAfjjyXJV03rMh2dF03/mpcJm3yfi+/FeAhOBICcSQFA7aJUOgIAq1+bEKvCnI1aRGy3+qXNCzm3+4cAVAjbC7EGklIAINTVQyAvyIbFrwaAOQcoASAa3mRCoOrxB+OUDgVC/9OFI+oQCE0akmDYsKGRaBiGMmiXjQyzMDAAL2FC7oewDs9T2y8gBADs/Yd+XsIPsvNzQ1B7raLLr9BIim0CUBJj0zyE6x4QTYxL54DzHtLdpBjAGIIrloinbnD2qE6kqkQcEDRV1xDX24EkVavX9q9d3vMhIlRiEAAr/mEAwPbrUbDDAwDLf46fBQDkJABgWXFB3AAAAEyiFQDAbNovyZVc2JTQ8aZqAIA3NU9qf7Bq29hmXdrnAAAAAElFTkSuQmCC',15,0],'landing-dust':[7,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOAAAAAgCAYAAAALxXRVAAACg0lEQVR42u2ay01DQQxFKYke6IAtTbCmB/bsaYItFbBmTwNUAEokS8bYnp9f8gjnSCMRzcTzefeOZx65ugIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgv3N1cfx0KKwFQbKrMWFL/+fF2LD3fAbiY7KIFXyV8ayptLNtOt5Hy/vp8LKNjmZ2HtPXWgo0AlrOPiFoLyjPJrPAz40WxW+1enh5+jblnnp7pW2ay6yT963Xbwvg9m2FvPL2uq7qpjLc7M+gJbbXT9pigJf7Rhx/FtHEldqtda0No9ZnNK1orO86e/u33Vw2ox9mKZ+sO7SvMVxVvN+azYoiyT9Xxr8cErczTO56WCSSW7vvx/vZHfSZ+ad8yThTPM38kfDvGyLS6f/08KzZS75SSmUVMUp0Bo8+bvxTY0nzywKwBsh268vinBZ3V92bCrL/MBCLuqF7GYA1rxRn1pw1l42Rz0SaVtt6J5RxaurhMtPVFO7pfWQN64psZj9ef3aEPoooMIPV65+/NAp7ZImNJH9ro1iRSrz/bccicogwU3ad6XkZFmWB1k8R8wW5dvajZyw0RujaHNkZrp27112sCz3x6DL0GjPrSWUTHlqIzjs1Qtn3rDncqDWG+AkPY+8JK1hk1hBV2ZD75e+QliD1C2mOcNYAnfk/4I0e3yMS2ZFlKH/28bHguA3DcLDBEtFtXP9joDuKJ2xPpbBb0TJWZIKsfEb7NdlHcmf/P6TgY4A8b0MsQK8e+ETNEAm+VUbF62SQzQXZPGh1HFHPVPKN3demz4hlWxIHgmDQjshXhWANkwq/+Rcrsr0OqX6uf+pljoB0ZsKfs4Q7BMev8WsG4ALBrvgFNYOuNWmcDIwAAAABJRU5ErkJggg==',12,0],'magic-sparkle':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAACgUlEQVR42u2b623DMAyEvUlH6GDdoB2nOxRdoQt0gS7QDVwwAAFBkB0nNR8KvwPyJwFCmybvjpK8LAAAAAAAAAAAruHt+XslCwAUxc/HCgEAUFWBowkAB0JOwvD0/hWe6OgGrB4f5O0Nc7z+rhBAkvglCg43k4tkPAlglAhJQHQDrisOAPtdQID7ByvNJ/BioVGhSwIEUU0gcSvHx4LH3p9n/12KTYJJ02njKfQ7y4uR+EJC7XVobHUC+jlbheT/NLZ+Rmh/t7qOrWuwjIsFz+P+2tpv+8+UCCQJgjYZngw0iu/tAEYxPBV4VIij+DR/HYdj3n+qOL3SaJFZziCt2o2UTn73WANoczBSVy8V2LpPy/tvi+tWYmFR8oHWAPYUODL+4rgKvtUAXvN3BAG0zzdinUGeKY4mCcmOCsDzAiIa4N74ZxWt5vcIAVoSwF78h1C4WZow62JIZANaX9e1EcCqAY+MQIvhPrGq794IOP2MS1/Ow4a33ujny7mN6elA+l0OLwXe2uXxdAD3rHJbOYXoMx7TE0IFpr2W8P8UZ+QM3itwdPzMaMWm+rspwMhRRTzYloAiCnuGNYBsDZiKAM624TiQvA1o0awzzv/lCSDbDDKjimR0IDPZ8MiaLE8AjzyD4GjmdEqeNTlaOPQkoNCFy6j9YpDb6UQrsOdZkdHR8Kj4boK1t1+MBa+BvWLzeldidF7DSpSOvhxmEb+PHfVymqsDwH7Pacf3DlFZqeDRQ1SWChxxiGrLgbiOBRX3IXE5eWqibzDvsVSbTQUrKn6JeQ/M4Y4qHY6JXIPoY50mTNhvMLMTiiaAStuQAJR2IJwEBACygQAAAPUICAAwIf4AWa11u0Is/kYAAAAASUVORK5CYII=',10,1],'smoke-puff':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAADgElEQVR42u2bwZEUMQxFNx8O3EmBGykQAdeNgQi4EgMpcCIAgqCKy96XmqVcJVSSLMv2dC/9flUftnumZXf7fcn27MMDQgghhBBCCCGEEEIIIYQQQggh9FfvP3x81gdPBaEDwFsNX3Tfdv7X76fn7z9+vhxfvn57OWbbM9InDAhdBnR57gaePBqAK2DQcHsGYMH/6fHzP+dH26D7Fn3/ds2Kv8IIsvfAeABzS/axMqw8p+FvENwAkH+PtEnf34NYt0sDaFUEo7Ej84ngl/Er76R9J2Net+sybvs8hnAB0Hdn4Ahy77y8VjGBKK7uew/+UROw4I+qiAapB/+oAWlTyVQw1ruW7cIEXvkClDcoe3BWM3AG/tvhQeYBILNTJm7rYy/DtvM9AHtluTQVz1z0e7Zia1PI9t0zgOr7q8RmWlGAvZeBd8Cvs7AHZ3UAevB7BtCDU5envdgRhNJkRuCXBhBlc+uI+qfvq9tlxc8agPX+MmNLTwtmTQDyHRgt+OXgnHl4Pfg9CKvwjUCYAXAEvghCCyb5OX3/Hnxv3r4bmtP3MrxeGO3Fz65FeN+X9476UYn7aioDb0587zLcKret7DAb04MimxlHnkk2E+p+9srfigF4MFmluTThCL5s9syW99oApCl55pM1Aev7mTWF3ZAeDr+VhSWAqxc/LBijwVnJvKPZsMWSA62aebMQyljyfDRXHxn8EXzyfvr6qvhe+WxlYKssXxG/l+hmE8t/VYpr6NvAXP2APCgadLo9K/aCM+Wot+ruZb7RBSQPRPkZb4oymnmt2KPwe88/U/5b4HkZ2Npyy8CfjV+Zl1/mh0gaDD0IVv0II5OZvMpgxdwrgkFes6qECnxWBrTi6gzpxW+fl5lvtPS1+qFNobfoNwOf1f5oyy3aj98N5mWqA12GRfDtiikh7ME/uxAYlaLRHH2mDVkIe6vl1TZEazsW/JmFt5kf5ETz4Gg78Kh1sUttx1W2WmZg1Fs+Hngryz0PhGiVfNaEvPK5t+A3C7+OLTOwvm8mdmXuPZsYdsdFapDs2O7IQLEq41VNIJP1du627IA/ympV+HePQ+A/kRmcwYB2br945fA9/iMtE390zj/73HsLbvcwAOu4h/mgk5nPkSZ0z3ZkfodxJHxnmA8DPzrMhI42wLOYICMDoQtlPaBHCCGEEEIIIYQQQgghhBA6m/4A0VeA1uvcdFAAAAAASUVORK5CYII=',10,0],'water-splash':[9,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAAgCAYAAACy9KU0AAADl0lEQVR42u2b3Y0bMQyE3UlKSFFXQPpJPXnJc5q49xTgYAMIIBhSv6S0sb8BDJ/htSitxNFwVvd4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4gqfAt1/PJ3cEALCdgC7ygYAAANsJqJAPBAQACmQrJPlAQACgQI4Q0Nfvn39fJ0mY1QDAmymQUwRUxioV4C4zvNY+fhh4SwI6oUAk8V2xdz0JkwkuE35H8rfaL99/+fgZ3ofe+8sTSfAWCkS+ZPJnJF9vP3bHt/qTFb+HXFFgL4wfv8cndeY3M4vyxK53JZokwBPJ7xHwXXyhE/OSMQ9lHD3tQoKJGFUZkarkIjPZXs/uH02AOqk1AWT5MLpNbb5bBBSVBLNt3CkRI8i4l9TuoEQhoAQCstqTKuT6W096dHy5sGSCSQLKSDq9oMtnj4CiksAaS+/47pCIp45pZCiwmXG/VPl13VSd0K1/Rbiuj1AhOr72XTwTOCq+t7MXEigEsMuErSmgkXIhUxFd/Zjtg7eeRtXlXbyxXeXfS5eB5QbUyiBLfURNvIwvd3/PBI6Or9WHpYAkKWX5PS0FJL+LGrtO/Gwz2Ov77JhOk8+qEhvt/8uWgVoF1RZ7IYqM+Jb3o8uwjPjeJGsC2rUr6vhyTiL7IcelSd+S+ycfDqwoplq5MzsWrVb/e1LQZqx3TTYB6cNvlgLKIiCdGCWWjJdNQI8bnEPSJeCJssCb/wgVZiV9r7cxozhqJLNa0tyFfJa8IcuL2eV9eATgMfsuAvISMCO+9yTOip99BOFx+BxUIfzMk+jWutLlp16HlkIdSf7adTLeyHu07zb7OcQbkknoHYDL2v21vyIXoo6fUXtb8a0EzIhvGeGWB1QmN2MTsI4eWPEzSEG36fWlRgoryVfe9ZPP2vWSfFb8qJ3+WYpyiTbktReiDclMqWf5MDoBsvogS66e+JE7kBfbMoF1H1alu5fMLQW0QkY9v+1VYKP9aCmI2STqGU8keXqKQ4+vpUwivDRJ4EtkKBPB+j46+Wqxawokug/yBvbGj9jB5MKYLQFnF3Pv/171lGCjfRg56zNSArba3WVaz/Rj9hiA9MpmSr/HDZ7k/dOZ1mtn3NZ3GbGjrh2Ju/v3J8eQsY5628xcw7X2WzFXyhfrt5yWDiaGdyXg7H7MxI3oh7fBzKyLGQK03md9w952stcxpAPAJjLM3ux6P0eRxur7KlmNtoPiAgAAAADw8AdH3IR9Wsx7pQAAAABJRU5ErkJggg==',14,0],'energy-orb':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAAEdElEQVR42u1dMW4cMQy8PnXekR+ky3v8Bdd5TOo8w0WekcK9iwvWsA483pDS3nK05+wQWNjAGTeUSA4piVqfThKJRCKRSCQSiUQikUgkB5Q/336dNQuyv2RHOT+9yAiyv2RXI/z+KyPI/hIJlu9ffpztsyf2I+hwtBJX9j+o/duAf359vjzLl86YCIRtnz11GMG+p7T1mThy/lmO2HAWvRa77zH3Dds+s3Xw+E2vmfZfPptm/17wLZNgFaouJRv28n0ND+nRdKheV/acr4dfNQce2+MzsS3+aBBW2j/D9jqw7B/hRv5fbQPva4iI6MDR4FmKNPye89lJYeEv37840/vvHz89PiMQ7ZgRvs/GbOJp89AeZiaO8NeSwCz/Z9kAJTukSzkJ3ASgMfzFGUkEALGd81kd7N9W6rAGn+GAbX5t8CMdWPiRw2ckwKx6vL8x58AGX5b92QnQ42ckWIZ/lf2A07WAYClxE3xBANo1KRM/IwFLAFUO6EtfXwlEBMDAHyWByiogdH7gdwwSQvi95DcTP4q9MgJsDpAF//n17aYcrQhAGPzL84F3FYivbxQSgtnP6+AMwQ5ASD5FGdCvlcPxozkozsBd5wf41SQUVr8fZGz1sCRUTQAo8LPYa5/zSv8F2D5Aia2TEJZ/g/hbCWAtvg8AOgEB/ItjbHCARgJo7ZvZH+2JbJ1/iN0cH43fZOV7NmTbd6T42fwTCWgk/tq4SwgIlZ9w8icSwBoCYhDASABULkO8DiH+8oCjuYq9h6tnMACpBJCM3wfAVvyb8Sf+X0EAloDa5u8Qfhu/iYMSAvDrzjUZ+H+sAGYSUBgESQAyS/AQOwjAqQRArEBGK2BWBQD3oAbGX1oBdAMQMNDeFcBnr0CiI9BeBVa5/LgnANsR1daeiFUERNgITTfAB3SoJABr3zUExDkCyjZhTBnKWP/CTbBgA7BSh5tM4McOdKjeBQ43/0gboF0SADpUnkLY5rOrJUiwEchojPIkMLIRPOMUZmQOaAQQHYX5/YL3JURBB5YdFDp68pUHKwBuMlHnKIhBADAIycewEQFkjTCV+KgJKjoLZxyDZs0/yPen4SenUKXNWD4IRzryqhtBfBuw3xVm64DanqOdZ5utTgXtsHZdjRpf2C2haC0c9QRUBr8lgF4TTnQ3hDH+iPSiTtCt9u+1IFPIxyrtFfAZKbsY4yuA0YrAH8d4I/cMwWwFzdowffl1bwXkd4OzdtSRLrS1enj7Z5loTSfcaj2eXs69Tjzkh0wCzHBZ90EQCUR3YRDhbH7HAroMhJh3a+kRKZpdRPLM18OPrkRmkzRr/GttgMY/AzssiTc6/6VqAg1JoyTAtH8v+Nn2z4K/IvGs3ph5hKu4/lrkDB1sVVKBPXpPG10BZt9CG7FBVvUxsGffxPM6oIpnL/sj/6O/VUkvhPicL4SYMX6288n+DyKP8O62PXU4+viP6vOaczn/qZ0+KPiP6496b6JEIpFIVAFIDmh//ROFY4vsL5FIJBJlIIns/xnlH0iKdWFag8wgAAAAAElFTkSuQmCC',12,1],'fireball':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAADuklEQVR42u1bS24VMRB8a/ZsskHiAIgLIHGurDgI1+A+SJG4BIuHRuDg9Otu99fzAlXSKFKkpOx2dbk97rlcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXhE+vXl/3c1Hn3+dc3dcd6/l7r99FVo/Y0EiibBbMNfHh+v124fnn938z5wMb9f8X3A+Przg6Zrv4Hz6/E6cE51zNoE1rpUG59js0v28Fq28IzhUAN0JuFr4WZQjGXYvwJyE3QZwM2fK3zR/lvcPF6eHSs2Nh9MZ1WR2/sfffn37cTmPeQy79SfpnhpzW/LfkJOnWgCcw2v8nUlo4e9KQDH5G/lVXspfWAHR5Ge1p4wnUwUcBkBNR82HgvhbzZNN/ig/JTz+ocsAhOTzDELilHaACn6NUztWVPFHjjZd8V9xe3kzJsDxmpM/MX/KS02HVh83YwrwDw1yvKvKI73+lNTtOhz5jy9/n4JSaB6fSXxF/PMOYBVbBb9qNAH+DLcr7pR/MgKrCWvJp/LPvw/G31NpqONy8mux5iqPZeXpWX8qMOl8ZS47Z/LxKAHQSp2QCJ38kiBp+aeWuwX88y7A8kaS3zl/mgBsMmi8Cf6x1sfcxbhbngT/cr0tlUdA/xazmfNSjYt3/pLbswKwBv3n99+PwYXo2d6180mic/C37HwJfrbi4MRXFP+DS6uyzDtdIv7zvMdLN5cBUB0E+Nl1X5l9wfqrxyvrUSc5f7HUNiX/SgwGBx68s/uzE5UcL7kDmRagaQdalryrHagw/lzymyuBIP8c+5H8yx25oQIpPfYFKxA13pF1j1TA4TOYNBjjGYzugCKv14yc/MvKQ/qpxcFoABbnV6uSQPy1sn+YsmpOqyQ08EtvvcVKzKvDxDsY9gWk1wQcR7BlFaqNocIANCO4ue+2Pk4HNr319phCQAD0zW+qQkjsAKYzefIWYNXHkTblxEvYWXu7+dO3IAXzD5vBZApmbu5KjHNnqeml+xosagKZ4EvJ53lBFTG/cRwyXwE29kGYRNjAL3X2ea9iK3tRXC/EE/w0F+n6W3tg2vpgpM6n6B2oV4hd98CeSsgigupe8uVRpWjnS+1IZ3bCCW3RWxrBmHWo5vZeCbZ3woom0Bh8qRe9c/Gl3nCtDbTDADydeZ094VLb75kfJnGa2P1h1O5vQVZNQVv4pY8RugUouWFXL7r3LL37W4QzEu9yR5A0cdYYzvp6cffHSHcriHsQJKIAnGmGiAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/B/4BZBxXhPx9NxqAAAAAElFTkSuQmCC',12,1],'healing-aura':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAADxklEQVR42u1cwY3cMAzcGlJHSrgSUklKCFLJlZIO0kWeqSDfPfjBgGdItkgOKdk7BIy7A86myRlRQ0m7jweNdgH7+ff7k1mgLUEckpFGTtBoNBqNsxuNVkYgkpFGbtBoNBqtbV9+vHEmIJa0u0qtr7++PVuXEGb7/U7EieRb8nJFTvSwPMKf1sb/0u3RKMhClt/Pd5LiBjP/HssR/C18oS0s3awAymyxEebf84+JOKh3QN/fI/fIzytL8B6Wnnch/omS++yKkMcjWfSsIb8j5M8Wy/aMqSBMaMlkIHqvaEwtLGfkx4r7PvZLHkbzAumRbkdBWgPVfaPnftpn/CMDEIF/ZCIh/oCqh5BuiNlAgzn6991aqYqZFy3Bo4pIF/JXxN+jxCHtmzeBLRmOAmN75orAZL2Xbj0sgwhREFaS4KtyJpuPXhzl/3Xb6iZfRIbLvVyN9QGPGoCeQqAJ5BnAmjvEv3bxcD8Ju5+nq48GdOS6w1bM6P4zWoJLvrUElxm5sqV7dfxnSXBEy7TnThgH6QmrBsFsGSaJjEgwby5kECElOGIl3LMDQAnuxx+lALgY6gQeMfg8kq4160YlOGX4dSQ48Z94BjxDfnulHSV4PX+i+epJcCkEt8M/Q4ZJEqMHUTzBb/FI5UYpAP3cSgl+ZfntjTsqv6M4PTo7YQj8V2zBUyq3DhYlv0eTouU/YuYX4CnD8zAbkd8e/CMDViuBS+I/6wx4lvy2yrs9EbzXKw786t2KUf4Qf4cEt0qy6GzZO8//AG3DWat6tAVBSmX9zFnyb+TzH96ijcjVEX+i+FskeOXAh7ZjvbP8owFFkqBX3vcLGZFtON0TW6WgF0j0/Yj4s99h37558UcU39bqtwV/1AQwY/3D/Q5ZEtxaQLSEQi2+jYCfWbktn2nP9J/Vf5+tflfjL5y14J/Bg0gBr8b+/xdqoFfAR3o8/ZJ72YXowfbPRvaeiBxUScYjP4gtsDPuHPnotVAo/C1fKlKFeyUHTp+vv1YLufg2WgCqJNiqBWCmf9Q7nHHnrABk42/1X1kEZvv/tJiQtQvQk3VVxxV7fiqPSvb8z4wfuZh0xJ0jH9k5GHl+tv/o+6XGj+6/LX24/uhw1jeoyMzUImjrc+cZ/nuz4+z4Z+OfmYOR2LN4cIb7avGf9t8WsHt9uCUJHjBa946C3/MfAV77t5KgMv4V8D/LgeeyrmUd8cDr2+N/VvyhRRnUVohOnDUhrXuj/iPAI/xXxz8b/14OPBdiYfOKvjMW8R8zDz5MCdgJxt3iXwF/Gt4+AIvwey6X5zpNAAAAAElFTkSuQmCC',10,1],'ice-shard':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAACZ0lEQVR42u2awU0DMRBFUwQdcKEGqqAPrvRBO1wogT44Io6R0CIjjWRG9tqeGXsT5T1pJBRI3q49397NcjoBAAAAAAAAAAAAAAAAAAAAAAAAwI1z9/C85YUfP/4r8d8/vW2prML3r237/tm2l4/zX6WfRw7E60+VvPlxrPYnd16zGyHSf/T537o/av5T70uZF4LH189/JaHWUnm9VaMTkbv3TjraX/IJpfPXE14rmYwRd8/49/o943+0v7XplMY6lcVvnf88dHnfyXH0+C3zX3LqMi8EIixNQG/wLEGsefMBmOlvHdNI40fsCLoxVviTMzVOLYC10EnJ+3uCWJvvvV1P+1oB2Aui1T/Sd9YduXRs1v43LwTRIbQEUU7gCL92e0MYEcSSX+/aqSKvSBLpveIv+faqFkT5zBb533lCoIPQ8pd+7+m/iCCuzt+UEFqC6NkJPf7aSjwSAOtCULsstYRQH4enEa3+/LJWFqPeRSAyBJfg947/cr/eBaWhehtPv3ZkA+K/DL8lfJEBGPHr/ve403cd3g1wdLEz35KW5Ksar3YfOtsffQnsCZ5u0tX+yPHXjT96D24Nn3zLb/XnV8Dpvfnn6dI+XRG3wHuf36ohf0m+qvFK98Ar/K0vwWb795rS6rc0Xm3x0Q3V8noav3T+Sxq/cjxH+SPCb/bXHkPM3HF6HoPM8I88BusNwKzHYKVJ9gRv9DFYZONZHoPNaHzL/M/0j86/2R/xjxDRl5qjfj14q/8RxDvxt+yPmn/Gf934Nw/I87x7tf/o88eP/9r9AAAAAAAAAAAAAAAAAAAAAAAAAHAUvzW8XL4zGuHbAAAAAElFTkSuQmCC',12,1],'lightning-strike':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAACnElEQVR42u2c0W2DMBRFGaBql+gU+eocHa0T5LdbZYb8uDKqJePYhjT4Ppp3roQiFAlTyjk8PyDTNCCX77cwGeTj/TWEyynMuZxCXP+PYzyyb/HYh+t5/jzSvhFHQQAIgCABJOBYAsgHASAApwJIxwcJAL/0pPMMf/r7gZ+4hH+G0jH88bhbwp8LGPidgm8Kf4pT+CP4lvAnAQM/V32z+b5n+JOAreBPFQA0AL8p/KNOwpoELE/4FvzKfQJ+Ylb+3zT9BlcByorjkfJfXQWU5T8iQARBctJdz2EhAUEfQNlzuFcCln2A8v+ABBBBUMDfOgFlEjhIXyC/BcidAPLUqQmgN0+XTUEOcNLzFCB5evhbAlDDX6sAjtQUBELylOBbX/1bPYBeZYIACHmw5M+bfoeAv9LwspIApT9xUQFYzsW3PAdgIQDeASC+qwPhXPxoFQCdfwL84rl47zmA8vkEVdnPOwDEL/wGV+LecwBbehZ7z/k9vgOAcIDfdC7e6z1suWuxF/wWAFqX/OkYIAEkUD0RVQJYazyqKgCPTT8kgASaAI6eiy+mAEYQIAEkgAA2VAF7VgKLsv932/NiMBdGAAgA+IulJoG9pgNV8MtFDAMSQAI+4W/A15uLD4E/xkACiyZjEqBQAl+fLyEuSIDYwl8AOPS2XzluGcF+pG0rq4+43Rz2uF4Tghq+fJ8mbgs6E0ADQIkAelGLqFgsIShFMQLyNEZNQtax+mk8s6QysCwHJVd/IXw35f8GAQx9H2FFAPFzNOhr3+8BaGsbvW3n/aARQKeHrlqwr33/iPxK5sx4XNsBBGArAOpEIit59jTePc2vfInJ11XjtsZX7Ud5/JW3Icux1T8Kaz1+utCVn1b9D/X4h+sLMD4hf8sPdEDTUT6djm4AAAAASUVORK5CYII=',15,0],'poison-cloud':[8,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAAgCAYAAAD9qabkAAAE0klEQVR42u1Zy60TUQxNDexZI8GeImgCie1rgC7ogjVFUAxdBA2SJcvy59jjuTchtjQankjm+HOO7bm53cbGxsbGxsbGxsbGxsYQ+33/fp8sTK4nTy9oX//8vPP72OR68rS403349eO+C/uVuu7k+vkm/5I8cWKsJojEXY2/utvuFOGuHD/jZNtZp+V52k2MlbhaYVdOo1fK9Zl3250CfIQ6Xc5Ja/JagXcnIou/CncVuXYLMcJ/dQGurJG2gS/B3iVCWm12iXA3uR59WhP5dzeqR2+ST6k//vBDiPKShe92hj+PfJB4Gn61KGiSr9p8rOdZd60eq0mo8WCVyK4WgYW3aihZ+kP53+bEAXqsHloTuJqEFtm1q1OEZ+/d+FY+5ARe2QSsa+W6vasJrJz8Gd21+KN1HrQBeJtBhvRW4IcfkS8VfA9TPhf5DEJKJN7IN0+EKBms/HvY2mfev72VmiLSVK3Nz4v7CnwrL2cmsYeLaq69GUjxZxoAOXEQokJC77nki+VPVQSVREvcyjpcLXK0AVTyjjZCBLcqAqS5ZcTYuflla7Jq823DtyZ/JDqEIB1ikL5If6KJFMWrPd+LmU5krWmIbh5orEjTq2w+SD2lD5EYsxtQlk8d/EMmPIpn5WfXBsD5X3rH8sRvJcZbCysbh0xodiIhRYjE74kwWo+zm0cGt2sSS/zob4sHZ/MfbXjyINgTYkYE6CsO0qS9TbR6wIpsvlbDgvVnvYtW1v4qCazDxmwnzk4A2QC6JhHy64T2/bObFrIJaP5Xt7zIp4OAtA15JLeaTZaDiAiRs5do0ne8BkdnHBFm5pzm8nfR6ql01+FbdQ2qxI36nC1+Z86j16CIZJkJFDUAS4SZyVpplt7rWNSEke2i413ce+XIHninf5UjclCCEFJliUgTwMLPYGdPp+n5Hv5x//juMzTNIz/kQWDUfI7/l9jRqqeR1Mt7FP+Bn3m/9ZqE5wPPd3b9z/4Cw68jPokreY8eeFd4iPIfbUQZXUA85BMCuY6Efvn0DXpv8oLn+NnTXvRC8aNiVLGPPKFNQBMiQjZPdPRcJP8dPz1mm29V1Ci2Jn5UfGd4R7gI/87mmQaIdS6k4suOzB9iCZInlP87KkRUBMKXE4sERCTmn+kkgRQhXR2Nx5p8ERnPYlPeIvxuXHlR89EmMOFe5YMXfxem1mwJV/4dbSBZXBrEst4Z/f2z48tchFEx+fc8YHKMnh8ZD4jj0fdlM5BNwSoGis9x6K49W2tQ1j3z6wvP5ZmL8DNxW821gs95wfNp4WoxZ5qMV5Mobi126QeKJfEknyLdWTnwahzxJ8wDd1IjPC8SD1J+z+p+GRLyZ/G/LVwetHb3kh/lQYtLuxD/Kk3AawQSH/Engyu3PO/igreubN2zd61maPxonbX8dtRf4ls6lI010kNWfzeN/FFwXkerkt8KBvlel8kJflbUWeN5tEh4pT/WBPeavyXIat3Rz8tGeCYfkYg1sXbyUdadNwNN/OimkQ5eEg4pUsfk8yYxSoqO+LW1boXoojxURNItgqheVpO6sgl01Avlc/Z+VofRZnsJP1eRHvVjte2K99ltd77+t3rt1t/tFUVgTYKxaQKPMISGj2NjY2NjY2NjY2NjY2NjY2NjY2OQ/QUsiumgkLNlOQAAAABJRU5ErkJggg==',8,1],'portal':[8,'data:image/png;base64,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',10,1],'shield-bubble':[12,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAAAgCAYAAAAbrK/lAAAFGElEQVR42u2dzW0jMQyFfdoW9r5lpIdtLGWlj1zTxB68QBAPKFkaSdQjKWueAN0Mf8KQfI/zq9uNg4ODg4OjZ/z98+t+Nsknn3zyyd+ILwH3j7fn+fV+TIvFyP/8fP/9PYvr+Hhz49cm+bb8Wtzd+CLXI/Lv/u8rXUM2Xfgnk3zH/MunBT8vutbv82RE8KXANPlZMXrzpTlF8aUYIuMfze/JPxO+yOmI/EtEpnEcpDlZ8qvToP6H+JkYo+MfwhfHtZl3KL7suPLkyhPuLBm1biQ7TjVfdGRX5MuOOCL+W/DF/0fEPxG9F+Dn8YrgSzH0jj+cP5j/EL7sOr//NDvtHPkvTTewFV/RDSL5mm5Ydt1hfMG6JF92vAH5B+Mr6w/Blx1xRPyn+ID6U/Gfus5HICYTsHcRaH7ejYTxO4vQit8rQk9dRwRfdl0RfNl1bsIfyT8T/kD9JZdaUPozyI/UP2T9jfITAcpvcGgvJ2kNAMXXGgCUrzAAJF9jAGF82XlF8GXnuQlfZQBB9XcYAFJ/FAYQpX/o+uvm18TnBhg9i7Dk9yShOb9RhLXg78JviWCt+Fz5BfHbhd8V/2i+Yfx76t8q/3v1L4xvLX6tRXjwz5LAjV8pAmvxXYVfE0Hr4u/iG4rfKvzT+EfzG/HveQpspv6t87+lf5F8GsAC/HADiBZgGgAN4MwAlPcfaAADBjB7s2fWAMz5DQOw5PckoDm/UYDW/JYBhPIBNzvJx+ffUReP9U2cCaDqT7OGJfSvxE+6X4cEyBdxJf4jyDn/cH8PflaESfflwM9FKOk+yd+er80/xJpQ9TfzNNZq+vf06KHlaB2A3fmtBHThnxSgB/9MgMgP4k921h75h1gfov6Oy2Tas4ACP1L/aADeAnxxAyjyaQDhBnCZ/FPWX3IpSj6fPxC3Gn9G/zTmRQOgAdAAyF8n/tH573QGYGIAireDaQA0ABoA+TQAJX/mjXCkAYyaEQ1gVQOIPgWmAdAAaAAml10sDEB7OYoGEGwAtZtAKxhA6E1AGsBlDKDIDzaA6IdAtjoDOP1eOQ2gzI82AEcBogHQAGgAC90DQB+E2oJ63wT2FF/PJGzyjYuwlHyeIlQqPm9+z5u4YXzjs7Aevrf4e9ZfK/+s9adVfzNnAdqrD9AD0Hpjb3kBpgFsbwBLG1C0ANMAXtIAEPwlzgBoADQAGsDeAnx5A1jUgKCLKAVy9HOonuK7FN/xExSeIniW/Ffhj3wOO4xvlP8r8HvibyXCS/B79kSwWMTMjjghfHARavjIYzC8IQZYBLuTz5Kv2BDFU/ws82+YD66/UT5af1bga3cE9K4/kyeCIg1AxQcWoJYv9wSF8BUCjPr2itYAoHzllogofpQBqPgG5hclwKvwowxgtP6SRcwuRH7edGZT5NnOe3ZT6BC+2BT7VflT8UfxtZuiA+I/Kj5L8QH1N8NH6U80X5t/kfp7LELTDciD/gAPwyf4R8cruu4pfvZdcne+3KD7RfjQ+A/yk/z7KTxU/IfzH8GfqL+H8L0yf1QEV+Ij4h/FL3YDsrhrU37Pegqc83/+s8oVoqfpenu6MXlppjot+PJ179X5FvEv8Jv5N9h19ca/mf/iWEDzv7P+tF1vD3+EjeSPcqP56Phr2Ch+4kZ5MtaKftp1zvjZrkHJFB2vGV+KUWGS78A/yQHX/CvUgjm/Yrx5x2vF7xFd8u35tTyw4FcXU5o340E++eSTT34Mn4ODg4Njk/Ef1njK7/9pf6cAAAAASUVORK5CYII=',12,1],'teleport':[12,'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAAAgCAYAAAAbrK/lAAAEx0lEQVR42u2dQY7VMAyG34oNO07Djg234QrcBokLzGVYcAck9qgoIxkZT5L2vca//eo/UvWGx0ydtom//I6T3m5PXL5vv7cP3142tN13Hz+/2v21/dmkDu07hM12fPr54/UQ+/Jv+X+vukgdtH35Wex73od27vdfvobal+tv9713/xHtwD5/aYPtE9kH5P7ba27fRfR/lF0WAiAMANL5Rw6oOUgEACIcYHX7IwCgbB8FwNX7PwsBkAoA2gmhABA9Ah8poCvb31MABAALAUAAUAEE2W8/V1YA6BDMqP9fLRREyBEAb+YAxAHpETgCAFli8JkUgLQB9EBA339tGzEXEK0ApA+g+n9r93T+BMB/o7AMANAOkAogDgDIEJAGAOcA/Pu/DHqiIEBIJAaAOIMqCiBzDN47BJNdASCzgLT9DACwYZ9VYSBx/nKtWSFAABQFQFQaaCYFIHXwhF82BWAHAFEKoAddjxh8z/Ei0kClXWV0/uXDQ1kAkGkOoAoAeiGQSACIU26/4zkSzwYAxOCnPdd2vdYBzxQAAkCe4GEhAJ5OAUSHYFAA0A44Ig000xyAPHO5B6udom1r2hFHp4GiHT8nhAmAf84nGgAZs3AiAIC691kBkEEBcAReFBBUAG9H4BEKAOWEjoZgKioA7Ygj0kAjQjDZFoIh5gioAgiAFFtBRGTBHLXv5QAzKQC9DkXag75ubwhkSAOV+44O+fQcffZUUQLgAgDQi7AyhYDQCqA3AkcCaDQCjwQA2hFX3Qqi5+iZKkoAwLI/9uYAKiiAqBH4HgBQW0H0AFBhIZgdgdv+7+14Z46eCqAoALLtBpphDgAZgsmiAGSSUq4fcQ+s/QoKQE8I6/4/mihGKAAUgFgIgN0QTBUF0FsJG60AvLOQegCosA7AOn+bEjr63rMe9L4EQJq9gNAAiMqCiQ7BZARAlnUAEQrgyPcsBAAVgCMAsozA7XPwCMFoBdQLwVRUAGgAzEbgdP4EwOUBMHsfgAAgIgafaQTuff2jhXBIAGRbCUxvxFIKAHYESAXwAhuBj9IgkXsB9UbgFQEQmQbKQgCkUAAoAIzWAaAyYaLz4I9m4aBUGHozOgKAhSWZAkBuB90czGw3UNRWEEdi8N72syiACADwpfAsaUrk3hRUADHrAKKyYLLYz/ZSeAKAJXQUTgWQQwFUAUBUDH4vBEQAsBAAxRQAGgD69X+9EEwVAGR6IUy23UAJABZY+Kc1gqgwUJXN4MSxaQUwckBSl1U50e08csxi4BoA+m+87fcUAML+TAGstG/rYRWAhc9qu7P2aAHAPPwiTl9vRiaH3hLAuw7SyPWLQBCN3nZCC4DVHV/Opc+vQz4zAJy9L9q2Pe9eHrz+m0frcK99DYAI+7odrLBv25yuw8i+tu0FQV0PDQAPu6O6HPlkAThDrQAQN942rN5ugB716DmC3mE7/iq7ojruOQTWZ5yPhfk9tvWA4VEHXNn+o3VYZduep6eCZ3Y9nLGcd++TEACHYSJUSO9A2hTFYzdDW1mXka2jx5m6nLV9tg4z+7O2iLD/LM9gVVu0CxD3Ds/+eBQCLBcGQJZQWBR8jh6Rtlc7nxl8RxD2so9+Bo/Uw7s90vmy3PjQWTLAF+H0WFiuWP4CIgYFGwvNGDcAAAAASUVORK5CYII=',15,0]};
+        const SPFX_CSS = '.spfx{position:absolute;pointer-events:none;image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated;background-repeat:no-repeat;z-index:12;will-change:background-position,transform}';
+        (function () { const st = document.createElement('style'); st.textContent = SPFX_CSS; document.head.appendChild(st); })();
+        (function () {
+            const st = document.createElement('style');
+            st.textContent = '.protect-bubble{background:none !important;border:0 !important;box-shadow:none !important}' +
+                '.protect-bubble .pb-sprite{inset:0;border-radius:0;background-repeat:no-repeat;background-size:1200% 100%;image-rendering:pixelated;animation:spShield 1s steps(12,jump-none) infinite}' +
+                '.protect-bubble .pb-flash{background:radial-gradient(circle,rgba(255,255,255,.55) 0%,rgba(253,224,71,.3) 55%,rgba(253,224,71,0) 75%)}' +
+                '@keyframes spShield{from{background-position:0 0}to{background-position:100% 0}}';
+            document.head.appendChild(st);
+        })();
+        let spLive = 0;
+        const SPFX_URL = {};
+        function spUrl(name) {
+            if (SPFX_URL[name]) return SPFX_URL[name];
+            const D = SPFX_DATA[name]; let u = D[1];
+            try { const b = atob(D[1].split(',')[1]), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); u = URL.createObjectURL(new Blob([a], { type: 'image/png' })); } catch (e) {}
+            return (SPFX_URL[name] = u);
+        }
+        try { const st = document.createElement('style'); st.textContent = '.protect-bubble .pb-sprite{background-image:url(' + spUrl('shield-bubble') + ')}'; document.head.appendChild(st); } catch (e) {}
+        // Color (#hex / rgb) -> filtro CSS que lleva el sprite de su tono base (grados) a ese color.
+        function spTint(color, baseHue) {
+            try {
+                let r, g, b, m;
+                if (!color) return '';
+                if ((m = /^#([0-9a-f]{3})$/i.exec(color))) { r = parseInt(m[1][0] + m[1][0], 16); g = parseInt(m[1][1] + m[1][1], 16); b = parseInt(m[1][2] + m[1][2], 16); }
+                else if ((m = /^#([0-9a-f]{6})/i.exec(color))) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+                else if ((m = /rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/i.exec(color))) { r = +m[1]; g = +m[2]; b = +m[3]; }
+                else return '';
+                r /= 255; g /= 255; b /= 255;
+                const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+                if (d < 0.12) return mx > 0.75 ? 'grayscale(1) brightness(1.25)' : 'grayscale(1) brightness(.8)';
+                let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360;
+                let dh = h - (baseHue == null ? 40 : baseHue); dh = ((dh + 540) % 360) - 180;
+                return 'hue-rotate(' + Math.round(dh) + 'deg)';
+            } catch (e) { return ''; }
+        }
+        // Reproduce un sprite (tira horizontal de fotogramas) en (x, y) de la capa de cámara.
+        // o: size (px), rot (grados), flip (-1 invierte en X), filter, fps, once, ms (vida si hace bucle), anchor ('b' = el punto es la base), z, op, delay (ms), scale, parent
+        function spfx(name, x, y, o) {
+            o = o || {};
+            const D = SPFX_DATA[name]; if (!D || !container || spLive > 90) return null;
+            const n = D[0], gs = Math.max(1, gameSpeed || 1), fps = (o.fps || D[2]) * gs * (o.fpsMul || 1);
+            const loop = !!D[3] && !o.once, dur = n / fps * 1000, s = o.size || 32;
+            const el = document.createElement('div'); el.className = 'spfx';
+            const st = el.style;
+            st.left = x + 'px'; st.top = y + 'px'; st.width = s + 'px'; st.height = s + 'px';
+            st.marginLeft = (-s / 2) + 'px'; st.marginTop = (o.anchor === 'b' ? -s * 0.92 : -s / 2) + 'px';
+            st.backgroundImage = 'url(' + spUrl(name) + ')'; st.backgroundSize = (n * 100) + '% 100%';
+            if (o.z != null) st.zIndex = o.z;
+            if (o.op != null) st.opacity = o.op;
+            if (o.filter) st.filter = o.filter;
+            st.transformOrigin = o.anchor === 'b' ? '50% 92%' : '50% 50%';
+            st.transform = 'rotate(' + (o.rot || 0) + 'deg) scale(' + ((o.flip || 1) * (o.scale || 1)) + ',' + (o.scale || 1) + ')';
+            (o.parent || container).appendChild(el); spLive++;
+            if (o.travel) { try { const b0 = st.transform; el.animate([{ transform: 'translate(0px,0px) ' + b0 }, { transform: 'translate(' + o.travel[0] + 'px,' + o.travel[1] + 'px) ' + b0 }], { duration: (o.travelMs || 500) / gs, easing: 'ease-out', fill: 'forwards' }); } catch (e) {} }
+            let gone = false;
+            const rm = () => { if (gone) return; gone = true; spLive--; el.remove(); };
+            el.spRemove = rm;
+            const go = () => {
+                if (gone) return;
+                const a = el.animate([{ backgroundPosition: '0% 0%' }, { backgroundPosition: '100% 0%' }], { duration: dur, easing: 'steps(' + n + ', jump-none)', iterations: loop ? Infinity : 1, fill: 'forwards' });
+                if (!loop) a.onfinish = rm; else if (o.ms) setTimeout(rm, o.ms / gs);
+            };
+            if (o.delay) { st.visibility = 'hidden'; setTimeout(() => { st.visibility = ''; go(); }, o.delay / gs); } else go();
+            if (loop && !o.ms && !o.keep) setTimeout(rm, 6000);
+            return el;
+        }
+        let spSparkWin = 0, spSparkCnt = 0;
+        function spSparks(x, y, color, count) {
+            const now = performance.now(); if (now - spSparkWin > 300) { spSparkWin = now; spSparkCnt = 0; }
+            if (++spSparkCnt > 7) return true;
+            const c = Math.max(1, count || 8), size = Math.min(54, 22 + c * 2.4);
+            spfx('hit-spark', x, y, { size, rot: Math.random() * 360, filter: spTint(color, 40), z: 13 });
+            return true;
+        }
+        function spPhysHit(x, y, o) {
+            const pw = Math.max(0.5, Math.min(1.9, (o.power || 70) / 70)), crit = !!o.crit, eff = o.eff == null ? 1 : o.eff;
+            const k = pw * (crit ? 1.3 : 1) * (eff > 1 ? 1.12 : (eff > 0 && eff < 1 ? 0.88 : 1)) * (o.scale || 1) * (physHitScale || 1);
+            if (crit) {
+                spfx('critical-hit', x, y, { size: Math.round(64 * k), z: 14 });
+            } else {
+                spfx('hit-spark', x, y, { size: Math.round(52 * k), rot: Math.random() * 360, filter: spTint(PHYS_HIT_TINT[o.type] || '#fdba74', 40), z: 13 });
+                if (eff > 1 || k > 1.3) spfx('hit-spark', x, y, { size: Math.round(36 * k), rot: 45 + Math.random() * 30, op: 0.9, delay: 60, z: 13 });
+            }
+            if (o.defender && !o.mini) duelHitFlash(o.defender);
+        }
+        const SP_SLASH_TINT = { blade: '', x: 'hue-rotate(-100deg) saturate(1.1)', dark: 'hue-rotate(50deg) brightness(.75)', psychic: 'hue-rotate(115deg)', solar: 'hue-rotate(-150deg) brightness(1.15)', fury: 'hue-rotate(-100deg) saturate(1.1)', air: 'saturate(.35) brightness(1.4)' };
+        function spClaw(x, y, attacker, crit) {
+            const ax = attacker ? attacker.x + 35 : x - 40, ay = attacker ? attacker.y + 60 : y - 10;
+            let dir = Math.atan2(y - ay, x - ax) * 180 / Math.PI; if (!isFinite(dir)) dir = 0;
+            const side = Math.random() < 0.5 ? 1 : -1;
+            spfx('claw-slash', x, y, { size: crit ? 84 : 66, rot: dir - 50 * side + (side < 0 ? 0 : 0), flip: side, filter: crit ? 'hue-rotate(75deg) brightness(1.15)' : '', z: 14 });
+            spfx('hit-spark', x, y, { size: crit ? 46 : 32, delay: 50, z: 13, rot: Math.random() * 360 });
+            if (crit) spfx('critical-hit', x, y, { size: 58, delay: 40, z: 13 });
+        }
+        function spSlash(x, y, move, attacker, crit) {
+            const key = move.slash, P = SLASH_FX[key] || SLASH_FX.blade;
+            const ax = attacker ? attacker.x + 35 : x - 40, ay = attacker ? attacker.y + 35 : y - 10;
+            let dir = Math.atan2(y - ay, x - ax) * 180 / Math.PI; if (!isFinite(dir)) dir = 0;
+            let cuts = crit ? 1 : P.n; if (key === 'fury' && !crit) cuts = 1 + Math.min(2, Math.max(0, (attacker && attacker.furyStreak) || 0));
+            const tint = crit ? 'hue-rotate(-170deg) brightness(1.2)' : (SP_SLASH_TINT[key] || '');
+            for (let i = 0; i < cuts; i++) {
+                const flip = (key === 'x' && !crit) ? (i === 0 ? 1 : -1) : (Math.random() < 0.5 ? 1 : -1);
+                const rot = dir + (key === 'x' && !crit ? (i === 0 ? 40 : -40) : (Math.random() - 0.5) * 40) - 20 * flip;
+                spfx('sword-slash', x + (Math.random() - 0.5) * 8, y + (Math.random() - 0.5) * 8, { size: Math.round(72 * P.scale * (crit ? 1.35 : 1)), rot, flip, filter: tint, delay: i * P.gap * 1000, z: 14 });
+            }
+            spfx('hit-spark', x, y, { size: crit ? 44 : 30, delay: 70, z: 13, rot: Math.random() * 360, filter: spTint(P.spark, 40) });
+            if (crit) spfx('critical-hit', x, y, { size: 56, delay: 40, z: 13 });
+        }
+
+
+        // Estilo de sprite para un elemento de proyectil ya existente (se mueve con left/top como siempre).
+        function spProjStyle(el, name, o) {
+            const D = SPFX_DATA[name]; if (!D) return;
+            o = o || {}; const n = D[0], s = o.size || 32, gs = Math.max(1, gameSpeed || 1);
+            el.className = 'projectile'; el.textContent = '';
+            const st = el.style; st.width = s + 'px'; st.height = s + 'px'; st.marginLeft = (-s / 2) + 'px'; st.marginTop = (-s / 2) + 'px';
+            st.backgroundImage = 'url(' + spUrl(name) + ')'; st.backgroundSize = (n * 100) + '% 100%'; st.backgroundRepeat = 'no-repeat';
+            st.imageRendering = 'pixelated'; if (o.filter) st.filter = o.filter;
+            st.transform = 'rotate(' + (o.rot || 0) + 'deg)';
+            try { el.animate([{ backgroundPosition: '0% 0%' }, { backgroundPosition: '100% 0%' }], { duration: n / (D[2] * gs) * 1000, easing: 'steps(' + n + ', jump-none)', iterations: Infinity }); } catch (e) {}
+        }
+        const spAng = (sx, sy, tx, ty) => Math.atan2(ty - sy, tx - sx) * 180 / Math.PI;
+        // Efecto de impacto de un proyectil según su visual
+        function spImpact(visual, x, y, move) {
+            switch (visual) {
+                case 'fire': spfx('explosion', x, y, { size: 46, z: 13, fpsMul: 1.5 }); break;
+                case 'bubble': spfx('water-splash', x, y + 8, { size: 56, anchor: 'b', z: 13 }); break;
+                case 'sound': spfx('shockwave', x, y + 6, { size: 72, filter: 'hue-rotate(110deg)', z: 12 }); break;
+                case 'shadow': spfx('magic-sparkle', x, y, { size: 56, filter: 'hue-rotate(-30deg) brightness(.7)', once: true, ms: 500, z: 13 }); break;
+                case 'psychic': spfx('magic-sparkle', x, y, { size: 56, once: true, ms: 500, z: 13 }); break;
+                case 'fairy': spfx('magic-sparkle', x, y, { size: 56, filter: 'hue-rotate(20deg) brightness(1.3)', once: true, ms: 500, z: 13 }); break;
+                case 'overdrive': spfx('lightning-strike', x, y + 14, { size: 60, anchor: 'b', filter: 'hue-rotate(0deg)', z: 13 }); break;
+                case 'poison': spfx('poison-cloud', x, y + 4, { size: 54, filter: 'hue-rotate(110deg)', ms: 700, z: 12 }); break;
+            }
+        }
         function spawnSparks(x, y, color, count = 8) {
+            if (spSparks(x, y, color, count)) return;
             if (fxReapQ.length > 240) return; // tope de efectos vivos: más no se aprecian y saturan la GPU
             if (gameSpeed > 1) count = Math.max(1, Math.round(count / Math.sqrt(gameSpeed))); // a x2/x4 pasan demasiado rápido para verse
             count = fxN(count); if (count <= 0) return;
@@ -14180,6 +14321,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // chispazo de rayos finos (.impact-burst) que gira un ángulo aleatorio
         // en cada golpe para que no se vea repetitivo.
         function spawnBurst(x, y, color) {
+            if (Math.random() <= (window.PA_FXL || 1)) spfx('hit-spark', x, y, { size: 46, rot: Math.random() * 360, filter: spTint(color, 40), z: 13 });
+            return;
             if (Math.random() > (window.PA_FXL || 1)) return;
             const b = document.createElement('div');
             b.className = 'impact-burst';
@@ -14195,6 +14338,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         // chispazo de rayos con degradado de brasa, superpuesto al destello
         // genérico para que el impacto se sienta como una llamarada.
         function spawnFireBurst(x, y) {
+            spfx('explosion', x, y, { size: 44, z: 13, fpsMul: 1.4 }); return;
             const b = document.createElement('div');
             b.className = 'flame-impact-burst';
             b.style.left = x + 'px';
@@ -14222,6 +14366,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function spawnPhysicalHitFx(x, y, o) {
             try {
                 o = o || {};
+                spPhysHit(x, y, o); return;
                 const now = performance.now();
                 if (now - physFxWin > 450) { physFxWin = now; physFxCnt = 0; }
                 const lite = ++physFxCnt > 5;
@@ -14378,6 +14523,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 '</svg>';
         }
         function spawnClawFx(x, y, move, attacker, crit) {
+            spClaw(x, y, attacker, crit); return;
             const ts = 1 / Math.min(2, Math.max(1, gameSpeed));
             const ax = attacker ? attacker.x + 35 : x - 40, ay = attacker ? attacker.y + 60 : y - 10;
             let dir = Math.atan2(y - ay, x - ax) * 180 / Math.PI; if (!isFinite(dir)) dir = 0;
@@ -14438,6 +14584,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         function spawnSlashFx(x, y, move, attacker, crit) {
             const key = move.slash;
+            if (key === 'claw') { spClaw(x, y, attacker, crit); return; }
+            spSlash(x, y, move, attacker, crit); return;
             if (key === 'claw') return spawnClawFx(x, y, move, attacker, crit);
             const P = SLASH_FX[key] || SLASH_FX.blade;
             const ts = 1 / Math.min(2, Math.max(1, gameSpeed));
@@ -14632,6 +14780,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function updateAttackBoostBadge(c) { updateAtkStatBadge(c); }
 
         function spawnStatRisePopup(c, text) {
+            try { if (/PS/.test(text) && /^\+|máx/.test(text)) spfx('healing-aura', c.x + 35, c.y + 62, { size: 72, ms: 900, z: 11 }); } catch (e) {}
             const hud = c.wrapper.querySelector('.pokemon-hud');
             if (!hud) return;
             const popup = document.createElement('div');
@@ -16032,7 +16181,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             const centerY = c.y + 35;
 
             spawnBurst(centerX, centerY, '#ef4444');
-            spawnSparks(centerX, centerY, '#f87171', 14);
+            spfx('magic-sparkle', centerX, centerY, { size: 72, filter: 'hue-rotate(-100deg)', ms: 800, z: 14 });
 
             c.wrapper.classList.add('ability-aura');
             const auraTimer = setTimeout(() => c.wrapper.classList.remove('ability-aura'), 2500);
@@ -18118,7 +18267,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // instantes, con el tono descendente clásico de fondo.
             const faintDuration = 650 / gameSpeed;
             c.wrapper.style.setProperty('--faint-duration', faintDuration + 'ms');
-            if (!c.captured) { c.wrapper.classList.add('fainting'); playFaintSound(); } // capturado: sin animación ni sonido de KO
+            if (!c.captured) { c.wrapper.classList.add('fainting'); playFaintSound(); try { spfx('smoke-puff', c.x + 35, c.y + 52, { size: 76, z: 14 }); } catch (e) {} } // capturado: sin animación ni sonido de KO
             if (wasChampion && !c.captured) showKOEffect(c);
 
             const faintTimer = setTimeout(() => {
@@ -19232,7 +19381,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             // Chispas doradas girando alrededor del sprite mientras dura el brillo.
             const sparkInterval = setInterval(() => {
                 if (c.fainted) return;
-                spawnSparks(centerX(), centerY(), '#fff9c4', 4);
+                spfx('magic-sparkle', centerX() + (Math.random() - 0.5) * 36, centerY() + (Math.random() - 0.5) * 36, { size: 60, ms: 700, z: 14 });
             }, 180);
             activeTimers.push(sparkInterval);
 
@@ -19254,7 +19403,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 if (c.fainted) return;
 
                 spawnBurst(centerX(), centerY(), '#ffffff');
-                spawnSparks(centerX(), centerY(), '#ffffff', 18);
+                spfx('shockwave', centerX(), centerY() + 22, { size: 130, filter: 'brightness(1.3)', z: 12 }); spfx('magic-sparkle', centerX(), centerY(), { size: 96, ms: 800, z: 14 });
                 playEvolutionChime();
                 if (c.sound) c.sound.play().catch(() => {});
 
@@ -20237,6 +20386,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         // Lluvia de terrones que salen en arco y caen con gravedad.
         function spawnDirtBurst(x, y, count, power, spread) {
+            if (count >= 5) spfx('landing-dust', x + (Math.random() - 0.5) * 16, y + 6, { size: 28 + Math.min(20, count), anchor: 'b', flip: Math.random() < 0.5 ? -1 : 1, z: 9 });
+            return;
             spread = spread === undefined ? 1 : spread;
             for (let i = 0; i < count; i++) {
                 const isStone = Math.random() < 0.22;
@@ -20262,6 +20413,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         // Nube de polvo: varias bolitas que crecen y se desvanecen.
         function spawnDustPuff(x, y, count, size) {
+            for (let i = 0; i < Math.min(2, count); i++) spfx('landing-dust', x + (Math.random() - 0.5) * 24, y + 4, { size: Math.max(30, size * 1.6), anchor: 'b', flip: Math.random() < 0.5 ? -1 : 1, z: 9 });
+            return;
             for (let i = 0; i < count; i++) {
                 const ox = (Math.random() - 0.5) * 22;
                 const el = fxAt('dig-dust', x + ox, y - 2 - Math.random() * 4, 900, { marginLeft: (-size / 2) + 'px', marginTop: (-size / 2) + 'px', width: size + 'px', height: size + 'px' });
@@ -20315,24 +20468,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             triggerCameraShake(11, 650 / gameSpeed);
             logMessage(`¡El suelo tiembla con ${move.name} de ${attacker.name}!`, 'attack');
 
-            // Visual: dos anillos que se expanden hasta el radio, grietas y tierra.
-            for (let i = 0; i < 2; i++) {
-                const ring = fxAt('quake-ring', cx, cy + 20, 900, { width: (R * 2) + 'px', height: (R * 0.9) + 'px' });
-                ring.animate([
-                    { transform: 'translate(-50%,-50%) scale(0.1)', opacity: 1 },
-                    { transform: 'translate(-50%,-50%) scale(1)', opacity: 0 }
-                ], { duration: (650 + i * 200) / gameSpeed, delay: (i * 140) / gameSpeed, easing: 'ease-out', fill: 'both' });
-            }
-            spawnDigCracks(cx, cy + 20, 9);
-            spawnDustPuff(cx, cy + 22, 7, 22);
-            spawnDirtBurst(cx, cy + 16, 24, 1.5, 1.3);
+            spfx('ground-slam', cx, cy + 26, { size: R * 1.2, anchor: 'b', z: 13, fpsMul: 0.9 });
+            spfx('shockwave', cx, cy + 22, { size: R * 2.4, filter: 'hue-rotate(-185deg) saturate(.8)', z: 11, fpsMul: 0.8 });
+            spfx('shockwave', cx, cy + 22, { size: R * 1.6, filter: 'hue-rotate(-185deg) saturate(.8)', z: 11, delay: 140, fpsMul: 0.8 });
             for (let i = 0; i < 6; i++) {
                 const ang = Math.random() * Math.PI * 2, d = R * (0.35 + Math.random() * 0.6);
-                const t = setTimeout(() => {
-                    spawnDirtBurst(cx + Math.cos(ang) * d, cy + 20 + Math.sin(ang) * d * 0.45, 5, 0.9, 1);
-                    spawnDustPuff(cx + Math.cos(ang) * d, cy + 22 + Math.sin(ang) * d * 0.45, 2, 16);
-                }, (120 + i * 90) / gameSpeed);
-                activeTimers.push(t);
+                spfx(i % 2 ? 'landing-dust' : 'ground-slam', cx + Math.cos(ang) * d, cy + 24 + Math.sin(ang) * d * 0.45, { size: i % 2 ? 44 : 40, anchor: 'b', delay: 120 + i * 90, z: 13 });
             }
 
             const victims = combatants.filter(x =>
@@ -20867,36 +21008,18 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     ? `¡Un destello de ${move.name} deslumbra la arena desde ${attacker.name}!`
                     : `¡Una oleada tóxica de ${move.name} se expande desde ${attacker.name}!`, 'attack');
 
-            if (fairy) {
-                fxRingWave({ cx, cy: gy, R, H: 22, T, style: 'fairy', N: 40 });
-                spawnBurst(cx, cy + 10, pal.burst);
-                spawnSparks(cx, cy + 10, pal.spark, 24);
-                for (let i = 0; i < 9; i++) {
+            {
+                const wtint = fairy ? 'hue-rotate(115deg)' : electric ? 'hue-rotate(-165deg) brightness(1.2)' : 'hue-rotate(45deg)';
+                spfx('shockwave', cx, gy, { size: R * 2.4, filter: wtint, z: 11, fpsMul: 0.8 });
+                if (!electric && !fairy) spfx('poison-cloud', cx, gy, { size: R * 0.9, filter: 'hue-rotate(110deg)', ms: T, z: 12 });
+                spfx(electric ? 'lightning-strike' : fairy ? 'magic-sparkle' : 'explosion', cx, electric ? gy + 14 : gy - 6, { size: electric ? 96 : fairy ? 80 : 60, anchor: electric ? 'b' : null, filter: fairy ? 'hue-rotate(20deg)' : !electric ? 'hue-rotate(200deg) saturate(.8)' : '', ms: 700, z: 14 });
+                for (let i = 0; i < 8; i++) {
                     const ang = Math.random() * Math.PI * 2, d = R * (0.3 + Math.random() * 0.7);
                     const px = cx + Math.cos(ang) * d, py = gy + Math.sin(ang) * d * FX_K;
-                    const t = setTimeout(() => spawnSparks(px, py - 6, pal.spark, 8), areaHitDelay(d, R, T));
-                    activeTimers.push(t);
-                }
-            } else if (electric) {
-                fxElectricShock({ cx, cy: gy, R, T });
-                spawnSparks(cx, cy + 10, pal.spark, 22);
-                for (let i = 0; i < 7; i++) {
-                    const ang = Math.random() * Math.PI * 2, d = R * (0.35 + Math.random() * 0.6);
-                    const px = cx + Math.cos(ang) * d, py = gy + Math.sin(ang) * d * FX_K;
-                    const t = setTimeout(() => spawnSparks(px, py - 6, pal.spark, 8), areaHitDelay(d, R, T));
-                    activeTimers.push(t);
-                }
-            } else {
-                fxGeyser(cx, gy - 2, 'sludge');
-                fxRingWave({ cx, cy: gy, R, H: 46, T, style: 'sludge', N: 40 });
-                for (let i = 0; i < 18; i++) fxSprayDrop(cx, cy + 16, 'sludge', Math.random() < 0.5 ? -1 : 1, 1.5);
-                fxGroundPuddle(cx, gy, R, '88,28,135', T * 0.5, 1500);
-                fxSludgeBubbles(cx, gy, R, 14, 1300, T * 0.35);
-                for (let i = 0; i < 7; i++) {
-                    const ang = Math.random() * Math.PI * 2, d = R * (0.35 + Math.random() * 0.6);
-                    const px = cx + Math.cos(ang) * d, py = gy + Math.sin(ang) * d * FX_K;
-                    const t = setTimeout(() => { for (let k = 0; k < 5; k++) fxSprayDrop(px, py - 4, 'sludge', Math.cos(ang), 0.9); }, areaHitDelay(d, R, T));
-                    activeTimers.push(t);
+                    const dl = areaHitDelay(d, R, T) * gameSpeed;
+                    if (electric) spfx('lightning-strike', px, py + 10, { size: 64, anchor: 'b', delay: dl, z: 13 });
+                    else if (fairy) spfx('magic-sparkle', px, py - 6, { size: 52, filter: 'hue-rotate(20deg)', ms: 700, delay: dl, z: 13 });
+                    else spfx('poison-cloud', px, py, { size: 40, filter: 'hue-rotate(110deg)', ms: 800, delay: dl, z: 12 });
                 }
             }
 
@@ -20930,19 +21053,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             triggerCameraShake(6, 500 / gameSpeed);
             logMessage(`¡Una gran ola de ${move.name} arrasa la arena desde ${attacker.name}!`, 'attack');
 
-            fxGeyser(cx, gy - 2, 'water');
-            fxRingWave({ cx, cy: gy, R, H: 48, T, style: 'water', N: 46 });
-            fxGroundPuddle(cx, gy, R, '96,180,250', T * 0.55, 900);
-            spawnWaterFoam(cx, cy + 22, 8, 24);
-            spawnWaterSplash(cx, cy + 16, 26, 1.5, 1.3);
-            for (let i = 0; i < 7; i++) {
-                const ang = Math.random() * Math.PI * 2, d = R * (0.35 + Math.random() * 0.6);
-                const px = cx + Math.cos(ang) * d, py = gy + Math.sin(ang) * d * FX_K;
-                const t = setTimeout(() => {
-                    spawnWaterSplash(px, py - 2, 7, 1, 1);
-                    spawnWaterFoam(px, py + 2, 2, 18);
-                }, areaHitDelay(d, R, T));
-                activeTimers.push(t);
+            spfx('shockwave', cx, gy, { size: R * 2.4, z: 11, fpsMul: 0.75 });
+            spfx('water-splash', cx, gy + 6, { size: 96, anchor: 'b', z: 14, fpsMul: 0.9 });
+            for (let i = 0; i < 9; i++) {
+                const ang = Math.random() * Math.PI * 2, d = R * (0.3 + Math.random() * 0.7);
+                spfx('water-splash', cx + Math.cos(ang) * d, gy + Math.sin(ang) * d * FX_K + 4, { size: 56, anchor: 'b', delay: areaHitDelay(d, R, T) * gameSpeed, z: 13 });
             }
 
             const victims = combatants.filter(x =>
@@ -21075,6 +21190,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         // Anillo de polvo que se abre por el plano del suelo.
         function fxDustRing(x, y, count, r1) {
+            spfx('shockwave', x, y + 4, { size: r1 * 2.4, filter: 'hue-rotate(-185deg) saturate(.8)', z: 9 }); spfx('landing-dust', x, y + 6, { size: 44, anchor: 'b', z: 9 });
+            return;
             for (let i = 0; i < count; i++) {
                 const ang = (i / count) * Math.PI * 2 + Math.random() * 0.3, size = fxRand(16, 28);
                 const el = fxAt('dig-dust fx-gc', x, y, 1000, {
@@ -21445,6 +21562,26 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             sh.el.style.cssText = '';
             if (fxBeamShells.length < 24) fxBeamShells.push(sh);
         }
+
+        // Rayo hecho de sprites: teselas del sprite a lo largo del rayo (misma API que los fxBuild* de fxBeam).
+        function spBeamBuild(c, name, o) {
+            const D = SPFX_DATA[name]; if (!D) return '';
+            const x0 = c.tail, x1 = c.len; if (x1 - x0 < 6) return '';
+            const n = D[0], url = spUrl(name), cy = c.H / 2, fr = Math.floor(c.ph * D[2]);
+            const S = o.size || c.H, step = S * (o.step || 0.6), grow = o.grow || 0;
+            let out = '', i = 0;
+            for (let x = x1 - S * 0.4; x > x0 - S * 0.3; x -= step, i++) {
+                const k = o.frames ? o.frames[(fr + i) % o.frames.length] : (fr + i) % n;
+                const sz = grow ? S * (0.55 + grow * Math.min(1, x / Math.max(60, c.dist))) : S;
+                const cx = k * 32;
+                out += '<svg x="' + (x - sz / 2).toFixed(1) + '" y="' + (cy - sz / 2).toFixed(1) + '" width="' + sz.toFixed(1) + '" height="' + sz.toFixed(1) + '" viewBox="' + cx + ' 0 32 32" opacity="' + c.alpha.toFixed(2) + '">';
+                if (o.rot) out += '<g transform="rotate(' + o.rot + ' ' + (cx + 16) + ' 16)">';
+                out += '<image href="' + url + '" width="' + (n * 32) + '" height="32"' + (o.filter ? ' style="filter:' + o.filter + '"' : '') + '/>';
+                if (o.rot) out += '</g>';
+                out += '</svg>';
+            }
+            return out;
+        }
         function fxBeam(o) {
             const NS = 'http://www.w3.org/2000/svg';
             const H = o.H;
@@ -21568,11 +21705,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function fxElectricBeam(move, attacker, defender, hitSound) {
             const tc0 = fxSpriteCenter(defender);
             const m0 = fxMuzzle(attacker, tc0.x, tc0.y);
-            spawnSparks(m0.x, m0.y, '#fde047', 7);
+            spfx('muzzle-flash', m0.x, m0.y, { size: 40, rot: spAng(m0.x, m0.y, tc0.x, tc0.y), filter: 'hue-rotate(10deg)', z: 13 });
             fxBeam({
                 move, hitSound, attacker, defender, H: 130, grow: 70, hitAt: 220, fade: 220, rollMs: 55,
-                build: fxBuildElectric,
-                particle: {
+                build: c => spBeamBuild(c, 'lightning-strike', { rot: 90, size: 84, step: 0.5, frames: [1, 2, 3, 2] }),
+                particleOff: {
                     every: 38, fn: (i) => {
                         const p = fxAlong(i, i.tail + Math.random() * (i.len - i.tail), (Math.random() - 0.5) * 24);
                         spawnSparks(p.x, p.y, Math.random() < 0.5 ? '#fef08a' : '#ffffff', 2);
@@ -21580,6 +21717,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 },
                 onHit: (tc, hd) => {
                     resolveSingleHit(move, attacker, hd || defender, tc.x, tc.y, hitSound, '#facc15', '#fef08a');
+                    spfx('lightning-strike', tc.x, tc.y + 16, { size: 96, anchor: 'b', z: 14 });
                     spawnSparks(tc.x, tc.y, '#fde047', 10);
                 }
             });
@@ -21658,11 +21796,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function fxIceBeam(move, attacker, defender, hitSound) {
             const tc0 = fxSpriteCenter(defender);
             const m0 = fxMuzzle(attacker, tc0.x, tc0.y);
-            for (let i = 0; i < 5; i++) fxIceShard(m0.x, m0.y, (Math.random() - 0.5) * 36, (Math.random() - 0.5) * 36, 4 + Math.random() * 4, 'ice-sparkle');
+            spfx('muzzle-flash', m0.x, m0.y, { size: 38, rot: spAng(m0.x, m0.y, tc0.x, tc0.y), filter: 'hue-rotate(-190deg) brightness(1.2)', z: 13 });
             fxBeam({
                 move, hitSound, attacker, defender, H: 64, grow: 110, hitAt: 250, fade: 230,
-                build: fxBuildIce,
-                particle: {
+                build: c => spBeamBuild(c, 'ice-shard', { size: 54, step: 0.55 }),
+                particleOff: {
                     every: 42, fn: (i) => {
                         const side = (Math.random() - 0.5) * 16;
                         const p = fxAlong(i, i.tail + Math.random() * (i.len - i.tail), side);
@@ -21672,7 +21810,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 },
                 onHit: (tc, hd) => {
                     resolveSingleHit(move, attacker, hd || defender, tc.x, tc.y, hitSound, '#bae6fd', '#e0f2fe');
-                    fxIceBurst(tc.x, tc.y);
+                    spfx('shockwave', tc.x, tc.y + 10, { size: 84, z: 12 });
+                    for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2 + Math.random() * 0.5; spfx('ice-shard', tc.x, tc.y, { size: 26, rot: a * 180 / Math.PI, travel: [Math.cos(a) * 36, Math.sin(a) * 30], travelMs: 450, ms: 450, z: 13 }); }
                 }
             });
         }
@@ -21716,11 +21855,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         function fxSolarBeam(move, attacker, defender, hitSound) {
             const tc0 = fxSpriteCenter(defender);
             const m0 = fxMuzzle(attacker, tc0.x, tc0.y);
-            spawnSparks(m0.x, m0.y, '#d9f99d', 8);
+            spfx('magic-sparkle', m0.x, m0.y, { size: 52, filter: 'hue-rotate(40deg)', ms: 500, z: 13 });
             fxBeam({
                 move, hitSound, attacker, defender, H: 64, grow: 100, hitAt: 250, fade: 220,
-                build: fxBuildSolar,
-                particle: {
+                build: c => spBeamBuild(c, 'energy-orb', { size: 46, step: 0.55, filter: 'hue-rotate(125deg) brightness(1.25)' }),
+                particleOff: {
                     every: 36, fn: (i) => {
                         const p = fxAlong(i, i.tail + Math.random() * (i.len - i.tail), (Math.random() - 0.5) * 22);
                         spawnTrail(p.x, p.y, Math.random() < 0.5 ? 'rgba(190,242,100,0.8)' : 'rgba(253,224,71,0.8)', 4 + Math.random() * 5);
@@ -21728,7 +21867,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 },
                 onHit: (tc, hd) => {
                     resolveSingleHit(move, attacker, hd || defender, tc.x, tc.y, hitSound, '#a3e635', '#fde047');
-                    spawnSparks(tc.x, tc.y, '#fde047', 10);
+                    spfx('explosion', tc.x, tc.y, { size: 56, filter: 'hue-rotate(60deg) brightness(1.15)', z: 14, fpsMul: 1.3 });
+                    spfx('magic-sparkle', tc.x, tc.y, { size: 70, filter: 'hue-rotate(40deg)', ms: 600, z: 14 });
                 }
             });
         }
@@ -21746,7 +21886,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (!gameRunning || grp.dead) return;
                     const el = fxProjGet('projectile');
                     el.className = 'projectile leaf-particle' + (i % 2 ? ' leaf-b' : '');
-                    container.appendChild(el);
+                    container.appendChild(el); spProjStyle(el, 'energy-orb', { size: 20, filter: 'hue-rotate(160deg)' });
                     const tc0 = fxSpriteCenter(defender);
                     const m0 = fxMuzzle(attacker, tc0.x, tc0.y);
                     const spread = (Math.random() - 0.5) * 10;
@@ -21773,7 +21913,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                         if (step >= steps) {
                             clearInterval(interval);
                             el.remove();
-                            spawnSparks(x, y, i % 2 ? '#86efac' : '#4ade80', 3);
+                            spfx('hit-spark', x, y, { size: 26, filter: 'hue-rotate(80deg)', z: 13 });
                             if (i === hitIdx) resolveSingleHit(move, attacker, defender, tc.x, tc.y, hitSound, '#4ade80', '#86efac');
                         }
                     }, 20 / gameSpeed);
@@ -21827,11 +21967,11 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             playFlamethrowerRoar(500 / gameSpeed, move);
             const tc0 = fxSpriteCenter(defender);
             const m0 = fxMuzzle(attacker, tc0.x, tc0.y);
-            spawnSparks(m0.x, m0.y, '#fdba74', 6);
+            spfx('muzzle-flash', m0.x, m0.y, { size: 44, rot: spAng(m0.x, m0.y, tc0.x, tc0.y), z: 13 });
             fxBeam({
                 move, hitSound, attacker, defender, H: 90, grow: 120, hitAt: 280, fade: 240, rollMs: 45,
-                build: fxBuildFlame,
-                particle: {
+                build: c => spBeamBuild(c, 'fire', { rot: 90, size: 84, step: 0.42, grow: 0.9 }),
+                particleOff: {
                     every: 30, fn: (i) => {
                         const s = i.tail + Math.random() * (i.len - i.tail);
                         const side = (Math.random() - 0.5) * (6 + 34 * Math.min(1, s / Math.max(80, i.dist * 0.85)));
@@ -21842,8 +21982,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 },
                 onHit: (tc, hd) => {
                     resolveSingleHit(move, attacker, hd || defender, tc.x, tc.y, hitSound, '#f97316', '#fdba74');
-                    for (let k = 0; k < 8; k++) fxIceShard(tc.x, tc.y, (Math.random() - 0.5) * 50, -8 - Math.random() * 34, 4 + Math.random() * 4, 'fx-ember');
-                    spawnSparks(tc.x, tc.y, '#fdba74', 8);
+                    spfx('explosion', tc.x, tc.y, { size: 60, z: 14, fpsMul: 1.3 });
+                    spfx('fire', tc.x, tc.y + 12, { size: 52, anchor: 'b', ms: 700, z: 13 });
                 }
             });
         }
@@ -21912,6 +22052,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             return null;
         }
         function projClashFx(x, y, c1, c2) {
+            spfx('parry-flash', x, y, { size: 70, z: 14, rot: Math.random() * 360 }); spfx('hit-spark', x, y, { size: 44, z: 13, delay: 40 });
+            try { const a = sndHit.cloneNode(); a.volume = 0.5; a.play().catch(() => {}); } catch (e) {}
+            return;
             spawnSparks(x, y, c1, 9); spawnSparks(x, y, c2, 9);
             const ring = fxPool.get('projectile');
             ring.style.cssText = `left:${x}px;top:${y}px;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px ${c1},0 0 24px ${c2};`;
@@ -21984,19 +22127,13 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             playAreaFxSound('poison', 1100 / gameSpeed);
             triggerCameraShake(6, 520 / gameSpeed);
             logMessage(move.terror ? `¡Una oleada de sombras de ${move.name} aterra la arena desde ${attacker.name}!` : move.wildfire ? `¡Una oleada de llamas de ${move.name} arrasa la arena desde ${attacker.name}!` : `¡Una nube de polvos de colores de ${move.name} cubre la arena desde ${attacker.name}!`, 'attack');
-            const ring = fxAt('fx-gc fx-befuddle-ring' + (move.wildfire ? ' fx-wildfire' : '') + (move.terror ? ' fx-terror' : ''), ctr.x, ctr.y + ctr.ry * 0.7, 1100 / gameSpeed);
-            ring.style.setProperty('--R', R + 'px');
-            ring.style.animationDuration = (T / gameSpeed) + 'ms';
-            for (let i = 0; i < 36; i++) {
+            { const tint = move.terror ? 'hue-rotate(80deg) brightness(.7)' : move.wildfire ? 'hue-rotate(-190deg) saturate(1.3)' : 'hue-rotate(110deg)';
+              spfx('shockwave', ctr.x, ctr.y + ctr.ry * 0.7, { size: R * 2.4, filter: tint, z: 11, fpsMul: 0.75 });
+              for (let i = 0; i < 12; i++) {
                 const ang = Math.random() * Math.PI * 2, d = R * (0.2 + Math.random() * 0.8);
-                const sp = fxAt('fx-gc fx-befuddle-spore', ctr.x, ctr.y, 1500 / gameSpeed);
-                sp.style.setProperty('--dx', (Math.cos(ang) * d) + 'px');
-                sp.style.setProperty('--dy', (Math.sin(ang) * d * FX_K - Math.random() * 60) + 'px');
-                const cols = move.terror ? TERROR_COLORS : move.wildfire ? WILDFIRE_COLORS : BEFUDDLE_COLORS; sp.style.setProperty('--c', cols[i % cols.length]);
-                sp.style.setProperty('--s', (10 + Math.floor(Math.random() * 10)) + 'px');
-                sp.style.animationDuration = ((1000 + Math.random() * 300) / gameSpeed) + 'ms';
-                sp.style.animationDelay = (Math.random() * 220 / gameSpeed) + 'ms';
-            }
+                if (move.wildfire) spfx('fire', ctr.x + Math.cos(ang) * d, ctr.y + Math.sin(ang) * d * FX_K + 10, { size: 44, anchor: 'b', ms: 800, delay: Math.random() * 300, z: 12 });
+                else spfx('magic-sparkle', ctr.x + Math.cos(ang) * d, ctr.y + Math.sin(ang) * d * FX_K, { size: 52, filter: move.terror ? 'hue-rotate(-30deg) brightness(.7)' : '', ms: 900, delay: Math.random() * 350, z: 12 });
+              } }
             try { if ((move.wildfire || move.terror) && window.PARaidFx) PARaidFx.wildfire(attacker, ctr, R); } catch (e) {}
             spawnSparks(ctr.x, ctr.y, move.terror ? '#a855f7' : move.wildfire ? '#f97316' : '#c084fc', 22);
             spawnSparks(ctr.x, ctr.y, '#fde047', 14);
@@ -22034,7 +22171,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                         const ex = targetX + nx * off * 0.3, ey = targetY + ny * off * 0.3;
                         const el = fxProjGet('projectile');
                         el.className = 'projectile psychicball-particle';
-                        container.appendChild(el);
+                        container.appendChild(el); spProjStyle(el, 'energy-orb', { size: 30, filter: 'hue-rotate(15deg)' });
                         el.style.left = sx + 'px';
                         el.style.top = sy + 'px';
                         let bx = sx, by = sy, steps = 0;
@@ -22080,6 +22217,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                         el.style.top = sy + 'px';
                         let bx = sx, by = sy, steps = 0;
                         const vx = (ex - sx) / 13, vy = (ey - sy) / 13;
+                        if (move.iceSpike) spProjStyle(el, 'ice-shard', { size: 38, rot: spAng(sx, sy, ex, ey) }); else spProjStyle(el, 'energy-orb', { size: 22, filter: 'hue-rotate(160deg)' });
                         spawnSparks(sx, sy, move.iceSpike ? '#bae6fd' : '#bef264', 2);
                         const P = projRegister({ kind: 'ball', move, attacker, defender, x: sx, y: sy, r: 5, el, hitSound, color: move.iceSpike ? '#7dd3fc' : '#84cc16', spark: move.iceSpike ? '#e0f2fe' : '#bef264' });
                         const interval = setInterval(() => {
@@ -22107,6 +22245,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const el = fxProjGet('projectile');
                 el.className = 'projectile ' + (isB ? 'belch-particle' : 'sludgebomb-particle');
                 container.appendChild(el); el.style.left = startX + 'px'; el.style.top = startY + 'px';
+                if (isB) spProjStyle(el, 'poison-cloud', { size: 30 }); else spProjStyle(el, 'poison-cloud', { size: 44, filter: 'hue-rotate(110deg) brightness(.85)' });
                 const N = isB ? 17 : 16; const vx = (targetX - startX) / N, vy = (targetY - startY) / N;
                 const dist = Math.hypot(targetX - startX, targetY - startY);
                 const arcH = isB ? 0 : Math.min(90, 25 + dist * 0.18);
@@ -22122,13 +22261,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (pc) { clearInterval(interval); projFinish(P, pc); return; }
                     const t = steps / N; const lift = Math.sin(Math.PI * t) * arcH;
                     el.style.left = bx + 'px'; el.style.top = (by - lift) + 'px';
-                    if (isB) { const sc = 0.7 + t * 1.5; el.style.transform = 'scale(' + sc + ')'; el.style.opacity = String(1 - t * 0.35); if (steps % 2 === 0) spawnTrail(bx + fxRand(-5, 5), by + fxRand(-5, 5), trailColor, fxRand(8, 15)); }
-                    else { el.style.transform = 'rotate(' + (steps * 22) + 'deg)'; if (steps % 2 === 0) spawnTrail(bx, by - lift + 6, trailColor, 6); }
+                    if (isB) { const sc = 0.8 + t * 1.6; el.style.transform = 'scale(' + sc + ')'; el.style.opacity = String(1 - t * 0.3); if (steps % 4 === 0) spfx('smoke-puff', bx + fxRand(-5, 5), by + fxRand(-5, 5), { size: 22, op: 0.7, filter: 'sepia(1) hue-rotate(40deg) saturate(2)', z: 9 }); }
+                    else { if (steps % 4 === 0) spfx('smoke-puff', bx, by - lift + 8, { size: 16, op: 0.6, filter: 'sepia(1) hue-rotate(230deg) saturate(2)', z: 9 }); }
                     if (steps >= N) {
                         clearInterval(interval); el.remove();
-                        if (isB) { for (let i = 0; i < 7; i++) spawnTrail(targetX + fxRand(-18, 18), targetY + fxRand(-16, 16), 'rgba(163,230,53,0.55)', fxRand(12, 22)); }
-                        else { for (let i = 0; i < 9; i++) fxSprayDrop(targetX, targetY, 'sludge', i % 2 ? 1 : -1, 1.1); }
-                        spawnSparks(targetX, targetY, sparkColor);
+                        if (isB) { spfx('poison-cloud', targetX, targetY, { size: 84, ms: 600, z: 12 }); spfx('smoke-puff', targetX, targetY - 6, { size: 56, filter: 'sepia(1) hue-rotate(40deg) saturate(2)', z: 11 }); }
+                        else { spfx('poison-cloud', targetX, targetY + 2, { size: 60, filter: 'hue-rotate(110deg) brightness(.85)', ms: 650, z: 12 }); spfx('explosion', targetX, targetY, { size: 40, filter: 'hue-rotate(200deg) saturate(.8)', z: 13, fpsMul: 1.4 }); }
                         resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, burstColor, sparkColor);
                     }
                 }, 20 / gameSpeed); activeTimers.push(interval);
@@ -22140,6 +22278,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const el = fxProjGet('projectile');
                 el.className = 'projectile ' + (isOD ? 'overdrive-particle' : isFairy ? 'fairy-particle' : 'poison-particle');
                 container.appendChild(el);
+                if (isOD) spProjStyle(el, 'energy-orb', { size: 34, filter: 'hue-rotate(110deg) brightness(1.2)' });
+                else if (isFairy) spProjStyle(el, 'magic-sparkle', { size: 44 });
+                else spProjStyle(el, 'poison-cloud', { size: 38, filter: 'hue-rotate(110deg)' });
                 el.style.left = startX + 'px';
                 el.style.top = startY + 'px';
 
@@ -22168,6 +22309,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (steps > 15) {
                         clearInterval(interval);
                         el.remove();
+                        spImpact(visual, targetX, targetY, move);
                         resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, burstColor, sparkColor);
                         if (move.wave) triggerSurfWave(move, attacker, defender, targetX, targetY); // área (delegada según waveFx)
                     }
@@ -22180,6 +22322,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 el.className = 'projectile ' + visualClass;
                 if (visual === 'fire') playEmberLaunchSfx(16 * 20 / gameSpeed); // Ascuas: escupitajo de brasa
                 container.appendChild(el);
+                { const a0 = spAng(startX, startY, targetX, targetY);
+                  if (visual === 'fire') { spProjStyle(el, 'fireball', { size: 46, rot: a0 }); spfx('muzzle-flash', startX, startY, { size: 30, rot: a0, z: 13 }); }
+                  else if (visual === 'bubble') spProjStyle(el, 'energy-orb', { size: 30, filter: 'hue-rotate(-100deg) saturate(1.1)' });
+                  else if (visual === 'sound') spProjStyle(el, 'energy-orb', { size: 32, filter: 'hue-rotate(-15deg) brightness(1.15)' });
+                  else if (visual === 'shadow') spProjStyle(el, 'energy-orb', { size: 36, filter: 'hue-rotate(-35deg) brightness(.65) saturate(1.2)' });
+                  else spProjStyle(el, 'energy-orb', { size: 34, filter: 'hue-rotate(15deg)' }); }
                 el.style.left = startX + 'px';
                 el.style.top = startY + 'px';
 
@@ -22207,6 +22355,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     if (steps > 15) {
                         clearInterval(interval);
                         el.remove();
+                        spImpact(visual, targetX, targetY, move);
                         resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, burstColor, sparkColor);
                         if (move.wave) triggerSurfWave(move, attacker, defender, targetX, targetY); // Surf: ola en área alrededor del impacto
                     }
@@ -22256,6 +22405,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                     steps++;
 
                     if (phase === 'out' && steps >= totalSteps) {
+                        if (isRock) spfx('ground-slam', targetX, targetY + 14, { size: 64, anchor: 'b', z: 13 }); else spfx('landing-dust', targetX, targetY + 10, { size: 40, anchor: 'b', z: 13 });
                         resolveSingleHit(move, attacker, defender, targetX, targetY, hitSound, isRock ? '#a8a29e' : '#e0c291', isRock ? '#d6d3d1' : '#f5deb3', multiHit ? 'ida' : null);
                         if (multiHit) {
                             vx = -vx;
@@ -23027,6 +23177,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         const STRIDE_MS = 900;    // duración de un dash de movimiento al deambular (antes pasitos de 560 ms)
         function feetOf(c) { return { x: c.x + (elW(c.wrapper) || 70) / 2, y: c.y + (elH(c.wrapper) || 95) }; }
         function dashDust(x, y, n, dirX) {
+            if (window.PA_PQ >= 2) n = Math.max(1, Math.ceil(n / 2)); n = fxN(n); if (n > 0) spfx('landing-dust', x - dirX * 6, y + 4, { size: 24 + Math.min(14, n * 4), anchor: 'b', flip: dirX > 0 ? 1 : -1, z: 9 });
+            return;
             if (window.PA_PQ >= 2) n = Math.max(1, Math.ceil(n / 2));
             n = fxN(n); if (n <= 0) return;
             for (let i = 0; i < n; i++) {
@@ -23610,7 +23762,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             if (!b) {
                 b = document.createElement('div');
                 b.className = 'protect-bubble';
-                b.innerHTML = '<i class="pb-shine"></i><i class="pb-arc"></i><i class="pb-flash"></i>';
+                b.innerHTML = '<i class="pb-sprite"></i><i class="pb-flash"></i>';
                 c.wrapper.appendChild(b);
             }
             layoutProtectBubble(c, b);
@@ -23650,7 +23802,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 
         // Un golpe choca contra la burbuja: sin daño, sin efectos secundarios.
         function blockWithProtect(defender, attacker, move, x, y) {
-            spawnSparks(x, y, '#e0f2fe', 7);
+            spfx('parry-flash', x, y, { size: 64, z: 14, rot: spAng(defender.x + 35, defender.y + 35, x, y) });
             const b = protectBubbleEl(defender);
             if (b) {
                 try {
@@ -25210,17 +25362,17 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
               amb: [255, 252, 240], vig: 0.20, vigCol: [40, 28, 10],
               sunRgb: [255, 244, 205], sunA: 0.30, sunX: 0.30, sunY: -0.10, rays: 0.55,
               keyRgb: [255, 240, 200], keyA: 0.0, keyR: 0.8,
-              shDx: 5, shSx: 1.05, shOp: 0.95, shBl: 0.0, pl: 0.0 },
+              shDx: 5, shSx: 1.05, shOp: 0.95, shBl: 0.0, pl: 0.0, pool: 0 },
             { id: 'dusk',  name: 'Atardecer', ico: '◐', ms: 15000, c: '#fb923c',
               amb: [240, 150, 108], vig: 0.40, vigCol: [70, 18, 58],
               sunRgb: [255, 140, 60], sunA: 0.58, sunX: 1.10, sunY: 0.36, rays: 0.85,
               keyRgb: [255, 168, 88], keyA: 0.55, keyR: 0.95,
-              shDx: -17, shSx: 2.2, shOp: 0.78, shBl: 0.6, pl: 0.35 },
+              shDx: -17, shSx: 2.2, shOp: 0.78, shBl: 0.6, pl: 0.35, pool: 0 },
             { id: 'night', name: 'Noche',     ico: '☾', ms: 30000, c: '#93c5fd',
-              amb: [60, 76, 140], vig: 0.52, vigCol: [4, 6, 28],
-              sunRgb: [165, 192, 255], sunA: 0.20, sunX: 0.24, sunY: -0.06, rays: 0.12,
-              keyRgb: [140, 170, 235], keyA: 0.55, keyR: 0.85,
-              shDx: 6, shSx: 1.2, shOp: 0.38, shBl: 1.0, pl: 0.8 }
+              amb: [70, 94, 176], vig: 0.36, vigCol: [8, 14, 48],
+              sunRgb: [170, 200, 255], sunA: 0.30, sunX: 0.24, sunY: -0.06, rays: 0.30,
+              keyRgb: [110, 150, 255], keyA: 0.62, keyR: 1.1,
+              shDx: 6, shSx: 1.2, shOp: 0.45, shBl: 1.0, pl: 0.8, pool: 1 }
         ];
         const DAY_TOTAL_MS = DAY_PHASES.reduce((a, p) => a + p.ms, 0);
         const ltMap = document.getElementById('light-map');
@@ -25306,6 +25458,13 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
                 const kx = P.sunX * W, ky = P.sunY * H, kr = P.keyR * H;
                 g = c.createRadialGradient(kx, ky, 0, kx, ky, kr);
                 g.addColorStop(0, rgb(P.keyRgb, P.keyA)); g.addColorStop(0.5, rgb(P.keyRgb, P.keyA * 0.35)); g.addColorStop(1, rgb(P.keyRgb, 0));
+                c.fillStyle = g; c.fillRect(0, 0, W, H);
+            }
+            // charco de luz de luna: zona clara y fría sobre el centro del campo, con borde suave
+            if (P.pool > 0.01 && !window.PA_IOS) {
+                const mx = W * 0.5, my = H * 0.46, mr = Math.max(W, H) * 0.62;
+                g = c.createRadialGradient(mx, my, 0, mx, my, mr);
+                g.addColorStop(0, 'rgba(90,130,240,' + (0.26 * P.pool) + ')'); g.addColorStop(0.55, 'rgba(80,120,230,' + (0.12 * P.pool) + ')'); g.addColorStop(1, 'rgba(90,120,210,0)');
                 c.fillStyle = g; c.fillRect(0, 0, W, H);
             }
             // luces puntuales: pokémon y proyectiles. Se convierten de coordenadas de arena a pantalla

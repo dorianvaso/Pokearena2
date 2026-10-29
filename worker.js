@@ -294,7 +294,7 @@ async function friendsApi(db, h, route, req, url) {
         return reply({ ok: true, acc: me, now });
     }
     if (route === '/api/f/mission' && req.method === 'POST') { // Misión 1: capturas de Johto (solo sube; se cierra el domingo 24-oct 12:00 hora de Costa Rica)
-        if (b.mid !== 'm1' && b.mid !== 'm2') return reply({ error: 'misión no válida' }, 400);
+        if (b.mid !== 'm1' && b.mid !== 'm2' && b.mid !== 'm3') return reply({ error: 'misión no válida' }, 400);
         if (now > (b.mid === 'm2' ? MIS2_END : MIS_END) + 30000) return reply({ closed: true, now });
         let n = Math.max(0, Math.min(999, b.n | 0));
         if (b.mid === 'm2') { // La Granjera: la nota (1-100) se calcula AQUÍ con IVs, tamaño y peso del Miltank enviado
@@ -320,17 +320,18 @@ async function friendsApi(db, h, route, req, url) {
             await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', 'm2', me, 'reward', now).run();
             return reply({ ok: true, pick: 'reward' });
         }
+        const mid1 = b.mid === 'm3' ? 'm3' : 'm1'; // m3 = segunda edición de Operación Johto (marcadores desde 0)
         if (now <= MIS_END + 30000) return reply({ error: 'la misión aún no termina' }, 403);
         if (!['chikorita', 'cyndaquil', 'totodile'].includes(b.pick)) return reply({ error: 'elección no válida' }, 400);
-        const top = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', 'm1').first();
+        const top = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', mid1).first();
         if (!top || top.acc !== me) return reply({ error: 'no eres el ganador' }, 403);
-        const ex = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', 'm1', me).first();
+        const ex = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', mid1, me).first();
         if (ex) return reply({ ok: true, pick: ex.pick, already: true });
-        await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', 'm1', me, b.pick, now).run();
+        await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', mid1, me, b.pick, now).run();
         return reply({ ok: true, pick: b.pick });
     }
     if (route === '/api/f/mboard' && req.method === 'GET') {
-        const mid = url.searchParams.get('mid') === 'm2' ? 'm2' : 'm1';
+        const mq = url.searchParams.get('mid'), mid = mq === 'm2' ? 'm2' : mq === 'm3' ? 'm3' : 'm1';
         const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', mid).all();
         const cl = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', mid, me).first();
         return reply({ now, end: mid === 'm2' ? MIS2_END : MIS_END, me, board: results, claim: cl ? cl.pick : null });

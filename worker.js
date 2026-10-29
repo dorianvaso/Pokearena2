@@ -280,7 +280,7 @@ const cleanHof = a => (Array.isArray(a) ? a : []).slice(0, 6).map(m => (m && typ
     ? { n: String(m.n || '').replace(/[<>"&]/g, '').slice(0, 30), s: m.s, sh: m.sh ? 1 : 0 } : null);
 const MIS2_END = Date.parse('2026-10-26T18:00:00Z'); // Misión 2 (La Granjera): lunes 26 de octubre, 12:00 del mediodía en Costa Rica
 const miltankScore = (iv, hf, wf) => { const sum = iv.reduce((a, v) => a + v, 0); return Math.max(1, Math.min(100, Math.round(1 + 99 * (0.6 * sum / 186 + 0.2 * hf / 1000 + 0.2 * wf / 1000)))); };
-const MIS_END = Date.parse('2026-10-25T18:00:00Z'); // domingo 25 de octubre, 12:00 del mediodía en Costa Rica (UTC-6)
+const MIS_END = Date.parse('2026-10-29T05:59:00Z'); // miércoles 28 de octubre, 11:59 pm en Costa Rica (UTC-6)
 async function friendsApi(db, h, route, req, url) {
     const me = h.slice(0, 8), now = Date.now(), q = (sql, ...a) => db.prepare(sql).bind(...a);
     const b = req.method === 'POST' ? await req.json().catch(() => ({})) : {};

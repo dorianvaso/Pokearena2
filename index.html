@@ -6375,6 +6375,88 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
 }
 @media (prefers-reduced-motion: reduce) { .ts-ly, .ts-trainer, .ts-pika, .ts-streak, .ts-land, .ts-logoimg { animation: none !important; } }
 </style>
+<style id="ui-v2">
+/* ===== UI v2: botones e interfaz (Apple HIG + reglas de animación de Emil Kowalski) =====
+   - Un solo lenguaje: estilo prominente (relleno) para la acción principal, secundario translúcido, destructivo en rojo.
+   - Estado de pulsación en todo botón (scale .97, 100-160 ms, ease-out fuerte); hover solo con puntero fino.
+   - Transiciones solo de propiedades concretas (nunca "all"), objetivos táctiles de 44 px, texto >= 11 px, foco visible. */
+:root { --ui-ease: cubic-bezier(.23, 1, .32, 1); --ui-ease-io: cubic-bezier(.77, 0, .175, 1); --ui-press: .14s; --ui-ring: #7dd3fc; }
+html, body { -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+button, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+:where(button):focus-visible { outline: 2px solid var(--ui-ring); outline-offset: 2px; }
+h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
+
+/* ---- Pulsación común: la propiedad individual "scale" convive con transform/translate que ya usan los componentes ---- */
+.ts-btn.ts-btn, .dv-btn.dv-btn, .fr-btn.fr-btn, .mp-btn.mp-btn, .pv-btn.pv-btn, .nd-btn.nd-btn, .rl-btn.rl-btn,
+.mmt-go.mmt-go, .mmt-auto.mmt-auto, .sh-pill.sh-pill, .lc-ok.lc-ok, .ev-ok.ev-ok, .mm-pop-ok.mm-pop-ok, .mmm-back.mmm-back {
+    transition-property: scale, background-color, background, border-color, color, box-shadow, opacity, translate, filter;
+    transition-duration: var(--ui-press), .16s, .16s, .16s, .16s, .16s, .2s, .24s, .16s;
+    transition-timing-function: var(--ui-ease);
+}
+.ts-btn.ts-btn:active, .dv-btn.dv-btn:active, .fr-btn.fr-btn:active, .mp-btn.mp-btn:active, .pv-btn.pv-btn:active, .nd-btn.nd-btn:active,
+.rl-btn.rl-btn:active, .mmt-go.mmt-go:not(:disabled):active, .mmt-auto.mmt-auto:not(:disabled):active, .sh-pill.sh-pill:not([disabled]):active,
+.lc-ok.lc-ok:active, .ev-ok.ev-ok:active, .mm-pop-ok.mm-pop-ok:active, .mmm-back.mmm-back:active { scale: .97; transform: none; filter: none; }
+.lc-ok.lc-ok:active, .ev-ok.ev-ok:active { translate: 0 0; }
+
+/* ---- Título: acción principal rellena, el resto de cristal; sin parpadeo ---- */
+.ts-btn.ts-btn { min-width: min(76vw, 320px); min-height: 52px; display: flex; align-items: center; justify-content: center; padding: .8em 1.6em;
+    border: 1px solid rgba(255,255,255,.38); border-radius: 16px; letter-spacing: .1em; font-weight: 700; text-shadow: none; color: #fff;
+    background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 22px rgba(20,10,80,.28); animation: none; }
+.ts-btn.ts-btn::before { content: none; }
+.ts-menu .ts-btn.ts-btn:not([hidden]):not(.ts-btn:not([hidden]) ~ .ts-btn), .ts-btn.ts-btn.main {
+    background: #fff; color: #2b2070; border-color: #fff; box-shadow: 0 10px 26px rgba(20,10,80,.38); }
+.ts-btn.ts-btn.warn { background: rgba(220,38,68,.9); border-color: rgba(255,255,255,.3); color: #fff; }
+.ts-btn.ts-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .ts-btn.ts-btn:hover { filter: brightness(1.06); } }
+
+/* ---- Botones de cuadros de diálogo y listas ---- */
+.fr-btn.fr-btn { font-size: max(.56rem, 11px); letter-spacing: .03em; padding: 10px 15px; min-height: 36px; }
+.rl-btn.rl-btn { font-size: max(.48rem, 11px); letter-spacing: .03em; min-height: 44px; border-radius: 14px; text-shadow: none; display: flex; align-items: center; justify-content: center; }
+.rl-keep.rl-keep { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(11,21,52,.4); }
+.rl-yes.rl-yes { box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(127,29,29,.45); }
+.mmt-go.mmt-go { font-size: max(.75rem, 12px); letter-spacing: .06em; min-height: 50px; border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 20px rgba(36,144,207,.4); }
+.mmt-auto.mmt-auto { font-size: max(.55rem, 11px); letter-spacing: .04em; min-height: 44px; border-radius: 14px; border: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 6px 14px rgba(0,0,0,.3); }
+.sh-pill.sh-pill { font-size: max(.58rem, 11px); letter-spacing: .03em; min-height: 44px; display: inline-flex; align-items: center; }
+.sh-pill.sh-pill.main { box-shadow: 0 6px 16px rgba(0,0,0,.3); }
+.lc-ok.lc-ok, .ev-ok.ev-ok { letter-spacing: .08em; min-height: 48px; text-shadow: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 10px 24px rgba(var(--lc-glow, 0,0,0), .45); }
+.pv-btn.pv-btn, .mp-btn.mp-btn { letter-spacing: .02em; min-height: 46px; }
+.pv-btn.pv-btn { border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+.dv-btn.dv-btn { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+
+/* ---- Barra de iconos: área táctil de 44 px sin cambiar el tamaño visible; hover solo con puntero fino ---- */
+.icon-btn { position: relative; transition-property: scale, background-color, border-color, color, opacity; transition-duration: var(--ui-press), .16s, .16s, .16s, .2s; transition-timing-function: var(--ui-ease); }
+.icon-btn::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; }
+.icon-btn:hover:not(:disabled) { transform: none; }
+.icon-btn:active:not(:disabled) { scale: .92; }
+@media (hover: hover) and (pointer: fine) { .icon-btn:hover:not(:disabled) { background: rgba(255,255,255,.14); } }
+
+/* ---- Movimiento reducido: sin escala ni desplazamientos, solo cambios de color ---- */
+@media (prefers-reduced-motion: reduce) {
+    .ts-btn.ts-btn:active, .dv-btn:active, .fr-btn:active, .mp-btn:active, .pv-btn:active, .nd-btn:active, .rl-btn:active, .mmt-go:active, .mmt-auto:active,
+    .sh-pill:active, .lc-ok:active, .ev-ok:active, .mm-pop-ok:active, .mmm-back:active, .icon-btn:active { scale: 1; }
+    button { transition-duration: .01ms !important; }
+}
+.ts-btn.ts-btn[hidden], .rl-btn.rl-btn[hidden], .sh-pill.sh-pill[hidden], .dv-btn.dv-btn[hidden], .mmt-go.mmt-go[hidden], .mmt-auto.mmt-auto[hidden] { display: none !important; }
+
+/* ---- Aviso emergente del menú: cristal oscuro redondeado, botón de ancho completo ---- */
+#mm-popup { background: rgba(6, 8, 22, .55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation-timing-function: var(--ui-ease); }
+.mm-pop-card.mm-pop-card { padding: 0; clip-path: none; filter: none; border-radius: 22px; border: 1px solid rgba(255,255,255,.16);
+    background: linear-gradient(180deg, rgba(34,40,82,.97), rgba(14,18,42,.97)); box-shadow: 0 24px 60px rgba(0,0,0,.55); animation: mmPop .22s var(--ui-ease) both; }
+.mm-pop-in.mm-pop-in { clip-path: none; background: none; padding: 24px 22px 20px; text-align: center; }
+.mm-pop-in.mm-pop-in::before { display: none; }
+.mm-pop-title.mm-pop-title { font-size: max(.6rem, 11px); letter-spacing: .14em; color: #a5b4fc; text-shadow: none; }
+.mm-pop-msg.mm-pop-msg { margin-top: .7em; font-size: clamp(.9rem, 4.4vw, 1.1rem); line-height: 1.35; text-shadow: none; text-wrap: pretty; }
+.mm-pop-ok.mm-pop-ok { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 1.4em; padding: 0 1em; border-radius: 14px; box-sizing: border-box;
+    font-size: 14px; font-weight: 700; letter-spacing: .04em; background: linear-gradient(180deg, #4f8dff, #2f62e6); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 8px 20px rgba(47,98,230,.4); }
+
+/* ---- Volver: píldora de cristal en lugar de pieza recortada ---- */
+.mmm-back.mmm-back { clip-path: none; min-height: 40px; display: inline-flex; align-items: center; padding: 0 1.2em; border-radius: 999px; font-size: max(.6rem, 11px); letter-spacing: .06em;
+    background: rgba(0,0,0,.35); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+.mm-pop-msg.mm-pop-msg { color: #e8edff; text-shadow: none; }
+.mm-pop-ok.mm-pop-ok { text-shadow: none; }
+.mm-pop-ok.mm-pop-ok:focus-visible { outline: 2px solid rgba(255,255,255,.9); outline-offset: 3px; }
+</style>
 </head>
 <body>
 

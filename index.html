@@ -33404,7 +33404,36 @@ body.pvp-on #lt-chip{top:128px!important}
 #pvp-me .pv-balls{flex:0 0 44px;padding-top:0;gap:4px}
 #pvp-me .pv-ball{padding:3px 2px 5px;max-width:52px}
 #pvp-me .pv-ball.s1{transform:none}
-#pvp-me .pv-bn{display:none}
+#pvp-me{overflow:visible}
+#pvp-me .pv-balls{flex:1;min-height:0;gap:5px;padding-top:0;align-items:stretch}
+#pvp-me .pv-ball{position:relative;cursor:pointer;padding:4px 3px 6px;max-width:62px;gap:2px;border-radius:13px;clip-path:none;border-bottom:3px solid #334155;transform:none}
+#pvp-me .pv-ball img{flex:1 1 0;min-height:0;width:100%;object-fit:contain}
+#pvp-me .pv-bn{display:block;font-size:8px;line-height:1;color:#cbd5e1}
+#pvp-me .pv-bhp{width:86%;height:5px;border-radius:3px}
+#pvp-me .pv-ball.s1{border-bottom-color:#fde047;filter:none;box-shadow:0 0 10px -2px rgba(253,224,71,.6)}
+#pvp-me .pv-ball.sel{background:linear-gradient(180deg,#7a5c12,#2a2008);box-shadow:0 0 14px rgba(253,224,71,.8)}
+#pvp-me .pv-ball.s2{opacity:.45;filter:grayscale(1)}
+#pvp-me .pv-rc{position:absolute;right:2px;top:2px;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;color:#fde047;background:rgba(2,6,23,.75);border:1px solid rgba(253,224,71,.6)}
+#pvp-me .pv-gx{position:absolute;left:2px;top:2px;flex:none;width:17px;height:17px;font-size:9px;z-index:2}
+.cm-bub{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);z-index:60;display:grid;grid-template-columns:repeat(2,24px);gap:2px;justify-items:center;padding:4px;border-radius:18px;background:linear-gradient(180deg,#16204a,#0b1126);border:2px solid #fde047;box-shadow:0 6px 18px rgba(0,0,0,.65)}
+.cm-bub::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;background:#0b1126;border-right:2px solid #fde047;border-bottom:2px solid #fde047;transform:translateX(-50%) rotate(45deg)}
+.cm-bub .cm-btn{width:24px;height:24px;min-height:0;border-radius:50%;gap:0}
+.cm-bub .cm-btn.a{grid-column:1/3}
+.cm-bub .cm-btn svg{width:14px;height:14px}
+.cm-bub .cm-btn i{font-size:10px}
+/* fondo gris con diseño (rayas diagonales + brillo), en lugar del azul */
+#pvp-me{background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px),linear-gradient(180deg,#2c2e34,#18191d);border-image:linear-gradient(90deg,#94a3b8,#fde047,#fb7185) 1}
+#pvp-me .pv-ball{background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 7px),linear-gradient(180deg,#4a4d56,#2a2c32);border-bottom-color:#5b5f6a}
+#pvp-me .pv-ball.s1{border-bottom-color:#fde047}
+#pvp-me .pv-ball.sel{background:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 2px,transparent 2px 7px),linear-gradient(180deg,#7a6320,#2e2810)}
+#pvp-me .pv-ball.s2{border-bottom-color:#2a2c32}
+.cm-bub{background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 7px),linear-gradient(180deg,#3a3c44,#202227)}
+.cm-bub::after{background:#202227}
+.cm-btn{background:linear-gradient(180deg,color-mix(in srgb,var(--bc) 40%,#1c1d22),color-mix(in srgb,var(--bc) 14%,#1c1d22))}
+.vs-side.me{background:repeating-linear-gradient(135deg,rgba(255,255,255,.04) 0 2px,transparent 2px 9px),linear-gradient(90deg,rgba(66,69,78,.95),rgba(28,29,34,.9))}
+.vs-side.foe{background:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px),linear-gradient(270deg,rgba(110,16,40,.94),rgba(40,8,24,.86))}
+.pv-clk{background:#1c1d22}
+.pv-x{background:rgba(28,29,34,.92)}
 @media (min-aspect-ratio:5/4){#pvp-top{left:50%;right:auto;width:min(100%,760px);transform:translateX(-50%)}#pvp-me .pv-balls{justify-content:center}}
 </style>
 <script id="pa-pvp">
@@ -33810,7 +33839,7 @@ window.PAPvp = (function () {
         const top = document.createElement('div'); top.id = 'pvp-top'; top.className = 'vs'; gc.appendChild(top);
         const mine = document.createElement('div'); mine.id = 'pvp-me'; mine.className = 'me'; bar.appendChild(mine);
         top._h = ''; mine._h = ''; clearInterval(P.tm.cdt); P.tm.cdt = setInterval(tickCd, 80);
-        mine.addEventListener('pointerdown', e => { const cb = e.target.closest('.cm-btn[data-k]'); if (cb) { e.preventDefault(); cmdOrder(cb.dataset.k, +cb.dataset.s, cb); return; } const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } const b = e.target.closest('.pv-ball'); if (b) { e.preventDefault(); ballTap(+b.dataset.s, b); } });
+        mine.addEventListener('pointerdown', e => { const cb = e.target.closest('.cm-btn[data-k]'); if (cb) { e.preventDefault(); cmdOrder(cb.dataset.k, +cb.dataset.s, cb); return; } const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } const rc = e.target.closest('.pv-rc'); if (rc) { e.preventDefault(); ballTap(+rc.dataset.s, rc, true); return; } const b = e.target.closest('.pv-ball'); if (b) { e.preventDefault(); ballTap(+b.dataset.s, b); } });
         top.addEventListener('pointerdown', e => { const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } if (e.target.closest('.pv-x')) { e.preventDefault(); surrender(e.target.closest('.pv-x')); } });
     }
     function removeHud() { ['pvp-top', 'pvp-me'].forEach(id => { const n = $(id); if (n) n.remove(); }); }
@@ -33856,17 +33885,20 @@ window.PAPvp = (function () {
         const hd = (acc, av) => '<div class="vs-hd"><div class="pv-av">' + avHtml(P.names[acc], av) + '</div><div class="vs-who"><div class="pv-nm">' + esc(P.names[acc]) + '</div><div class="pv-pbs">' + pbs(acc) + '</div></div></div>';
         const htop = '<div class="vs-hud"><div class="vs-side me">' + hd(m, P.avatars[m] || mpProfile().avatar) + cards(m, v, true) + '</div><div class="vs-mid"><span class="pv-clk" id="pv-clk">⏱ ' + clockTxt(v.t) + '</span><button type="button" class="pv-x" aria-label="Rendirse" title="Rendirse">✕</button></div><div class="vs-side foe">' + hd(f, P.avatars[f]) + cards(f, v, false) + '</div></div>';
         if (top._h !== htop) { const ask = top.querySelector('.pv-x.ask'); top.innerHTML = htop; top._h = htop; if (ask && performance.now() - P.askAt < 3000) { const x = top.querySelector('.pv-x'); x.classList.add('ask'); x.textContent = '¿Rendirse?'; } }
+        const IC = { A: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4l-9.5 9.5M20 4h-5M20 4v5M9 11l4 4M6 18l-2 2M8.5 15.5L6 18"/></svg>', P: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5l8-3z"/></svg>', D: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>' };
+        const bt = (k, s) => '<button type="button" class="cm-btn ' + k.toLowerCase() + '" data-k="' + k + '" data-s="' + s + '" aria-label="' + ({ A: 'Atacar', P: 'Proteger', D: 'Esquivar' })[k] + '">' + IC[k] + '<i></i></button>';
+        if (P.sel != null && P.sel >= 0 && (v.a[m][P.sel] || [])[0] !== 1) P.sel = -1;
         const balls = P.teams[m].slots.map((sl, i) => {
             const d = v.a[m][i] || [0, 100]; if (d[0] !== 0) delete P.pending[i];
-            const r = d[0] === 1 ? d[1] / (d[2] || 1) : d[0] === 0 ? d[1] / 100 : 0, pend = P.pending[i] && performance.now() - P.pending[i] < 4000;
-            return '<button type="button" class="pv-ball s' + d[0] + (pend ? ' pend' : '') + '" data-s="' + i + '" aria-label="' + esc(sl.name) + '"><img alt="" draggable="false" src="' + esc(sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>' + (d[0] !== 2 ? '<span class="pv-bhp"><i style="width:' + Math.round(Math.max(0, Math.min(1, r)) * 100) + '%"></i></span>' : '') + (d[0] === 1 ? '<em>↩</em>' : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</button>';
+            const r = d[0] === 1 ? d[1] / (d[2] || 1) : d[0] === 0 ? d[1] / 100 : 0, pend = P.pending[i] && performance.now() - P.pending[i] < 4000, sel = d[0] === 1;
+            const hp = Math.round(Math.max(0, Math.min(1, r)) * 100), cls = r > .5 ? '' : r > .2 ? 'm' : 'l';
+            return '<div class="pv-ball s' + d[0] + (pend ? ' pend' : '') + (sel ? ' sel' : '') + '" data-s="' + i + '" role="button" aria-label="' + esc(sl.name) + '">'
+                + (sel ? '<div class="cm-bub">' + bt('A', i) + bt('P', i) + bt('D', i) + '</div>' : '')
+                + '<img alt="" draggable="false" src="' + esc((d[0] === 1 && d[5]) || sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>'
+                + (d[0] !== 2 ? '<span class="pv-bhp"><i class="' + cls + '" style="width:' + hp + '%"></i></span>' : '')
+                + (d[0] === 1 ? '<span class="pv-rc" data-s="' + i + '" aria-label="Retirar">↩</span>' + gxBtn(d, i, true) : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</div>';
         }).join('');
-        const nf = P.teams[m].slots.filter((sl, i) => { const o = P.opt[i]; return o ? o.to === 1 : (v.a[m][i] || [])[0] === 1; }).length;
-        const IC = { A: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4l-9.5 9.5M20 4h-5M20 4v5M9 11l4 4M6 18l-2 2M8.5 15.5L6 18"/></svg>', P: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5l8-3z"/></svg>', D: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>' };
-        const bt = (k, s, t) => '<button type="button" class="cm-btn ' + k.toLowerCase() + '" data-k="' + k + '" data-s="' + s + '">' + IC[k] + '<b>' + t + '</b><i></i></button>';
-        const groups = []; v.a[m].forEach((d, i) => { if (d[0] !== 1 || !P.teams[m].slots[i]) return; const sl = P.teams[m].slots[i]; groups.push('<div class="cm-g"><div class="cm-h"><img class="cm-s" alt="" draggable="false" src="' + esc(d[5] || sl.sprite) + '"><span class="cm-n">' + esc(d[4] || sl.name) + '</span>' + gxBtn(d, i, true) + '</div><div class="cm-b">' + bt('A', i, 'ATACAR') + bt('P', i, 'PROTEGER') + bt('D', i, 'ESQUIVAR') + '</div></div>'); });
-        while (groups.length < 2) groups.push('<div class="cm-g empty">' + (groups.length === 0 ? 'Elige un pokémon<br>del plantel' : 'Hueco libre') + '</div>');
-        const hmine = '<div class="cm-row">' + groups.slice(0, 2).join('') + '</div><div class="pv-balls">' + balls + '</div>';
+        const hmine = '<div class="pv-balls">' + balls + '</div>';
         if (mine._h !== hmine) { mine.innerHTML = hmine; mine._h = hmine; }
         tickCd();
     }
@@ -33902,9 +33934,10 @@ window.PAPvp = (function () {
         else sendCmd({ t: k, s });
         tickCd();
     }
-    function ballTap(i, el) {
+    function ballTap(i, el, recallIt) {
         if (!P.on || P.over || !P.live || !P.view) return;
         const d0 = (P.view.a[P.me] || [])[i]; if (!d0 || d0[0] === 2) return;
+        { const o0 = P.opt[i], c0 = o0 ? o0.to : d0[0]; if (c0 === 1 && !recallIt) { P.sel = (P.sel === i) ? -1 : i; sfx('tick'); render(P.view); return; } if (c0 === 0) P.sel = i; }
         const oo = P.opt[i], cur = oo ? oo.to : d0[0], d = [cur];
         const nf = P.teams[P.me].slots.filter((sl, k) => { const o = P.opt[k]; return o ? o.to === 1 : (P.view.a[P.me][k] || [])[0] === 1; }).length;
         if (d[0] === 0 && nf >= 2) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); return; }

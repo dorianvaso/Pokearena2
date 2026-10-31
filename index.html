@@ -8202,7 +8202,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
     <!-- Rey de la arena: el pokémon vivo con más KOs en su vida actual (a igualdad, más tiempo en esa vida) -->
     <section id="champion-bar" aria-label="Barra de estado">
       <button id="gmax-btn" type="button" aria-label="Activar Gigamax"><img class="gb-ico" id="gb-ico" alt=""><span class="gb-txt"><b>GIGAMAX</b><i id="gb-sub">¡ACTIVAR!</i></span><u class="gb-n" id="gb-n"></u><span class="gb-bar"><span id="gb-fill"></span></span></button>
-      <div id="raid-boss-bar"><div class="rb-left"><div class="rb-name"><b>ALFA</b> <span id="rb-name-t"></span></div><div class="rb-track"><div class="rb-fill" id="rb-fill"></div></div><div class="rb-hp" id="rb-hp"></div><div class="rb-mid"><img id="rb-sprite" class="rb-sprite" alt=""></div></div><div class="rb-top" id="rb-top"></div></div>
+      <div id="raid-boss-bar"><div class="rb-left"><div class="rb-mid"><img id="rb-sprite" class="rb-sprite" alt=""></div><div class="rb-name"><b>ALFA</b><span id="rb-name-t"></span></div><div class="rb-track"><div class="rb-fill" id="rb-fill"></div></div><div class="rb-hp" id="rb-hp"></div></div><div class="rb-top" id="rb-top"></div></div>
       <div id="hud-pager"><div class="hud-track" id="hud-track"><div class="hud-page" id="hud-page-main"><div id="champ-panel" class="champ-panel is-empty">
         <div class="hud-left">
           <div class="hud-champ">
@@ -33185,68 +33185,54 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
   } catch (e) { console.error('pa-trade', e); }
 })();
 </script>
+
+<style id="pa-hud4-css">
+/* ===== HUD de jefe: mismo cristal plano que el HUD normal / captura ===== */
+#champion-bar #raid-boss-bar{--rx:#fb7185;--rx2:#fecdd3;position:relative;margin:0;padding:6px 8px 8px;gap:0;box-sizing:border-box;flex-direction:row;align-items:stretch;overflow:hidden;
+  border-radius:16px;border:1px solid rgba(255,255,255,.22);border-top-color:rgba(255,255,255,.4);
+  background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);box-shadow:none}
+#champion-bar #raid-boss-bar.boss{--rx:#c084fc;--rx2:#f3e8ff;background:linear-gradient(160deg,rgba(168,85,247,.16),rgba(255,255,255,.03))}
+#champion-bar #raid-boss-bar.shiny{--rx:#fbbf24;--rx2:#fef3c7;background:linear-gradient(160deg,rgba(251,191,36,.16),rgba(255,255,255,.03))}
+#champion-bar #raid-boss-bar::before{display:none}
+#champion-bar #raid-boss-bar::after{content:"";position:absolute;left:22px;right:22px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--rx),transparent);opacity:.9}
+#champion-bar #raid-boss-bar,#champion-bar #raid-boss-bar *{font-family:'PA Chakra S',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:700;letter-spacing:0;text-shadow:none}
+/* izquierda: baldosa + etiqueta + nombre, barra y píldora de PS */
+#champion-bar #raid-boss-bar .rb-left{flex:1 1 50%;min-width:0;padding:0 10px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto auto auto;column-gap:8px;row-gap:6px;align-content:center}
+#champion-bar #raid-boss-bar .rb-mid{grid-column:1;grid-row:1/3;width:clamp(44px,7.2dvh,58px);height:clamp(44px,7.2dvh,58px);flex:none;min-height:0;border-radius:13px;border:1px solid color-mix(in srgb,var(--rx) 60%,transparent);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rx) 38%,transparent),rgba(255,255,255,.05));box-shadow:0 0 14px -4px var(--rx),inset 0 1px 0 rgba(255,255,255,.3);justify-content:center;align-items:center;overflow:hidden}
+#champion-bar #raid-boss-bar .rb-sprite,#champion-bar #raid-boss-bar.boss .rb-sprite,#champion-bar #raid-boss-bar.shiny .rb-sprite{max-width:92%;max-height:92%;width:auto;height:auto;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#champion-bar #raid-boss-bar .rb-name,#champion-bar #raid-boss-bar.shiny .rb-name{grid-column:2;grid-row:1/3;align-self:center;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;font-size:14px;line-height:1.1;color:#fff;text-align:left}
+#champion-bar #raid-boss-bar .rb-name b,#champion-bar #raid-boss-bar.shiny .rb-name b{display:inline-flex;align-items:center;gap:4px;margin:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none;font-size:10px;letter-spacing:.1em;line-height:1.1;color:var(--rx)}
+#champion-bar #raid-boss-bar .rb-name b::before{content:"";flex:0 0 auto;width:12px;height:12px;background:var(--rx);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l2.6 7.4L22 6l-4.6 6.4L23 17l-8-.6L12 23l-2.7-6.6L1 17l5.6-4.6L2 6l7.4 2.4z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l2.6 7.4L22 6l-4.6 6.4L23 17l-8-.6L12 23l-2.7-6.6L1 17l5.6-4.6L2 6l7.4 2.4z'/%3E%3C/svg%3E") center/contain no-repeat}
+#champion-bar #raid-boss-bar #rb-name-t,#champion-bar #raid-boss-bar.shiny #rb-name-t{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;max-width:100%;overflow:hidden;word-break:break-word;color:#fff}
+#champion-bar #raid-boss-bar .rb-track,#champion-bar #raid-boss-bar.boss .rb-track,#champion-bar #raid-boss-bar.shiny .rb-track{grid-column:1/3;grid-row:3;align-self:center;height:8px;border-radius:5px;border:0;background:rgba(255,255,255,.14);box-shadow:none;overflow:hidden}
+#champion-bar #raid-boss-bar .rb-fill,#champion-bar #raid-boss-bar.boss .rb-fill,#champion-bar #raid-boss-bar.shiny .rb-fill{border-radius:5px;background:linear-gradient(90deg,var(--rx),var(--rx2));box-shadow:none}
+#champion-bar #raid-boss-bar .rb-hp{grid-column:1/3;grid-row:4;justify-self:start;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);font-size:11px;line-height:1;color:#fff3b0;font-variant-numeric:tabular-nums}
+#champion-bar #raid-boss-bar .rb-hp::before{content:"";width:11px;height:11px;background:#fb7185;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5.3-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.7-8 11-8 11z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-8-5.3-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.7-8 11-8 11z'/%3E%3C/svg%3E") center/contain no-repeat}
+/* derecha: ranking de daño como filas de cristal (igual que el registro del HUD normal) */
+#champion-bar #raid-boss-bar .rb-top{flex:1 1 50%;min-width:0;padding:0 0 0 10px;gap:4px;border-left:1px solid rgba(255,255,255,.16);background:none;box-shadow:none;border-radius:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto repeat(3,minmax(0,1fr))}
+#champion-bar #raid-boss-bar .rb-top::before{content:"MÁS DAÑO";grid-column:1;display:flex;align-items:center;gap:5px;padding:0 2px 2px;margin:0;border:0;box-shadow:none;font-size:10px;line-height:1;letter-spacing:.08em;color:rgba(255,255,255,.7)}
+#champion-bar #raid-boss-bar .rb-top::after{content:none}
+#champion-bar #raid-boss-bar .rb-top-i,#champion-bar #raid-boss-bar .rb-top-i:first-child{--rk:#fde047;position:relative;display:flex;align-items:center;justify-content:flex-start;gap:8px;min-width:0;max-width:none;padding:0 10px 0 7px;border-radius:12px;border:1px solid rgba(255,255,255,.2);border-top-color:rgba(255,255,255,.3);border-left:3px solid var(--rk);background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04))}
+#champion-bar #raid-boss-bar .rb-top-i:nth-child(2){--rk:#cbd5e1}#champion-bar #raid-boss-bar .rb-top-i:nth-child(3){--rk:#fb923c}#champion-bar #raid-boss-bar .rb-top-i:nth-child(n+4){--rk:#475569}
+#champion-bar #raid-boss-bar .rb-top-i img{width:auto;height:92%;max-width:34px;object-fit:contain;image-rendering:auto}
+#champion-bar #raid-boss-bar .rb-top-i b{margin-left:auto;font-size:12px;color:#fff3b0;font-variant-numeric:tabular-nums}
+#champion-bar #raid-boss-bar .rb-top-i b::before{content:none}
+</style>
 <style id="pa-pvp-css">
 /* ===== PVP 1 contra 1: búsqueda, VS, HUD de combate y resultado ===== */
 body.pvp-on #icon-toolbar,body.pvp-on #mp-spec,body.pvp-on #mp-spec-msg{display:none!important}
 body.pvp-on #champion-bar > *:not(#pvp-me){display:none!important}
 #pvp-me,#pvp-top,#pvp-find,#pvp-vs,#pvp-res{font-family:'PA Chakra S',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:700;color:#f8fafc;box-sizing:border-box}
 #pvp-me *,#pvp-top *{box-sizing:border-box}
-.pv-pn{display:flex;flex-direction:column;gap:5px;background:linear-gradient(180deg,rgba(10,16,32,.94),rgba(15,23,42,.9));border:1px solid rgba(125,211,252,.28);border-radius:12px;padding:6px;box-shadow:0 2px 12px rgba(0,0,0,.55)}
-#pvp-top{position:absolute;left:6px;right:6px;top:6px;z-index:45;pointer-events:none}
-#pvp-top .pv-x{pointer-events:auto}
-#pvp-me{height:100%;min-height:0;margin-top:6px;pointer-events:auto;overflow:hidden;justify-content:space-between}
-body.pvp-on #lt-chip{top:126px!important}
-.pv-head{display:flex;align-items:center;gap:6px;min-height:26px}
 .pv-av{flex:0 0 26px;width:26px;height:26px;min-width:26px;border-radius:50%;overflow:hidden;background:#1e293b;border:2px solid #7dd3fc;display:flex;align-items:center;justify-content:center;font-size:12px}
 .pv-av img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
-.me .pv-av{border-color:#fde047}
-.pv-nm{font-size:11px;letter-spacing:.04em;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pv-pbs{display:flex;gap:3px;align-items:center}
-.pv-pb{display:inline-block;width:13px;height:13px;border-radius:50%;background:linear-gradient(180deg,#ef4444 0 44%,#0f172a 44% 56%,#f8fafc 56% 100%);border:1.5px solid #0f172a;box-shadow:0 0 0 1px rgba(255,255,255,.35);position:relative}
-.pv-pb.s1{box-shadow:0 0 0 1.5px #fde047,0 0 6px #fde047}
-.pv-pb.s2{filter:grayscale(1) brightness(.45);box-shadow:none}
 .pv-sp{flex:1}
-.pv-clk{font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(2,6,23,.7);border:1px solid rgba(125,211,252,.3);letter-spacing:.06em;font-variant-numeric:tabular-nums}
-.pv-clk.low{color:#fca5a5;border-color:#f87171}
-.pv-x{all:unset;cursor:pointer;width:24px;height:24px;border-radius:8px;background:rgba(127,29,29,.75);border:1px solid rgba(252,165,165,.5);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
-.pv-x.ask{width:auto;padding:0 8px;font-size:10px;background:#dc2626}
-.pv-cards{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.pv-card{display:flex;gap:6px;align-items:center;height:46px;min-height:46px;padding:4px 6px 4px 4px;border-radius:9px;background:rgba(30,41,59,.75);border:1px solid rgba(148,163,184,.25);min-width:0;overflow:hidden}
-.pv-card.on{border-color:rgba(125,211,252,.55)}
 .me .pv-card.on{border-color:rgba(253,224,71,.6)}
-.pv-card.empty small{display:block;margin-top:2px}
 .pv-gx{all:unset;box-sizing:border-box;flex:0 0 26px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:900 13px/1 system-ui,sans-serif;color:#fff;cursor:pointer;background:radial-gradient(circle at 35% 30%,#f0abfc,#a21caf 70%);border:2px solid #fde047;box-shadow:0 0 8px rgba(217,70,239,.8);animation:pvGx 1.1s ease-in-out infinite;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .pv-gx:active{transform:scale(.88)}
 .pv-gx.live{cursor:default;background:radial-gradient(circle at 35% 30%,#fde047,#f97316 70%);border-color:#fff;animation:pvGxLive .6s ease-in-out infinite alternate}
 @keyframes pvGx{0%,100%{box-shadow:0 0 5px rgba(217,70,239,.6)}50%{box-shadow:0 0 14px rgba(250,204,21,.95)}}
 @keyframes pvGxLive{from{box-shadow:0 0 6px #fb923c}to{box-shadow:0 0 16px #fde047}}
-.pv-card.empty{justify-content:center;color:#94a3b8;font-size:10px;text-align:center;border-style:dashed;line-height:1.15}
-.pv-por{flex:0 0 38px;width:38px;height:38px;min-width:38px;border-radius:8px;background:radial-gradient(circle,#334155,#0f172a);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.pv-por img{max-width:100%;max-height:100%;object-fit:contain;image-rendering:auto}
-.pv-inf{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pv-pk{font-size:11px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pv-tys{display:flex;gap:2px;flex-wrap:nowrap}
-.pv-ty{font-size:7.5px;letter-spacing:.04em;padding:1px 4px;border-radius:4px;color:#fff;text-shadow:0 1px 1px #0008}
-.pv-hp{height:7px;border-radius:5px;background:#0b1220;border:1px solid #334155;overflow:hidden}
-.pv-hp i{display:block;height:100%;background:#22c55e;transition:width .25s}
-.pv-hp i.m{background:#f59e0b}.pv-hp i.l{background:#ef4444}
-.pv-hpn{font-size:8.5px;color:#cbd5e1;line-height:1}
-.pv-balls{display:flex;gap:4px;justify-content:space-between;padding:0 2px 8px;flex:0 0 auto}
-.pv-ball{all:unset;cursor:pointer;flex:0 0 42px;width:42px;height:42px;min-width:42px;min-height:42px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 38%,#475569,#0f172a 70%);border:3px solid #ef4444;box-shadow:0 0 0 1px #0008,inset 0 0 0 2px rgba(255,255,255,.12);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.pv-ball:active{transform:scale(.93)}
-.pv-ball img{position:absolute;left:5px;top:5px;width:26px;height:26px;object-fit:contain;pointer-events:none}
-.pv-ball .pv-bhp{position:absolute;left:12%;right:12%;bottom:-7px;height:5px;border-radius:4px;background:#0b1220;border:1px solid #334155;overflow:hidden}
-.pv-ball .pv-bhp i{display:block;height:100%;background:#22c55e}
-.pv-ball em{position:absolute;right:-4px;top:-4px;width:17px;height:17px;border-radius:50%;background:#fde047;color:#422006;font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff}
-.pv-ball.s1{border-color:#fde047;box-shadow:0 0 10px #fde047aa,0 0 0 1px #0008}
-.pv-ball.s2{border-color:#475569;filter:grayscale(1);opacity:.55;cursor:default}
-.pv-ball.s2 img{opacity:.4}
-.pv-ball u{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:22px;color:#fca5a5}
-.pv-ball.pend{animation:pvPend .7s ease-in-out infinite}
-.pv-ball.shake{animation:pvShake .3s}
-@keyframes pvPend{50%{opacity:.45}}
-@keyframes pvShake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.pv-hint{font-size:10px;color:#94a3b8;text-align:center;margin-top:-1px;min-height:12px}
 #pvp-find{position:absolute;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.82);backdrop-filter:blur(4px);padding:18px}
 #pvp-find .fd{width:100%;max-width:340px;border-radius:18px;padding:18px 16px 16px;background:linear-gradient(180deg,#14213d,#0b1220);border:1px solid rgba(125,211,252,.35);box-shadow:0 10px 40px #000a;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 #pvp-find h2{margin:0;font-size:20px;letter-spacing:.2em}
@@ -33298,6 +33284,69 @@ body.pvp-on #lt-chip{top:126px!important}
 #pvp-res .rs-p small{font-size:11px;color:#94a3b8}
 #pvp-res .rs-vs{font-size:18px;color:#64748b;font-style:italic}
 #pvp-res .rs-btns{display:flex;flex-direction:column;gap:8px;width:100%}
+
+/* ===== HUD de combate v3 · estilo "versus" de juego de lucha: marcador arriba (tú | reloj | rival), bandeja de plantel abajo ===== */
+#pvp-top{position:absolute;left:0;right:0;top:0;z-index:45;pointer-events:none}
+#pvp-top .pv-x{pointer-events:auto}
+.vs-hud{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);align-items:start;gap:0;padding-top:6px}
+.vs-side{position:relative;display:flex;flex-direction:column;gap:4px;padding:6px 18px 8px 8px;min-width:0;border-bottom:2px solid var(--ac)}
+.vs-side.me{--ac:#38bdf8;background:linear-gradient(90deg,rgba(8,47,100,.94),rgba(8,20,48,.86));clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%)}
+.vs-side.foe{--ac:#fb7185;padding:6px 8px 8px 18px;background:linear-gradient(270deg,rgba(110,16,40,.94),rgba(40,8,24,.86));clip-path:polygon(14px 0,100% 0,100% 100%,0 100%)}
+.vs-hd{display:flex;align-items:center;gap:6px;min-width:0}
+.foe .vs-hd{flex-direction:row-reverse;text-align:right}
+.vs-hd .pv-av{flex:0 0 24px;width:24px;height:24px;min-width:24px;border:2px solid var(--ac);font-size:11px}
+.vs-who{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pv-nm{font-size:11px;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;letter-spacing:.05em;text-transform:uppercase}
+.pv-pbs{display:flex;gap:2px;align-items:center}
+.foe .pv-pbs{justify-content:flex-end}
+.pv-pb{display:inline-block;width:8px;height:8px;border-radius:50%;background:linear-gradient(180deg,#f43f5e 0 46%,#0f172a 46% 54%,#f8fafc 54% 100%)}
+.pv-pb.s1{box-shadow:0 0 0 1.5px #fde047,0 0 5px #fde047}
+.pv-pb.s2{filter:grayscale(1) brightness(.4)}
+.vr-list{display:flex;flex-direction:column;gap:3px}
+.vr{display:flex;align-items:center;gap:5px;height:26px;min-width:0}
+.foe .vr{flex-direction:row-reverse}
+.vr-s{flex:0 0 24px;width:24px;height:24px;object-fit:contain}
+.vr-i{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.vr-t{display:flex;justify-content:space-between;gap:4px;align-items:baseline;font-size:10px;line-height:1;color:#fff}
+.foe .vr-t{flex-direction:row-reverse}
+.vr-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.vr-h{font-size:9px;color:#fde68a;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vr-b{height:6px;background:rgba(0,0,0,.5);transform:skewX(-20deg);overflow:hidden}
+.vr-b i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#a3e635);transition:width .25s}
+.foe .vr-b{transform:skewX(20deg)}
+.foe .vr-b i{float:right}
+.vr-b i.m{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.vr-b i.l{background:linear-gradient(90deg,#fb7185,#ef4444)}
+.vr.empty{height:26px;justify-content:center;font-size:9px;color:rgba(255,255,255,.35);border:1px dashed rgba(255,255,255,.2);letter-spacing:.06em}
+.vr .pv-gx{flex:0 0 22px;width:22px;height:22px;font-size:11px;pointer-events:auto}
+.vs-mid{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:2px}
+.pv-clk{display:flex;align-items:center;justify-content:center;width:60px;height:34px;font-size:13px;line-height:1;color:#fff;background:#0b1020;border:2px solid #fde047;border-radius:9px;transform:skewX(-8deg);font-variant-numeric:tabular-nums;box-shadow:0 0 12px -2px rgba(253,224,71,.6)}
+.pv-clk.low{color:#fecaca;border-color:#f43f5e;background:#4c0519;animation:pvPend .7s ease-in-out infinite}
+.pv-x{all:unset;cursor:pointer;box-sizing:border-box;min-width:34px;height:22px;padding:0 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.04em;color:#fecaca;background:rgba(15,23,42,.9);border:1px solid rgba(251,113,133,.6);-webkit-tap-highlight-color:transparent}
+.pv-x.ask{color:#fff;background:#e11d48;padding:0 8px}
+/* bandeja de plantel */
+#pvp-me{height:100%;min-height:0;pointer-events:auto;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:5px 8px 8px;background:linear-gradient(180deg,#0e1530,#070b1a);border-top:2px solid transparent;border-image:linear-gradient(90deg,#38bdf8,#fde047,#fb7185) 1}
+.pt-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;line-height:1}
+.pt-hd b{color:#fde047;font-weight:700}
+.pv-balls{display:flex;gap:5px;flex:1;min-height:0;padding-top:6px}
+.pv-ball{all:unset;cursor:pointer;box-sizing:border-box;position:relative;flex:1 1 0;min-width:0;max-width:64px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 3px 6px;background:linear-gradient(180deg,#1a2448,#0d1430);border-bottom:3px solid #334155;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .12s}
+.pv-ball:active{transform:scale(.94)}
+.pv-ball img{position:static;flex:1 1 0;min-height:0;width:100%;object-fit:contain;pointer-events:none}
+.pv-bn{font-size:8.5px;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1}
+.pv-ball .pv-bhp{position:static;flex:0 0 4px;width:88%;height:4px;border:0;border-radius:0;background:rgba(0,0,0,.55);overflow:hidden}
+.pv-ball .pv-bhp i{display:block;height:100%;background:linear-gradient(90deg,#34d399,#a3e635)}
+.pv-ball em{position:absolute;right:2px;top:1px;width:auto;height:auto;border:0;background:none;box-shadow:none;color:#fde047;font-style:normal;font-size:11px;line-height:1}
+.pv-ball.s1{transform:translateY(-6px);background:linear-gradient(180deg,#5b4510,#2a2008);border-bottom-color:#fde047;filter:drop-shadow(0 0 6px rgba(253,224,71,.55))}
+.pv-ball.s1 .pv-bn{color:#fde68a}
+.pv-ball.s2{filter:grayscale(1);opacity:.45;cursor:default;border-bottom-color:#1e293b}
+.pv-ball.s2 img{opacity:.5}
+.pv-ball u{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;color:#fda4af}
+.pv-ball.pend{animation:pvPend .7s ease-in-out infinite}
+.pv-ball.shake{animation:pvShake .3s}
+@keyframes pvPend{50%{opacity:.45}}
+@keyframes pvShake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+body.pvp-on #lt-chip{top:128px!important}
+@media (min-aspect-ratio:5/4){#pvp-top{left:50%;right:auto;width:min(100%,760px);transform:translateX(-50%)}#pvp-me .pv-balls{justify-content:center}}
 </style>
 <script id="pa-pvp">
 /* PVP 1 contra 1: emparejamiento por el servidor, 6 pokémon del Salón de la Fama, VS, HUD y lanzar/retirar a mano.
@@ -33670,11 +33719,11 @@ window.PAPvp = (function () {
     function buildHud() {
         removeHud();
         const gc = $('game-container'), bar = $('champion-bar'); if (!gc || !bar) return;
-        const top = document.createElement('div'); top.id = 'pvp-top'; top.className = 'pv-pn foe'; gc.appendChild(top);
-        const mine = document.createElement('div'); mine.id = 'pvp-me'; mine.className = 'pv-pn me'; bar.appendChild(mine);
+        const top = document.createElement('div'); top.id = 'pvp-top'; top.className = 'vs'; gc.appendChild(top);
+        const mine = document.createElement('div'); mine.id = 'pvp-me'; mine.className = 'me'; bar.appendChild(mine);
         top._h = ''; mine._h = '';
         mine.addEventListener('pointerdown', e => { const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } const b = e.target.closest('.pv-ball'); if (b) { e.preventDefault(); ballTap(+b.dataset.s, b); } });
-        top.addEventListener('pointerdown', e => { if (e.target.closest('.pv-x')) { e.preventDefault(); surrender(e.target.closest('.pv-x')); } });
+        top.addEventListener('pointerdown', e => { const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } if (e.target.closest('.pv-x')) { e.preventDefault(); surrender(e.target.closest('.pv-x')); } });
     }
     function removeHud() { ['pvp-top', 'pvp-me'].forEach(id => { const n = $(id); if (n) n.remove(); }); }
     function clockTxt(t) { t = Math.max(0, t | 0); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
@@ -33683,11 +33732,11 @@ window.PAPvp = (function () {
         const t = Math.max(0, P.view.t - (P.host ? 0 : Math.floor((performance.now() - P.viewAt) / 1000)));
         el.textContent = '⏱ ' + clockTxt(t); el.classList.toggle('low', t <= 30);
     }
-    const tyChip = t => '<span class="pv-ty" style="background:' + ((typeof PC_TYPE_COLOR !== 'undefined' && PC_TYPE_COLOR[t]) || '#64748b') + '">' + esc(((typeof TYPE_NAME_ES !== 'undefined' && TYPE_NAME_ES[t]) || t).toUpperCase()) + '</span>';
+    const tyChip = t => '<span class="pv-ty" style="background:' + ((typeof PC_TYPE_COLOR !== 'undefined' && PC_TYPE_COLOR[t]) || '#64748b') + '">' + esc(((typeof TYPE_NAME_ES !== 'undefined' && TYPE_NAME_ES[t]) || t).toUpperCase().slice(0, 3)) + '</span>';
     function card(sl, d, gi, mineSide) {
         const hp = d[1], mx = d[2] || 1, r = Math.max(0, Math.min(1, hp / mx)), cls = r > .5 ? '' : r > .2 ? 'm' : 'l';
         const spr = d[5] || sl.sprite;
-        return '<div class="pv-card on"><div class="pv-por"><img alt="" draggable="false" src="' + esc(spr) + '"></div><div class="pv-inf"><div class="pv-pk">' + esc(d[4] || sl.name) + '</div><div class="pv-tys">' + String(d[3] || '').split(',').filter(Boolean).map(tyChip).join('') + '</div><div class="pv-hp"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div><div class="pv-hpn">' + (d[6] ? '…' : hp + ' / ' + mx) + '</div></div>' + gxBtn(d, gi, mineSide) + '</div>';
+        return '<div class="vr on"><img class="vr-s" alt="" draggable="false" src="' + esc(spr) + '"><div class="vr-i"><div class="vr-t"><span class="vr-n">' + esc(d[4] || sl.name) + '</span><span class="vr-h">' + (d[6] ? '…' : hp + '/' + mx) + '</span></div><div class="vr-b"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div></div>' + gxBtn(d, gi, mineSide) + '</div>';
     }
     function gxBtn(d, gi, mineSide) { // botón GIGAMAX (solo en tus pokémon): listo = pulsa para transformarte; activo = forma Gigamax en curso
         const g = d[7] | 0; if (!mineSide || !g) return '';
@@ -33704,8 +33753,8 @@ window.PAPvp = (function () {
     function cards(acc, v, mineSide) {
         const T = P.teams[acc], arr = v.a[acc] || [], on = [];
         arr.forEach((d, i) => { if (d[0] === 1 && T.slots[i]) on.push(card(T.slots[i], d, i, mineSide)); });
-        while (on.length < 2) on.push('<div class="pv-card empty">' + (mineSide ? (on.length === 0 ? 'Toca una Poké Ball<br>para lanzarlo' : 'Hueco libre<br><small style="opacity:.7">toca un activo para retirarlo</small>') : 'Sin pokémon<br>en la arena') + '</div>');
-        return '<div class="pv-cards">' + on.slice(0, 2).join('') + '</div>';
+        while (on.length < 2) on.push('<div class="vr empty">' + (mineSide ? 'LIBRE' : 'VACÍO') + '</div>');
+        return '<div class="vr-list">' + on.slice(0, 2).join('') + '</div>';
     }
     function render(v, init) {
         if (!P.on || !v) return; P.view = v; P.viewAt = performance.now(); if (P.guest && !init) P.live = true;
@@ -33716,15 +33765,16 @@ window.PAPvp = (function () {
           v.a[m] = v.a[m].map((d, i) => { const o = P.opt[i]; if (!o) return d; if (d[0] === o.to || now - o.t > 2500) { delete P.opt[i]; return d; } const sl = P.teams[m].slots[i]; return o.to === 1 ? [1, 100, 100, sl.ty || '', sl.name, '', 1] : [0, o.r != null ? o.r : 100]; }); }
         const pbs = acc => v.a[acc].map(d => '<i class="pv-pb s' + d[0] + '"></i>').join('');
         const left = acc => v.a[acc].filter(d => d[0] !== 2).length;
-        const htop = '<div class="pv-head"><div class="pv-av">' + avHtml(P.names[f], P.avatars[f]) + '</div><div class="pv-nm">' + esc(P.names[f]) + '</div><div class="pv-pbs">' + pbs(f) + '</div><span class="pv-sp"></span><span class="pv-clk" id="pv-clk">⏱ ' + clockTxt(v.t) + '</span><button type="button" class="pv-x" aria-label="Rendirse" title="Rendirse">✕</button></div>' + cards(f, v, false);
+        const hd = (acc, av) => '<div class="vs-hd"><div class="pv-av">' + avHtml(P.names[acc], av) + '</div><div class="vs-who"><div class="pv-nm">' + esc(P.names[acc]) + '</div><div class="pv-pbs">' + pbs(acc) + '</div></div></div>';
+        const htop = '<div class="vs-hud"><div class="vs-side me">' + hd(m, P.avatars[m] || mpProfile().avatar) + cards(m, v, true) + '</div><div class="vs-mid"><span class="pv-clk" id="pv-clk">⏱ ' + clockTxt(v.t) + '</span><button type="button" class="pv-x" aria-label="Rendirse" title="Rendirse">✕</button></div><div class="vs-side foe">' + hd(f, P.avatars[f]) + cards(f, v, false) + '</div></div>';
         if (top._h !== htop) { const ask = top.querySelector('.pv-x.ask'); top.innerHTML = htop; top._h = htop; if (ask && performance.now() - P.askAt < 3000) { const x = top.querySelector('.pv-x'); x.classList.add('ask'); x.textContent = '¿Rendirse?'; } }
         const balls = P.teams[m].slots.map((sl, i) => {
             const d = v.a[m][i] || [0, 100]; if (d[0] !== 0) delete P.pending[i];
             const r = d[0] === 1 ? d[1] / (d[2] || 1) : d[0] === 0 ? d[1] / 100 : 0, pend = P.pending[i] && performance.now() - P.pending[i] < 4000;
-            return '<button type="button" class="pv-ball s' + d[0] + (pend ? ' pend' : '') + '" data-s="' + i + '" aria-label="' + esc(sl.name) + '"><img alt="" draggable="false" src="' + esc(sl.sprite) + '">' + (d[0] !== 2 ? '<span class="pv-bhp"><i style="width:' + Math.round(Math.max(0, Math.min(1, r)) * 100) + '%"></i></span>' : '') + (d[0] === 1 ? '<em>↩</em>' : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</button>';
+            return '<button type="button" class="pv-ball s' + d[0] + (pend ? ' pend' : '') + '" data-s="' + i + '" aria-label="' + esc(sl.name) + '"><img alt="" draggable="false" src="' + esc(sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>' + (d[0] !== 2 ? '<span class="pv-bhp"><i style="width:' + Math.round(Math.max(0, Math.min(1, r)) * 100) + '%"></i></span>' : '') + (d[0] === 1 ? '<em>↩</em>' : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</button>';
         }).join('');
         const nf = P.teams[m].slots.filter((sl, i) => { const o = P.opt[i]; return o ? o.to === 1 : (v.a[m][i] || [])[0] === 1; }).length;
-        const hmine = '<div class="pv-head"><div class="pv-av">' + avHtml(P.names[m], P.avatars[m] || mpProfile().avatar) + '</div><div class="pv-nm">' + esc(P.names[m]) + '</div><div class="pv-pbs">' + pbs(m) + '</div><span class="pv-sp"></span><span class="pv-nm" style="max-width:none;color:#94a3b8">Quedan ' + left(m) + '/' + P.teams[m].slots.length + '</span></div>' + cards(m, v, true) + '<div class="pv-balls">' + balls + '</div>';
+        const hmine = '<div class="pt-hd"><span>Toca para lanzar · toca el activo para retirar</span><span>Vivos <b>' + left(m) + '/' + P.teams[m].slots.length + '</b></span></div><div class="pv-balls">' + balls + '</div>';
         if (mine._h !== hmine) { mine.innerHTML = hmine; mine._h = hmine; }
     }
     function ballTap(i, el) {

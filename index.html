@@ -19732,6 +19732,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         const NC_DODGE_BASE = 0.03, NC_DODGE_MAX = 0.2, NC_DODGE_CD_MS = 1800, NC_COUNTER_MS = 4500, NC_COUNTER_MULT = 1.25;
         function ncEvasion(att, def, move) {
             def._evd = false;
+            if (pvpDuel) return false; // PVP / Liga: la esquiva es una orden del entrenador, no un azar
             try {
                 if (!att || !def || att === def || gameOver || forcePhysHit || att.duel || def.duel || att.isBoss || att.isAlpha) return false;
                 if (def.sleep || def.freeze || def.paralysis || def.isCharging || def.isEvolving || def.isSpawning || def.fainted || def.protectMs > 0) return false;
@@ -19994,6 +19995,15 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                     return false;
                 }
                 protectedHit = true;
+            }
+            // Esquiva ordenada (PVP / Liga): mientras dure la ventana el golpe no llega y el pokémon queda listo para contragolpear.
+            if (pvpDuel && defender.dodgeMs > 0) {
+                attacker.furyStreak = 0; attacker.echoStreak = 0; attacker.rollStreak = 0;
+                spawnDodgePopup(defender);
+                if (!defender._dgHit || performance.now() - defender._dgHit > 500) { defender._dgHit = performance.now(); defender.counterUntil = performance.now() + NC_COUNTER_MS; try { ncDodgeFx(defender, attacker, targetX, targetY); } catch (e) {} }
+                logMessage(`💨 ¡${defender.name} esquiva ${move.name} de ${attacker.name} y se prepara para contraatacar!`, 'miss');
+                try { registerDodge(defender, move); } catch (e) {}
+                return false;
             }
 
             if (!(attacker && attacker.ability && abilitiesData[attacker.ability] && abilitiesData[attacker.ability].noGuardAttack) && !(move.poisonUserNeverMisses && (attacker.stats.type === 'poison' || attacker.stats.type2 === 'poison')) && (ncEvasion(attacker, defender, move) || !checkAccuracy(move.accuracy * sandVeilMult(defender) * ((attacker.ability && abilitiesData[attacker.ability] && abilitiesData[attacker.ability].hustleAccMult && move.category === 'physical') ? abilitiesData[attacker.ability].hustleAccMult : 1)))) {
@@ -24121,6 +24131,23 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             return true;
         }
 
+        // ===== ESQUIVA ordenada (PVP / Liga): ventana corta de invulnerabilidad con cooldown; el primer golpe esquivado arma el contragolpe (+25 %) =====
+        const DODGE_DURATION_MS = 700, DODGE_COOLDOWN_MS = 3200;
+        function canUseDodge(c) {
+            return !!c && !c.isAlpha && !c.isBoss && !gameOver && !c.fainted && c.hp > 0 && !c.isEvolving && !c.isSpawning && !c.sleep && !c.freeze &&
+                !c.digPhase && !c.flyPhase && !c.isUnderground && !c.isAirborne && !c.duel && !(c.dodgeMs > 0) && !(c.dodgeCdMs > 0);
+        }
+        function activateDodge(c) {
+            if (!canUseDodge(c)) return false;
+            c.dodgeMs = DODGE_DURATION_MS; c.dodgeCdMs = DODGE_COOLDOWN_MS;
+            c.wrapper.classList.add('pvp-dodging');
+            try { const o = combatants.find(x => x.id !== c.id && isHostile(c, x) && !x.fainted); const dir = o ? (c.x >= o.x ? 1 : -1) : 1; ncPose(c, 'dodge', dir, 1, 420); for (let i = 0; i < 2; i++) { const t = setTimeout(() => { if (c.wrapper && !c.fainted) spawnDashTrail(c, true); }, i * 70); activeTimers.push(t); } ncSfx('dodge'); } catch (e) {}
+            try { const ctr = fxSpriteCenter(c); spawnSparks(ctr.x, ctr.y, '#bef264', 6); } catch (e) {}
+            logMessage(`¡${c.name} se prepara para esquivar!`, 'info');
+            return true;
+        }
+        function attackTotalMs(c) { const m = movesData[c.attackKey]; return (m && m.cooldownMs) ? m.cooldownMs : Math.max(1000, 2200 - effSpeed(c) * 8); }
+
         // La burbuja envuelve al sprite (cuyo tamaño cambia con la especie y al evolucionar).
         function layoutProtectBubble(c, b) {
             const w = (c.pokemonEl && elW(c.pokemonEl)) || 50;
@@ -24224,6 +24251,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // embestida): decide si reacciona. La reacción tarda una fracción de segundo.
         function aiNotifyThreat(attacker, defender, move) {
             if (!attacker || !defender || attacker.id === defender.id) return;
+            if (pvpDuel) { try { if (window.PAPvp) PAPvp.botReact(attacker, defender, move); } catch (e) {} return; } // PVP / Liga: solo reacciona la IA de Liga, con órdenes como las de un jugador
             if (!canUseProtect(defender)) return;
             if (Math.random() >= aiProtectChance(defender, move, performance.now())) return;
             const t = setTimeout(() => { if (gameRunning && canUseProtect(defender)) activateProtect(defender); }, (60 + Math.random() * 110) / gameSpeed);
@@ -24233,6 +24261,8 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // Cada fotograma: gasta la duración y el cooldown de la Protección (tiempo de juego), anima el
         // final de la burbuja y, de vez en cuando, valora protegerse por pánico (vida baja con rivales cerca).
         function updateProtect(c, scaledDt, now) {
+            if (c.dodgeCdMs > 0) c.dodgeCdMs = Math.max(0, c.dodgeCdMs - scaledDt);
+            if (c.dodgeMs > 0) { c.dodgeMs = Math.max(0, c.dodgeMs - scaledDt); if (c.dodgeMs <= 0) c.wrapper.classList.remove('pvp-dodging'); }
             if (c.protectCdMs > 0) c.protectCdMs = Math.max(0, c.protectCdMs - scaledDt);
             if (c.protectMs > 0) {
                 c.protectMs -= scaledDt;
@@ -24247,7 +24277,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 }
                 return;
             }
-            if (now < (c.protectEvalAt || 0) || !canUseProtect(c)) return;
+            if (pvpDuel || now < (c.protectEvalAt || 0) || !canUseProtect(c)) return; // PVP / Liga: nada de Protección automática
             c.protectEvalAt = now + (350 + Math.random() * 350) / gameSpeed;
             const hpR = c.hp / Math.max(1, c.maxHp);
             if (hpR >= 0.4) return;
@@ -24286,7 +24316,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         }
 
         function tryStartDuel(attacker, defender, damage) {
-            if (!(damage > 0) || gameOver || !gameRunning) return;
+            if (!(damage > 0) || gameOver || !gameRunning || pvpDuel) return; // PVP / Liga: sin modo duelo
             if (!duelReady(attacker) || !duelReady(defender) || !isHostile(attacker, defender)) return;
             if (Math.hypot(attacker.x - defender.x, attacker.y - defender.y) > engageRadius() * 1.7) return;
             if (Math.random() >= DUEL_CHANCE) return;
@@ -25158,6 +25188,10 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         function attemptAttack(c, timestamp) {
             if (c.isChasing || c.isCharging) return;
             if (c.duel) return; // en duelo: solo ataca cuando le toca su turno (ver updateDuels)
+            if (pvpDuel) { // PVP / Liga: el pokémon solo ataca cuando su entrenador da la orden (ver PAPvp.order); la orden espera si aún hay cooldown o rival fuera de alcance
+                if (!c.atkOrder) return;
+                if (timestamp - (c.atkOrderAt || 0) > 7000) { c.atkOrder = false; return; }
+            }
             if (c.sleep || c.freeze) return; // dormido o congelado: no ataca
             if (timestamp < (c.atkRetryAt || 0)) return; // sin nadie al alcance: reintenta cada ~0,25 s
 
@@ -25194,6 +25228,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             }
             c.noTargetSince = 0;
             c.lastAttack = timestamp;
+            if (pvpDuel) c.atkOrder = false; // orden cumplida
             if ((isRaid() || bossC) && !c.isAlpha && !c.isBoss) { raidActCount++; c.atkBusyUntil = timestamp + RAID_RANGED_ACTION_MS / gameSpeed; } // ya cuenta como "en acción" para el límite de la Raid
             // Parálisis total: 25% de no poder moverse. Pierde el turno (el cooldown ya se gastó).
             if (c.paralysis && Math.random() < PARALYSIS_FULL_CHANCE) {
@@ -33187,6 +33222,7 @@ if(window.visualViewport){var vv=window.visualViewport;vv.addEventListener('resi
 </script>
 
 <style id="pa-hud4-css">
+.pokemon-wrapper.pvp-dodging .pokemon{opacity:.5;filter:saturate(1.6) drop-shadow(0 0 8px #bef264)}
 /* ===== HUD de jefe: mismo cristal plano que el HUD normal / captura ===== */
 #champion-bar #raid-boss-bar{--rx:#fb7185;--rx2:#fecdd3;position:relative;margin:0;padding:6px 8px 8px;gap:0;box-sizing:border-box;flex-direction:row;align-items:stretch;overflow:hidden;
   border-radius:16px;border:1px solid rgba(255,255,255,.22);border-top-color:rgba(255,255,255,.4);
@@ -33346,6 +33382,29 @@ body.pvp-on #champion-bar > *:not(#pvp-me){display:none!important}
 @keyframes pvPend{50%{opacity:.45}}
 @keyframes pvShake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 body.pvp-on #lt-chip{top:128px!important}
+.cm-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-height:0}
+.cm-g{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:0;padding:4px 5px 5px;background:linear-gradient(180deg,#16204a,#0b1126);border-left:3px solid #fde047;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.cm-g.empty{border-left-color:#334155;align-items:center;justify-content:center;text-align:center;font-size:9px;line-height:1.3;color:#64748b;background:rgba(255,255,255,.03)}
+.cm-h{display:flex;align-items:center;gap:5px;min-width:0;height:22px;flex:0 0 22px}
+.cm-s{flex:0 0 22px;width:22px;height:22px;object-fit:contain}
+.cm-n{flex:1;min-width:0;font-size:10px;line-height:1;text-transform:uppercase;letter-spacing:.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+.cm-h .pv-gx{flex:0 0 20px;width:20px;height:20px;font-size:10px}
+.cm-b{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;flex:1;min-height:0}
+.cm-btn{all:unset;box-sizing:border-box;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:38px;border-radius:9px;border:1px solid var(--bc);background:linear-gradient(180deg,color-mix(in srgb,var(--bc) 38%,#0b1126),color-mix(in srgb,var(--bc) 12%,#0b1126));color:#fff;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.cm-btn.a{--bc:#fb7185}.cm-btn.p{--bc:#38bdf8}.cm-btn.d{--bc:#a3e635}
+.cm-btn svg{width:17px;height:17px;flex:0 0 auto}
+.cm-btn b{font-size:7.5px;line-height:1;letter-spacing:.05em;font-weight:700}
+.cm-btn::after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--p,0) * 100%);background:rgba(2,6,23,.8);pointer-events:none}
+.cm-btn i{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;font-variant-numeric:tabular-nums;color:#fff}
+.cm-btn.cd svg,.cm-btn.cd b{opacity:.3}
+.cm-btn.q{animation:pvPend .45s ease-in-out infinite}
+.cm-btn.act{box-shadow:0 0 12px var(--bc),inset 0 0 10px var(--bc)}
+.cm-btn:active:not(.cd){transform:scale(.93)}
+.cm-btn.shake{animation:pvShake .3s}
+#pvp-me .pv-balls{flex:0 0 44px;padding-top:0;gap:4px}
+#pvp-me .pv-ball{padding:3px 2px 5px;max-width:52px}
+#pvp-me .pv-ball.s1{transform:none}
+#pvp-me .pv-bn{display:none}
 @media (min-aspect-ratio:5/4){#pvp-top{left:50%;right:auto;width:min(100%,760px);transform:translateX(-50%)}#pvp-me .pv-balls{justify-content:center}}
 </style>
 <script id="pa-pvp">
@@ -33517,6 +33576,34 @@ window.PAPvp = (function () {
         try { directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, 1400, DIRECTOR_PRIORITY_SPAWN); } catch (e) {}
         return true;
     }
+    function order(acc, i, kind) { // orden de un entrenador a su pokémon del hueco i: A = atacar, P = protegerse, D = esquivar (solo el anfitrión la ejecuta; el invitado la manda)
+        if (P.over || !gameRunning || gameOver) return false;
+        const sl = P.teams[acc] && P.teams[acc].slots[i], c = sl && combatantsById[sl.id];
+        if (!c || c.owner !== acc || c.fainted || c.retreated || c.isSpawning || c.isEvolving) return false;
+        if (kind === 'A') { if (c.atkOrder) return false; c.atkOrder = true; c.atkOrderAt = performance.now(); return true; }
+        if (kind === 'P') return activateProtect(c);
+        if (kind === 'D') return activateDodge(c);
+        return false;
+    }
+    function isBotC(c) { return !!(P.bot && c && c.owner === P.foe); }
+    function botReact(att, def, move) { // la IA de Liga ve venir un golpe y decide como un jugador: protegerse o esquivar (con un poco de reacción y de error)
+        if (!isBotC(def) || P.over) return;
+        const now = performance.now(), ch = Math.min(0.92, aiProtectChance(def, move, now) * 1.5 + (P.botSmart ? 0.12 : 0));
+        if (Math.random() >= ch) return;
+        const cu = canUseDodge(def), cp = canUseProtect(def); if (!cu && !cp) return;
+        const useD = cu && (!cp || Math.random() < 0.5), dist = Math.hypot(att.x - def.x, att.y - def.y);
+        const delay = useD ? Math.max(120, Math.min(480, dist * 0.5 + (Math.random() - 0.5) * 120)) : 60 + Math.random() * 110;
+        setTimeout(() => { if (!P.on || P.over || def.fainted || combatantsById[def.id] !== def) return; if (useD) activateDodge(def); else activateProtect(def); }, delay);
+    }
+    function botCombat() { // la IA de Liga da la orden de atacar en cuanto su pokémon está listo (con un tiempo de reacción)
+        if (!P.on || !P.bot || P.over || !gameRunning) return;
+        const now = performance.now();
+        fieldOf(P.foe).forEach(c => {
+            if (c.isSpawning || c.isEvolving || c.fainted || c.atkOrder) return;
+            if (now >= (c._bAt || 0) && attackReadyInMs(c, now) <= 0) { c.atkOrder = true; c.atkOrderAt = now; c._bAt = now + (P.botFast ? 120 : 280) + Math.random() * (P.botFast ? 260 : 620); }
+            if (!(c.protectMs > 0) && c.hp / Math.max(1, c.maxHp) < 0.35 && canUseProtect(c) && Math.random() < 0.05 && fieldOf(P.me).some(o => Math.hypot(o.x - c.x, o.y - c.y) < 220)) activateProtect(c);
+        });
+    }
     function view() { // estado para el HUD local y para la instantánea que ve el invitado
         const out = { t: Math.max(0, Math.round((P.limit - matchElapsedMs) / 1000)), a: {} };
         P.order.forEach(acc => {
@@ -33525,7 +33612,8 @@ window.PAPvp = (function () {
                 if (c && !c.fainted && c.owner === acc) {
                     const bs = c.baseStats || {}, ty = [bs.type, bs.type2].filter(Boolean).join(','); sl.ty = ty;
                     let s = c.currentFrontSrc || (c.imgEl ? c.imgEl.src : '') || ''; if (s.length > 400) s = '';
-                    return [1, Math.max(0, Math.round(c.hp)), Math.round(c.maxHp), ty, dispName(c.dexName || c.name), s, 0, c.gmax ? 2 : (c.gmaxReady && !gmaxTeamBusy(acc) ? 1 : 0)];
+                    const nw = performance.now(), n0 = v => (isFinite(v) && v > 0) ? Math.round(v) : 0;
+                    return [1, Math.max(0, Math.round(c.hp)), Math.round(c.maxHp), ty, dispName(c.dexName || c.name), s, 0, c.gmax ? 2 : (c.gmaxReady && !gmaxTeamBusy(acc) ? 1 : 0), n0(attackReadyInMs(c, nw)), n0(attackTotalMs(c)), n0(c.protectCdMs), n0(c.dodgeCdMs), c.atkOrder ? 1 : 0, c.protectMs > 0 ? 1 : 0, c.dodgeMs > 0 ? 1 : 0];
                 }
                 if ((speciesLives[sl.id] || 0) <= 0) return [2];
                 return [0, Math.round(sl.ratio * 100)];
@@ -33537,7 +33625,7 @@ window.PAPvp = (function () {
     function hostBegin() {
         buildHud(); P.live = true; P.view = view(); render(P.view);
         clearInterval(P.tm.tick); clearInterval(P.tm.cmd);
-        P.tm.tick = setInterval(hostTick, 250); if (!P.bot) cmdLoop(P.code);
+        P.tm.tick = setInterval(hostTick, 250); if (P.bot) { clearInterval(P.tm.bot); P.tm.bot = setInterval(botCombat, 110); } if (!P.bot) cmdLoop(P.code);
     }
     function hostTick() {
         if (!P.on || !P.host || P.over || !gameRunning) return;
@@ -33627,7 +33715,7 @@ window.PAPvp = (function () {
         c = c || {}; if (P.over) return false;
         if (c.u) { if (P.seen[c.u]) return false; P.seen[c.u] = 1; }
         const s = Math.max(0, Math.min(5, c.s | 0));
-        if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'G') duelGmax(P.foe, s); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); else return false;
+        if (c.t === 'L') launch(P.foe, s); else if (c.t === 'R') recall(P.foe, s); else if (c.t === 'G') duelGmax(P.foe, s); else if (c.t === 'A' || c.t === 'P' || c.t === 'D') order(P.foe, s, c.t); else if (c.t === 'F') end(P.me, 'rendicion', P.foe); else return false;
         return true;
     }
     async function pollCmds() {
@@ -33686,7 +33774,7 @@ window.PAPvp = (function () {
         if (!url) return;
         const code = P.code; let ws, opened = false; try { ws = new WebSocket(url); } catch (e) { return; }
         P.ws = ws;
-        ws.onopen = () => { opened = true; P.wsFails = 0; if (P.host) { clearInterval(P.tm.wsp); P.tm.wsp = setInterval(wsSnap, 140); } };
+        ws.onopen = () => { opened = true; P.wsFails = 0; if (P.host) { clearInterval(P.tm.wsp); P.tm.wsp = setInterval(wsSnap, 90); } };
         ws.onmessage = ev => {
             if (typeof ev.data !== 'string' || !P.on || P.over) return;
             let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
@@ -33721,8 +33809,8 @@ window.PAPvp = (function () {
         const gc = $('game-container'), bar = $('champion-bar'); if (!gc || !bar) return;
         const top = document.createElement('div'); top.id = 'pvp-top'; top.className = 'vs'; gc.appendChild(top);
         const mine = document.createElement('div'); mine.id = 'pvp-me'; mine.className = 'me'; bar.appendChild(mine);
-        top._h = ''; mine._h = '';
-        mine.addEventListener('pointerdown', e => { const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } const b = e.target.closest('.pv-ball'); if (b) { e.preventDefault(); ballTap(+b.dataset.s, b); } });
+        top._h = ''; mine._h = ''; clearInterval(P.tm.cdt); P.tm.cdt = setInterval(tickCd, 80);
+        mine.addEventListener('pointerdown', e => { const cb = e.target.closest('.cm-btn[data-k]'); if (cb) { e.preventDefault(); cmdOrder(cb.dataset.k, +cb.dataset.s, cb); return; } const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } const b = e.target.closest('.pv-ball'); if (b) { e.preventDefault(); ballTap(+b.dataset.s, b); } });
         top.addEventListener('pointerdown', e => { const gx = e.target.closest('.pv-gx[data-g]'); if (gx) { e.preventDefault(); gmaxTap(+gx.dataset.g, gx); return; } if (e.target.closest('.pv-x')) { e.preventDefault(); surrender(e.target.closest('.pv-x')); } });
     }
     function removeHud() { ['pvp-top', 'pvp-me'].forEach(id => { const n = $(id); if (n) n.remove(); }); }
@@ -33736,7 +33824,7 @@ window.PAPvp = (function () {
     function card(sl, d, gi, mineSide) {
         const hp = d[1], mx = d[2] || 1, r = Math.max(0, Math.min(1, hp / mx)), cls = r > .5 ? '' : r > .2 ? 'm' : 'l';
         const spr = d[5] || sl.sprite;
-        return '<div class="vr on"><img class="vr-s" alt="" draggable="false" src="' + esc(spr) + '"><div class="vr-i"><div class="vr-t"><span class="vr-n">' + esc(d[4] || sl.name) + '</span><span class="vr-h">' + (d[6] ? '…' : hp + '/' + mx) + '</span></div><div class="vr-b"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div></div>' + gxBtn(d, gi, mineSide) + '</div>';
+        return '<div class="vr on"><img class="vr-s" alt="" draggable="false" src="' + esc(spr) + '"><div class="vr-i"><div class="vr-t"><span class="vr-n">' + esc(d[4] || sl.name) + '</span><span class="vr-h">' + (d[6] ? '…' : hp + '/' + mx) + '</span></div><div class="vr-b"><i class="' + cls + '" style="width:' + (r * 100).toFixed(0) + '%"></i></div></div>' + '</div>';
     }
     function gxBtn(d, gi, mineSide) { // botón GIGAMAX (solo en tus pokémon): listo = pulsa para transformarte; activo = forma Gigamax en curso
         const g = d[7] | 0; if (!mineSide || !g) return '';
@@ -33774,8 +33862,45 @@ window.PAPvp = (function () {
             return '<button type="button" class="pv-ball s' + d[0] + (pend ? ' pend' : '') + '" data-s="' + i + '" aria-label="' + esc(sl.name) + '"><img alt="" draggable="false" src="' + esc(sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>' + (d[0] !== 2 ? '<span class="pv-bhp"><i style="width:' + Math.round(Math.max(0, Math.min(1, r)) * 100) + '%"></i></span>' : '') + (d[0] === 1 ? '<em>↩</em>' : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</button>';
         }).join('');
         const nf = P.teams[m].slots.filter((sl, i) => { const o = P.opt[i]; return o ? o.to === 1 : (v.a[m][i] || [])[0] === 1; }).length;
-        const hmine = '<div class="pt-hd"><span>Toca para lanzar · toca el activo para retirar</span><span>Vivos <b>' + left(m) + '/' + P.teams[m].slots.length + '</b></span></div><div class="pv-balls">' + balls + '</div>';
+        const IC = { A: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4l-9.5 9.5M20 4h-5M20 4v5M9 11l4 4M6 18l-2 2M8.5 15.5L6 18"/></svg>', P: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5l8-3z"/></svg>', D: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>' };
+        const bt = (k, s, t) => '<button type="button" class="cm-btn ' + k.toLowerCase() + '" data-k="' + k + '" data-s="' + s + '">' + IC[k] + '<b>' + t + '</b><i></i></button>';
+        const groups = []; v.a[m].forEach((d, i) => { if (d[0] !== 1 || !P.teams[m].slots[i]) return; const sl = P.teams[m].slots[i]; groups.push('<div class="cm-g"><div class="cm-h"><img class="cm-s" alt="" draggable="false" src="' + esc(d[5] || sl.sprite) + '"><span class="cm-n">' + esc(d[4] || sl.name) + '</span>' + gxBtn(d, i, true) + '</div><div class="cm-b">' + bt('A', i, 'ATACAR') + bt('P', i, 'PROTEGER') + bt('D', i, 'ESQUIVAR') + '</div></div>'); });
+        while (groups.length < 2) groups.push('<div class="cm-g empty">' + (groups.length === 0 ? 'Elige un pokémon<br>del plantel' : 'Hueco libre') + '</div>');
+        const hmine = '<div class="cm-row">' + groups.slice(0, 2).join('') + '</div><div class="pv-balls">' + balls + '</div>';
         if (mine._h !== hmine) { mine.innerHTML = hmine; mine._h = hmine; }
+        tickCd();
+    }
+    const CD_TOT = { P: () => (typeof PROTECT_COOLDOWN_MS === 'number' ? PROTECT_COOLDOWN_MS : 6000), D: () => (typeof DODGE_COOLDOWN_MS === 'number' ? DODGE_COOLDOWN_MS : 3200) };
+    const CD_IDX = { A: 8, P: 10, D: 11 };
+    function cdInfo(s, k) { // {rem, tot, q, act} del botón k del hueco s (el HUD lo anima solo: no cambia el HTML)
+        const v = P.view, d = v && (v.a[P.me] || [])[s]; if (!d || d[0] !== 1) return null;
+        const now = performance.now(), el = now - P.viewAt, lock = (P.lock || {})[s + k] > now;
+        let rem = Math.max(0, (d[CD_IDX[k]] | 0) - el), tot = k === 'A' ? Math.max(1000, d[9] | 0) : CD_TOT[k](), q = k === 'A' && !!d[12], act = (k === 'P' && d[13]) || (k === 'D' && d[14]);
+        if (lock && rem <= 0 && !act) { if (k === 'A') q = true; else rem = tot; }
+        return { rem, tot, q: q && rem >= 0 && k === 'A', act: !!act };
+    }
+    function tickCd() {
+        const mine = $('pvp-me'); if (!mine || !P.view) return;
+        mine.querySelectorAll('.cm-btn[data-k]').forEach(b => {
+            const k = b.dataset.k, inf = cdInfo(+b.dataset.s, k); if (!inf) return;
+            const fr = inf.rem > 0 ? Math.min(1, inf.rem / inf.tot) : 0, cd = inf.rem > 0, txt = cd ? (inf.rem / 1000).toFixed(1) : '';
+            if (b._fr !== fr.toFixed(2)) { b._fr = fr.toFixed(2); b.style.setProperty('--p', fr.toFixed(3)); }
+            if (b._cd !== cd) { b._cd = cd; b.classList.toggle('cd', cd); }
+            if (b._q !== inf.q) { b._q = inf.q; b.classList.toggle('q', inf.q); }
+            if (b._act !== inf.act) { b._act = inf.act; b.classList.toggle('act', inf.act); }
+            if (b._tx !== txt) { b._tx = txt; b.lastChild.textContent = txt; }
+        });
+    }
+    function cmdOrder(k, s, el) { // el entrenador toca ATACAR / PROTEGER / ESQUIVAR: el HUD responde al instante y la orden viaja por WebSocket (y HTTP de reserva)
+        if (!P.on || P.over || !P.live || !P.view) return;
+        const inf = cdInfo(s, k); if (!inf) return;
+        const bad = () => { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); };
+        if (inf.rem > 0 || (k === 'A' && inf.q)) { bad(); return; }
+        sfx(k === 'A' ? 'pop' : 'tick');
+        (P.lock = P.lock || {})[s + k] = performance.now() + 900;
+        if (P.host) { if (order(P.me, s, k)) { P.view = view(); P.viewAt = performance.now(); setTimeout(pushNow, 20); } else { delete P.lock[s + k]; bad(); return; } }
+        else sendCmd({ t: k, s });
+        tickCd();
     }
     function ballTap(i, el) {
         if (!P.on || P.over || !P.live || !P.view) return;
@@ -33822,7 +33947,7 @@ window.PAPvp = (function () {
         ['pvp-res', 'pvp-vs'].forEach(id => { const n = $(id); if (n) n.remove(); });
         if (wasGuest || mpSpec.on || document.querySelector('#camera-layer .mp-ghost')) { try { mpSpec.on = false; clearTimeout(mpSpec.tm); cancelAnimationFrame(mpSpec.raf); mpSpecClear(); } catch (e) {} }
     }
-    return { open, view, render, hostBegin, afterKo, hostAbort, guestOver, startBot, myPicks, leave: () => exitToMenu(false), get on() { return P.on; }, get guest() { return P.guest; }, wsLive, _P: P };
+    return { open, view, render, hostBegin, order, botReact, afterKo, hostAbort, guestOver, startBot, myPicks, leave: () => exitToMenu(false), get on() { return P.on; }, get guest() { return P.guest; }, wsLive, _P: P };
 })();
 </script>
 <style id="pa-liga-css">

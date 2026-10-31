@@ -25188,10 +25188,6 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         function attemptAttack(c, timestamp) {
             if (c.isChasing || c.isCharging) return;
             if (c.duel) return; // en duelo: solo ataca cuando le toca su turno (ver updateDuels)
-            if (pvpDuel) { // PVP / Liga: el pokémon solo ataca cuando su entrenador da la orden (ver PAPvp.order); la orden espera si aún hay cooldown o rival fuera de alcance
-                if (!c.atkOrder) return;
-                if (timestamp - (c.atkOrderAt || 0) > 7000) { c.atkOrder = false; return; }
-            }
             if (c.sleep || c.freeze) return; // dormido o congelado: no ataca
             if (timestamp < (c.atkRetryAt || 0)) return; // sin nadie al alcance: reintenta cada ~0,25 s
 
@@ -25228,7 +25224,6 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             }
             c.noTargetSince = 0;
             c.lastAttack = timestamp;
-            if (pvpDuel) c.atkOrder = false; // orden cumplida
             if ((isRaid() || bossC) && !c.isAlpha && !c.isBoss) { raidActCount++; c.atkBusyUntil = timestamp + RAID_RANGED_ACTION_MS / gameSpeed; } // ya cuenta como "en acción" para el límite de la Raid
             // Parálisis total: 25% de no poder moverse. Pierde el turno (el cooldown ya se gastó).
             if (c.paralysis && Math.random() < PARALYSIS_FULL_CHANCE) {
@@ -33418,9 +33413,10 @@ body.pvp-on #lt-chip{top:128px!important}
 .cm-bub{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);z-index:60;display:grid;grid-template-columns:repeat(2,24px);gap:2px;justify-items:center;padding:4px;border-radius:18px;background:linear-gradient(180deg,#16204a,#0b1126);border:2px solid #fde047;box-shadow:0 6px 18px rgba(0,0,0,.65)}
 .cm-bub::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;background:#0b1126;border-right:2px solid #fde047;border-bottom:2px solid #fde047;transform:translateX(-50%) rotate(45deg)}
 .cm-bub .cm-btn{width:24px;height:24px;min-height:0;border-radius:50%;gap:0}
-.cm-bub .cm-btn.a{grid-column:1/3}
 .cm-bub .cm-btn svg{width:14px;height:14px}
 .cm-bub .cm-btn i{font-size:10px}
+/* Trapinch: su sprite es muy compacto y se veía enorme en las cajas */
+.mmt-cell img[src*="/328."],.mmt-cell img[src*="trapinch"],.bx-slot img[src*="/328."],.bx-slot img[src*="trapinch"]{transform:scale(.62);transform-origin:50% 60%}
 /* fondo gris con diseño (rayas diagonales + brillo), en lugar del azul */
 #pvp-me{background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px),linear-gradient(180deg,#2c2e34,#18191d);border-image:linear-gradient(90deg,#94a3b8,#fde047,#fb7185) 1}
 #pvp-me .pv-ball{background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 7px),linear-gradient(180deg,#4a4d56,#2a2c32);border-bottom-color:#5b5f6a}
@@ -33628,8 +33624,7 @@ window.PAPvp = (function () {
         if (!P.on || !P.bot || P.over || !gameRunning) return;
         const now = performance.now();
         fieldOf(P.foe).forEach(c => {
-            if (c.isSpawning || c.isEvolving || c.fainted || c.atkOrder) return;
-            if (now >= (c._bAt || 0) && attackReadyInMs(c, now) <= 0) { c.atkOrder = true; c.atkOrderAt = now; c._bAt = now + (P.botFast ? 120 : 280) + Math.random() * (P.botFast ? 260 : 620); }
+            if (c.isSpawning || c.isEvolving || c.fainted) return;
             if (!(c.protectMs > 0) && c.hp / Math.max(1, c.maxHp) < 0.35 && canUseProtect(c) && Math.random() < 0.05 && fieldOf(P.me).some(o => Math.hypot(o.x - c.x, o.y - c.y) < 220)) activateProtect(c);
         });
     }
@@ -33893,7 +33888,7 @@ window.PAPvp = (function () {
             const r = d[0] === 1 ? d[1] / (d[2] || 1) : d[0] === 0 ? d[1] / 100 : 0, pend = P.pending[i] && performance.now() - P.pending[i] < 4000, sel = d[0] === 1;
             const hp = Math.round(Math.max(0, Math.min(1, r)) * 100), cls = r > .5 ? '' : r > .2 ? 'm' : 'l';
             return '<div class="pv-ball s' + d[0] + (pend ? ' pend' : '') + (sel ? ' sel' : '') + '" data-s="' + i + '" role="button" aria-label="' + esc(sl.name) + '">'
-                + (sel ? '<div class="cm-bub">' + bt('A', i) + bt('P', i) + bt('D', i) + '</div>' : '')
+                + (sel ? '<div class="cm-bub">' + bt('P', i) + bt('D', i) + '</div>' : '')
                 + '<img alt="" draggable="false" src="' + esc((d[0] === 1 && d[5]) || sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>'
                 + (d[0] !== 2 ? '<span class="pv-bhp"><i class="' + cls + '" style="width:' + hp + '%"></i></span>' : '')
                 + (d[0] === 1 ? '<span class="pv-rc" data-s="' + i + '" aria-label="Retirar">↩</span>' + gxBtn(d, i, true) : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</div>';

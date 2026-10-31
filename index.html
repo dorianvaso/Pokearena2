@@ -2787,6 +2787,8 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         .phys-chip { border-radius: 1px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 
         /* ===== DUELO 1 vs 1: anillo bajo los duelistas, etiqueta con combo, ondas de choque y cartel ===== */
+        .duel-tag { position: absolute; z-index: 27; pointer-events: none; transform: translate(-50%, 0); font-family: 'PA Chakra', 'Segoe UI', sans-serif; font-weight: 900; font-style: italic; font-size: .78rem; letter-spacing: .06em; white-space: nowrap; color: #fff; -webkit-text-stroke: 3px #1e1b4b; paint-order: stroke fill; text-shadow: 0 0 12px rgba(167, 139, 250, .9); animation: duelTagPop 1.05s cubic-bezier(.2, 1.4, .4, 1) both; }
+        @keyframes duelTagPop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.4); } 16% { opacity: 1; transform: translate(-50%, -2px) scale(1.25); } 30% { transform: translate(-50%, -4px) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -26px) scale(1); } }
         .duel-shock { position: absolute; width: 40px; height: 40px; border-radius: 50%; pointer-events: none; z-index: 25; --dc: #fff;
             border: 4px solid var(--dc); box-shadow: 0 0 14px var(--dc), inset 0 0 10px var(--dc);
             transform: translate(-50%, -50%) scale(0.3); animation: duelShock 0.42s ease-out forwards; }
@@ -3007,6 +3009,12 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         @keyframes cnBarT { from { transform: translateY(-100%); } to { transform: none; } } @keyframes cnBarB { from { transform: translateY(100%); } to { transform: none; } }
         #countdown-overlay.cdn.out .cn-bar.t { animation: cnBarT .4s ease-in reverse both; } #countdown-overlay.cdn.out .cn-bar.b { animation: cnBarB .4s ease-in reverse both; }
         @keyframes cnVig { from { opacity: 0; } to { opacity: 1; } }
+        /* Cuenta atrás sin barras negras ni viñeta oscura: la arena se DESENFOCA de fondo mientras dura el 3-2-1 */
+        #countdown-overlay.cdn .cn-bar { display: none !important; }
+        #countdown-overlay.cdn .cd-vig { background: rgba(10, 14, 28, .16); -webkit-backdrop-filter: blur(9px) saturate(1.1); backdrop-filter: blur(9px) saturate(1.1); animation: cnBlurIn .45s ease-out both; }
+        #countdown-overlay.cdn.out .cd-vig { animation: cnBlurOut .5s ease-in both; }
+        #countdown-overlay.cdn.drawing .cd-vig { display: none; }
+        @keyframes cnBlurIn { from { opacity: 0; } to { opacity: 1; } } @keyframes cnBlurOut { from { opacity: 1; } to { opacity: 0; } }
         #countdown-overlay.cdn .cd-tag { top: calc(11% + 18px); font-size: .62rem; letter-spacing: .5em; padding-left: .5em; font-weight: 700; color: #e2e8f0; z-index: 2; text-shadow: 0 2px 0 rgba(0,0,0,.8); animation: cnTag .6s ease-out both; }
         #countdown-overlay.cdn .cd-tag::before, #countdown-overlay.cdn .cd-tag::after { width: 34px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.8)); }
         #countdown-overlay.cdn .cd-tag::after { background: linear-gradient(270deg, transparent, rgba(255,255,255,.8)); }
@@ -6793,7 +6801,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 <div class="hp-bar-container"><div id="gengargmax-hp" class="hp-bar"></div></div>
                 <div class="xp-bar-container"><div id="gengargmax-xp" class="xp-bar"></div></div>
             </div>
-            <div id="gengargmax" class="pokemon"><img src="https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10202.webp" alt="Gengar Gigamax"></div>
+            <div id="gengargmax" class="pokemon"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10202.gif" alt="Gengar Gigamax"></div>
         </div>
 
         <!-- Mareep -->
@@ -8556,7 +8564,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         const SPR_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
         const SPR_GENV = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/';
         const SPR_DEX = {"whismur":293,"loudred":294,"exploud":295,"delibird":225,"litwick":607,"lampent":608,"chandelure":609,"absol":359,"kricketot":401,"kricketune":402,"phanpy":231,"donphan":232,"electrike":309,"manectric":310,"scyther":123,"scizor":212,"kleavor":900,"farfetchdgalar":10166,"sirfetchd":865,"tyrunt":696,"tyrantrum":697,"zorua":570,"zoroark":571,"zubat":41,"golbat":42,"crobat":169,"onix":95,"steelix":208,"houndour":228,"houndoom":229,"shinx":403,"luxio":404,"luxray":405,"silicobra":843,"sandaconda":844,"magikarp":129,"gyarados":130,"chikorita":152,"bayleef":153,"meganium":154,"cyndaquil":155,"quilava":156,"typhlosion":157,"totodile":158,"croconaw":159,"feraligatr":160,"machop":66,"machoke":67,"machamp":68,"carvanha":318,"sharpedo":319,"ditto":132,"honedge":679,"doublade":680,"aegislash":681,"skarmory":227,"grubbin":736,"charjabug":737,"vikavolt":738,"sneasel":215,"weavile":461,"amaura":698,"aurorus":699,"archen":566,"archeops":567,"miltank":241,"gible":443,"gabite":444,"garchomp":445,"teddiursa":216,"ursaring":217,"ursaluna":901,"horsea":116,"seadra":117,"kingdra":230,"sandile":551,"krokorok":552,"krookodile":553,"tynamo":602,"eelektrik":603,"eelektross":604,"gligar":207,"gliscor":472,"vullaby":629,"mandibuzz":630,"basculin":550,"basculegion":902,"leafeon":470,"glaceon":471,"sylveon":700,"murkrow":198,"honchkrow":430,"trapinch":328,"vibrava":329,"flygon":330,"espeon":196,"umbreon":197,"eevee":133,"vaporeon":134,"jolteon":135,"flareon":136,"drifloon":425,"drifblim":426,"scraggy":559,"scrafty":560,"snubbull":209,"granbull":210,"bulbasaur":1,"ivysaur":2,"venusaur":3,"charmander":4,"charmeleon":5,"charizard":6,"squirtle":7,"wartortle":8,"blastoise":9,"caterpie":10,"metapod":11,"butterfree":12,"weedle":13,"kakuna":14,"beedrill":15,"spearow":21,"fearow":22,"pikachu":25,"raichu":26,"vulpix":37,"ninetales":38,"mankey":56,"primeape":57,"abra":63,"kadabra":64,"alakazam":65,"geodude":74,"graveler":75,"golem":76,"slowpoke":79,"slowbro":80,"gastly":92,"haunter":93,"gengar":94,"cubone":104,"marowak":105,"mareep":179,"flaaffy":180,"ampharos":181,"slowking":199,"girafarig":203,"riolu":447,"lucario":448,"drilbur":529,"excadrill":530,"pawniard":624,"bisharp":625,"mimikyu":778,"rookidee":821,"corvisquire":822,"corviknight":823,"maschiff":942,"mabosstiff":943,"tinkatink":957,"tinkatuff":958,"tinkaton":959,"larvitar":246,"pupitar":247,"tyranitar":248,"munchlax":446,"snorlax":143,"buneary":427,"lopunny":428,"joltik":595,"galvantula":596,"farigiraf":981,"heracross":214,"hawlucha":701,"relicanth":369,"lapras":131,"cranidos":408,"rampardos":409,"fomantis":753,"lurantis":754,"kingambit":983,"toxel":848,"meowth":52,"persian":53,"rockruff":744,"lycanroc-midnight":10126,"lycanroc-dusk":10152,"wimpod":767,"starly":396,"staravia":397,"staraptor":398,"larvesta":636,"volcarona":637,"inkay":686,"malamar":687,"golisopod":768,"mareanie":747,"koffing":109,"weezing":110,"tympole":535,"smeargle":235,"kecleon":352,"corphish":341,"wynaut":360,"wobbuffet":202,"crawdaunt":342,"palpitoad":536,"seismitoad":537,"purrloin":509,"liepard":510,"greavard":971,"houndstone":972,"ferroseed":597,"ferrothorn":598,"wingull":278,"pelipper":279,"magnemite":81,"magneton":82,"magnezone":462,"shroomish":285,"breloom":286,"morelull":755,"shiinotic":756,"darumaka":554,"darmanitan":555,"turtonator":776,"milcery":868,"alcremie":869,"toxapex":748,"lycanroc":745,"toxtricity":849,"butterfree-gmax":10198,"charizard-gmax":10196,"toxtricity-lowkey":10184,"mimikyu-busted":10143}; // identificador de especie/forma -> nº de Pokédex (o id de forma de PokeAPI)
-        const SPR_FORM_BASE = {"10166": 83, "10248": 902, "10184": 849, "10126": 745, "10152": 745, "10143": 778, "10198": 12, "10200": 52}; // si un id de forma no carga, se usa el sprite de la especie base
+        const SPR_FORM_BASE = {"10166": 83, "10248": 902, "10184": 849, "10126": 745, "10152": 745, "10143": 778, "10198": 12, "10200": 52, "10196": 6, "10202": 94}; // si un id de forma no carga, se usa el sprite de la especie base
         function pokeSpriteUrl(slug, kind) { // kind: 'front' | 'back' | 'shiny' | 'backshiny'
             const id = SPR_DEX[slug]; if (!id) return SPR_GENV + slug + '.gif';
             const pre = { front: '', back: 'back/', shiny: 'shiny/', backshiny: 'back/shiny/' }[kind || 'front'];
@@ -17295,9 +17303,9 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // Un Butterfree de la Caja con el signo Gigamax, llevado a una Raid, se vuelve Gigamax UNA vez por vida al tocar el
         // botón GIGAMAX del HUD: durante 5 s es enorme, con más PS y poder y usa Gigaestupor; luego vuelve a la normalidad.
         const GMAX_DURATION_MS = 5000;
-        const GMAX_SPRITE_CHARIZARD = 'https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10196.webp';
+        const GMAX_SPRITE_CHARIZARD = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10196.gif';
         const GMAX_SPRITE_MEOWTH = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10200.gif';
-        const GMAX_SPRITE_GENGAR = 'https://assets.pokestats.gg/pokeapi/v1/anim/pokemon/versions/generation-viii/sword-shield/10202.webp';
+        const GMAX_SPRITE_GENGAR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/10202.gif';
         function gmaxSpriteFor(name) { const n = String(name || ''); return /charizard/i.test(n) ? GMAX_SPRITE_CHARIZARD : /gengar/i.test(n) ? GMAX_SPRITE_GENGAR : /meowth/i.test(n) ? GMAX_SPRITE_MEOWTH : GMAX_SPRITE_URL; }
         function gmaxFormOf(c) { // forma Gigamax según el pokémon (Butterfree o Charizard)
             const n = String((c && (c.dexName || c.name)) || '');
@@ -18582,6 +18590,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             if (c.hp > 0) { checkRetreat(c); return; } // Retirada: vivo pero bajo el umbral -> se va sin perder vida
             // ¿Era el campeón de la arena? (se comprueba antes de retirarlo del combate)
             const wasChampion = (lastChampionRef === c);
+            try { if (killer && killer !== c && !killer.fainted && !killer.duel && !killer.isAlpha && !killer.isBoss && !pvpDuel && !isRaid() && Math.random() < 0.5) { const kc = killer; setTimeout(() => { try { if (!kc.fainted && !kc.duel && !kc.pose && !gameOver) { ncPose(kc, Math.random() < 0.5 ? 'hop3' : 'spin', kc.facing || 1, 1, kc.pose ? 900 : 1100); const f = fxSpriteCenter(kc); spawnSparks(f.x, f.y - 10, '#fde047', 8); } } catch (e) {} }, 450 / gameSpeed); } } catch (e) {} // victoria: saltitos o pirueta
             c.fainted = true;
             c.hp = 0;
             try { ArenaLog.faint(c); } catch (e) {} // registro: veces debilitado
@@ -19916,6 +19925,17 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 case 'cast': { // ataque a distancia: se echa atrás, suelta hacia delante y se asienta
                     const p1 = moSm(k / 0.2) * (1 - moSm((k - 0.2) / 0.1)), p2 = moSm((k - 0.22) / 0.1) * (1 - moSm((k - 0.34) / 0.4)), wb = k > 0.6 ? moWob((k - 0.6) / 0.4, 1.5, 3.5) : 0;
                     o.ox = -d * 5 * p1 + d * 9 * p2; o.r = -d * 7 * p1 + d * 8 * p2; o.sy = 1 - 0.14 * p1 - 0.05 * p2 + 0.04 * wb; o.sx = 1 + 0.08 * p1 + 0.1 * p2; break; }
+                // ----- Comportamientos ambientales (no hacen daño; ver behaviorTick) -----
+                case 'stretch': { const up = moSm(k / 0.3) * (1 - moSm((k - 0.55) / 0.3)), wb = k > 0.8 ? moWob((k - 0.8) / 0.2, 2, 3) : 0; o.sy = 1 + 0.2 * up + 0.03 * wb; o.sx = 1 - 0.1 * up; o.r = -d * 9 * up; o.oy = -3 * up; break; } // se estira como al despertar
+                case 'shake': { const e = 1 - moSm(k), w = Math.sin(k * 6.2832 * 7); o.r = d * 15 * e * w; o.sx = 1 + 0.08 * e * Math.abs(w); o.sy = 1 - 0.06 * e * Math.abs(w); o.ox = d * 3 * e * w; break; } // se sacude como un perro mojado
+                case 'hop3': { const u = k * 3, i = Math.floor(Math.min(2.999, u)), v = u - i, j = moJump(v, 16 + i * 7, 0.16, 0.56); o.oy = j.oy; o.sx = j.sx; o.sy = j.sy; o.r = d * 6 * Math.sin(Math.PI * v) * (i % 2 ? -1 : 1); break; } // tres saltitos de alegría, cada uno más alto
+                case 'spin': { const jj = moJump(k, 30, 0.14, 0.62), u = moSm((k - 0.14) / 0.62); o.oy = jj.oy; o.sy = jj.sy; o.sx = Math.cos(6.2832 * u) * (0.95 + 0.05 * jj.sx); break; } // pirueta: salta y da una vuelta sobre sí mismo
+                case 'wiggle': { const e = Math.sin(Math.PI * k), w = Math.sin(k * 6.2832 * 4); o.ox = d * 7 * e * w; o.r = d * 9 * e * w; o.sy = 1 - 0.05 * e * Math.abs(w); break; } // contoneo
+                case 'puff': { const b = k < 0.92 ? Math.pow(Math.sin(Math.PI * k * 2), 2) : 0; o.sx = 1 + 0.16 * b; o.sy = 1 + 0.1 * b; break; } // se hincha dos veces
+                case 'sniff': { const e = Math.sin(Math.PI * k), w = Math.sin(k * 6.2832 * 5); o.r = d * 8 * e; o.ox = d * 6 * e; o.oy = -2 * Math.abs(w) * e; o.sy = 1 - 0.05 * e * Math.abs(w); break; } // olfatea el suelo
+                case 'taunt': { const e = moSm(k / 0.15) * (1 - moSm((k - 0.8) / 0.2)), w = Math.abs(Math.sin(k * 6.2832 * 3)); o.oy = -9 * w * e; o.sy = 1 - 0.1 * (1 - w) * e; o.sx = 1 + 0.08 * (1 - w) * e; o.r = d * 8 * e; o.ox = d * 5 * e; break; } // provoca con saltitos
+                case 'flex': { const e = Math.sin(Math.PI * k), w = 0.5 + 0.5 * Math.sin(k * 6.2832 * 3); o.sx = 1 + 0.12 * e * w; o.sy = 1 - 0.08 * e * w; break; } // presume de músculo
+                case 'pounce': { if (k < 0.55) { const e = moSm(k / 0.2); o.sy = 1 - 0.22 * e; o.sx = 1 + 0.14 * e; o.r = d * 5 * e * Math.sin(k * 6.2832 * 8); } else { const jj = moJump((k - 0.55) / 0.45, 26, 0.0001, 0.7); o.oy = jj.oy; o.sx = jj.sx; o.sy = jj.sy; o.ox = d * 14 * moSm((k - 0.55) / 0.4); } break; } // se agazapa moviendo el trasero y salta
             }
             return o;
         }
@@ -24385,12 +24405,12 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // ritmo normal (con un pequeño cooldown antes de poder duelear otra vez).
         // Todo corre con tiempo de juego (se escala con gameSpeed y se congela en pausa).
         // ============================================================
-        const DUEL_CHANCE = 0.3;           // probabilidad de que un golpe que conecta abra un duelo
+        const DUEL_CHANCE = 0.1;           // probabilidad de que un golpe que conecta abra un duelo
         const DUEL_GAP = 140;              // separación entre los dos duelistas (px de campo): da espacio para tomar carrerilla y embestir
         const DUEL_GATHER_MS = 900;        // fase de encuentro: se colocan frente a frente
         const DUEL_MIN_STRIKES = 4;        // golpes totales del duelo (sin contar el que lo abrió)
         const DUEL_MAX_STRIKES = 8;
-        const DUEL_COOLDOWN_MS = 8000;     // tiempo real hasta poder volver a entrar en un duelo
+        const DUEL_COOLDOWN_MS = 16000;     // tiempo real hasta poder volver a entrar en un duelo
         const DUEL_MAX_MS = 24000;         // tope de seguridad
         let duels = [];
         let duelSeq = 0;
@@ -24445,11 +24465,12 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // en reposo los duelistas se recolocan a base de dashes cortos, nunca deslizándose/arrastrándose.
         // ====================================================================================
         const DUEL_APPR = { meet: 210, ram: 190, spinram: 230, curve: 240 };
-        const DUEL_HITS = { clash: 240, bump: 190, upper: 250, slam: 330, whiff: 260 };
+        const DUEL_HITS = { clash: 240, bump: 190, upper: 250, slam: 330, whiff: 260, combo: 560, multi: 620, spin: 560, dive: 420, thru: 320, juggle: 680 };
+        const DUEL_NEW = { combo: 'COMBO', multi: '¡ATAQUE MÚLTIPLE!', spin: '¡TORBELLINO!', dive: '¡PICADO!', thru: '¡ATRAVESAR!', juggle: '¡MALABARES!' };
         const DUEL_RECS = { dashout: 210, spinout: 260, hopout: 250 };
         const DUEL_REACT = ['stagger', 'spin', 'bounce', 'skid', 'flip', 'tumble', 'shake'];
         const DUEL_HVP = { // perfil base de la reacción del rival: d = empuje, lift = altura, lf = fracción en el aire, spin = giro, bounce = rebotes, jit = temblor, sq = aplastamiento
-            bump: { d: 48 }, clash: { d: 44 }, upper: { d: 26, lift: 100, lf: 0.55, spin: 30 }, slam: { d: 14, lift: 78, lf: 0.45, bounce: 2, sq: 1 }, whiff: { d: 0 } };
+            bump: { d: 48 }, clash: { d: 44 }, combo: { d: 46, jit: 4, sq: 0.3 }, multi: { d: 24, jit: 6, sq: 0.2 }, spin: { d: 26, jit: 5 }, dive: { d: 18, lift: 40, lf: 0.4, bounce: 2, sq: 1 }, thru: { d: 30, spin: 34, lift: 26, lf: 0.5 }, juggle: { d: 30, lift: 105, lf: 0.7, spin: 22, bounce: 1 }, upper: { d: 26, lift: 100, lf: 0.55, spin: 30 }, slam: { d: 14, lift: 78, lf: 0.45, bounce: 2, sq: 1 }, whiff: { d: 0 } };
         const dEase = { out: t => 1 - Math.pow(1 - t, 3), in: t => t * t, io: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2 };
         const dClamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
         const dLerp = (a, b, t) => a + (b - a) * t;
@@ -24565,10 +24586,10 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             // DUELO = EMBESTIDAS A ALTA VELOCIDAD: cada turno el atacante se agacha, sale disparado contra el rival (recto,
             // girando o en curva), choca y retrocede de otro dash, rotando y moviéndose todo el rato. Tempo rápido.
             const fin = d.final, K = {}, tempo = 0.85 + Math.random() * 0.2;
-            if (fin) { K.appr = dPick(['spinram', 'curve']); K.hit = dPick(['bump', 'slam', 'upper']); K.f = 260; }
+            if (fin) { K.appr = dPick(['spinram', 'curve']); K.hit = dPick(['bump', 'slam', 'upper', 'dive', 'juggle', 'multi', 'spin']); K.f = 260; }
             else {
                 K.appr = dPick(['ram', 'ram', 'spinram', 'curve', 'meet'].filter(x => x !== d.lastAppr || x === 'ram'));
-                K.hit = K.appr === 'meet' ? 'clash' : dPick(['bump', 'bump', 'bump', 'upper', 'slam'].filter(x => x !== d.lastHit || x === 'bump'));
+                K.hit = K.appr === 'meet' ? 'clash' : dPick(['bump', 'bump', 'upper', 'slam', 'combo', 'combo', 'multi', 'spin', 'dive', 'thru', 'juggle'].filter(x => x !== d.lastHit || x === 'bump'));
                 K.f = 0;
             }
             // Defensa del rival: ESQUIVE (más probable si es más rápido; el que esquiva contraataca con más fuerza) o GUARDIA (recibe la mitad)
@@ -24587,6 +24608,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             else if (K.block) { vp.d = 12; vp.sq = 0.5; K.react = 'block'; }
             else if (K.hit === 'upper') { const sg1 = Math.random() < 0.5 ? 1 : -1; vp.spin *= sg1; K.react = 'upper'; }
             else if (K.hit === 'slam') K.react = 'slam';
+            else if (DUEL_NEW[K.hit]) K.react = K.hit; // coreografías nuevas: su reacción viene de DUEL_HVP
             else if (K.hit !== 'clash') {
                 K.react = dPick(DUEL_REACT); const sgn = Math.random() < 0.5 ? 1 : -1;
                 if (K.react === 'spin') { vp.spin = 26 * sgn; vp.lift = Math.max(vp.lift || 0, 14); vp.lf = vp.lf || 0.4; vp.d *= 1.2; } // vueltas completas: el rival termina de pie, sin "salto" al acabar el giro
@@ -24600,7 +24622,13 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             vp.d = Math.min(vp.d, 170); // empuje máximo razonable
             K.vp = vp;
             K.f *= tempo; K.ap = DUEL_APPR[K.appr] * (fin ? 1.1 : 1) * tempo; K.hi = DUEL_HITS[K.hit] * (fin ? 1.35 : 1) * tempo; K.rc = Math.max(DUEL_RECS[K.rec] * tempo, (120 + vp.d * 1.0) * (fin ? 1.15 : 1)); // volver desde lejos lleva su tiempo: se ve el recorrido
-            K.total = K.f + K.ap + K.hi + K.rc; K.hitAt = (K.f + K.ap) / K.total;
+            if (K.hit === 'thru') K.rc = Math.max(K.rc, 300);
+            // Golpes dentro de la fase de golpe (fracción q de K.hi) y su fuerza: el 1º es el principal; el resto son "extra" (combo, múltiple...)
+            { const H = { combo: () => { K.n = 3 + (Math.random() < 0.4 ? 1 : 0); const q = [], p = []; for (let i = 0; i < K.n; i++) { q.push((i + 0.5) / K.n); p.push(i === K.n - 1 ? 0.55 : 0.35); } return [q, p]; },
+                multi: () => [[0.167, 0.5, 0.833], [0.4, 0.4, 0.5]], spin: () => [[0.25, 0.5, 0.75], [0.4, 0.4, 0.5]], juggle: () => [[0.14, 0.62], [0.6, 0.8]], dive: () => [[0.61], [1.2]], thru: () => [[0.13], [1.1]] };
+              const hh = H[K.hit] ? H[K.hit]() : [[0], [1]]; K.hq = hh[0]; K.hpw = hh[1]; K.dir2 = Math.random() < 0.5 ? 1 : -1; }
+            K.total = K.f + K.ap + K.hi + K.rc; K.hitAt = (K.f + K.ap + K.hq[0] * K.hi) / K.total;
+            K.extra = K.hq.slice(1).map((q, i) => ({ at: (K.f + K.ap + q * K.hi) / K.total, pw: K.hpw[i + 1], big: i === K.hq.length - 2 }));
             d.lastAppr = K.appr; d.lastHit = K.hit;
             return K;
         }
@@ -24655,6 +24683,23 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                     else { const k = (q - 0.38) / 0.62, f = dEase.in(Math.min(1, k * 2.2)); o.a = dLerp(C + 6, C - 20, dEx(k)); o.l = -66 * (1 - f); o.sx = 1 + 0.4 * (k > 0.45 ? Math.sin(Math.PI * Math.min(1, (k - 0.45) / 0.4)) : 0); o.sy = 1 - 0.3 * (k > 0.45 ? Math.sin(Math.PI * Math.min(1, (k - 0.45) / 0.4)) : 0); o.r = sg * 14 * (1 - f);
                         if (k >= 0.45) X.once('land', () => { try { const cc = fxSpriteCenter(X.s); duelDust(cc.x, cc.y + (cc.ry || 20), 7); duelRing(cc.x, cc.y + (cc.ry || 20), '#ffffff', 120, 0, true); spawnSparks(cc.x, cc.y + (cc.ry || 20), '#ffffff', 10); duelSfx('hit', 3, true); } catch (e) {} }); }
                     break; // martillazo: salta y cae encima
+                case 'combo': { const N = X.K.n || 3, i = Math.min(N - 1, Math.floor(q * N)), u = q * N - i, pu = Math.sin(Math.PI * dClamp(u)), sd = (i % 2 ? 1 : -1); // N sacudidas rápidas, cada una más fuerte
+                    o.a = C + (10 + 4 * i) * pu + 3 * i; o.s = sd * 9 * pu; o.sx = 1 + 0.26 * pu; o.sy = 1 - 0.17 * pu; o.r = sd * sg * 15 * pu; o.dx = Math.sin(q * 160) * 1.5; break; }
+                case 'multi': { const i = Math.min(2, Math.floor(q * 3)), u = q * 3 - i, pos = [[10, -64], [10, 64], [0, 0]][i], k2 = dK => dClamp(dK); // se desvanece y reaparece golpeando desde 3 lados
+                    o.a = C + pos[0] + 22 * Math.sin(Math.PI * dClamp((u - 0.25) / 0.5)); o.s = pos[1] * X.K.dir2 + (pos[1] ? -X.K.dir2 * pos[1] * 0.22 * dClamp((u - 0.25) / 0.5) : 0); o.op = 0.22 + 0.78 * dClamp(u / 0.3); o.sx = 1.22; o.sy = 0.88; o.r = (pos[1] ? -Math.sign(pos[1]) * X.K.dir2 : 1) * sg * 12 * Math.sin(Math.PI * u); o.tr = u > 0.3 ? 1 : 0;
+                    X.once('mk' + i, () => { try { spawnDashTrail(X.s, true); const cc = fxSpriteCenter(X.s); spawnSparks(cc.x, cc.y, '#c4b5fd', 6); } catch (e) {} }); break; }
+                case 'spin': { const R = 58, th = 6.2832 * q * X.K.dir2, e = dClamp(q / 0.12), D = C + 34; // orbita al rival y lo corta en cada cuarto de vuelta
+                    o.a = dLerp(C, D - R * Math.cos(th), e); o.s = R * Math.sin(th) * e; o.sx = 1.28; o.sy = 0.84; o.r = X.K.dir2 * sg * (16 + 10 * Math.sin(th * 2)); o.tr = 1; o.l = -8 * Math.sin(Math.PI * q); break; }
+                case 'dive': if (q < 0.42) { const k = q / 0.42; o.a = C - 34 + 8 * k; o.l = -112 * dEase.out(k); o.r = -sg * 18 * k; o.sx = 0.9; o.sy = 1.22; o.tr = k > 0.6 ? 0 : 1; }
+                    else { const k = (q - 0.42) / 0.58, f = dEase.in(Math.min(1, k * 3)); o.a = dLerp(C - 26, C + 8, f) - 38 * dEx(Math.max(0, (k - 0.34) / 0.66)); o.l = -112 * (1 - f); o.r = sg * 46 * (1 - f); o.sx = f < 1 ? 0.88 : 1 + 0.4 * Math.sin(Math.PI * Math.min(1, (k - 0.33) / 0.4)); o.sy = f < 1 ? 1.28 : 1 - 0.3 * Math.sin(Math.PI * Math.min(1, (k - 0.33) / 0.4)); o.tr = f < 1 ? 1 : 0;
+                        if (k >= 0.34) X.once('land', () => { try { const cc = fxSpriteCenter(X.v); duelDust(cc.x, cc.y + (cc.ry || 20), 8); duelRing(cc.x, cc.y + (cc.ry || 20), '#ffffff', 150, 0, true); spawnSparks(cc.x, cc.y + (cc.ry || 20), '#fde68a', 14); triggerCameraShake(5, 260 / gameSpeed); } catch (e) {} }); }
+                    break; // salta muy alto y cae en picado
+                case 'thru': o.a = dLerp(C - 8, C + 150, dEx(q)); o.s = X.K.dir2 * 10 * Math.sin(Math.PI * q); o.sx = 1.55; o.sy = 0.72; o.r = sg * 14; o.tr = 1; break; // lo atraviesa de una carrera
+                case 'juggle': if (q < 0.3) { const k = q / 0.3; o.a = C + 4; o.l = -62 * dEase.out(k); o.r = -sg * 30 * k; o.sx = 0.9; o.sy = 1.2; o.tr = 1; } // gancho que lo lanza
+                    else if (q < 0.58) { o.a = C + 4; o.l = -62 - 8 * Math.sin(Math.PI * (q - 0.3) / 0.28); o.r = -sg * 30; o.sx = 0.94; o.sy = 1.14; o.dx = Math.sin(q * 140) * 1.6; } // suspendido junto a él
+                    else { const k = (q - 0.58) / 0.42, f = dEase.in(Math.min(1, k * 2.4)); o.a = dLerp(C + 4, C - 20, dEx(k)); o.l = -62 * (1 - f); o.r = -sg * 30 * (1 - f) + sg * 24 * (1 - f); o.sx = f < 1 ? 0.92 : 1 + 0.36 * Math.sin(Math.PI * Math.min(1, (k - 0.4) / 0.5)); o.sy = f < 1 ? 1.2 : 1 - 0.28 * Math.sin(Math.PI * Math.min(1, (k - 0.4) / 0.5));
+                        if (k >= 0.42) X.once('land', () => { try { const cc = fxSpriteCenter(X.v); duelDust(cc.x, cc.y + (cc.ry || 20), 7); duelRing(cc.x, cc.y + (cc.ry || 20), '#fde047', 130, 0, true); spawnSparks(cc.x, cc.y + (cc.ry || 20), '#fde047', 12); } catch (e) {} }); }
+                    break; // dos golpes encadenados: gancho al aire y martillazo
                 case 'whiff': o.a = dLerp(C, C + 78, dEase.out(q)); o.sx = 1.4 - 0.4 * q; o.sy = 0.8 + 0.2 * q; o.r = sg * 26 * Math.sin(Math.PI * q); o.tr = q < 0.6 ? 1 : 0; o.dx = Math.sin(q * 90) * 2 * q; break; // falla: lo atraviesa y se pasa de largo
                 case 'clash': o.a = dLerp(C, -26, dEase.out(q)); o.sx = 1.1; o.r = -sg * 10 * (1 - q); o.dx = Math.sin(q * 130) * 3 * (1 - q); break;
             }
@@ -24677,7 +24722,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             const s = d.turn, v = (s === d.a) ? d.b : d.a;
             const move = movesData[s.attackKey];
             if (!move) { endDuel(d, false); return; }
-            d.phase = 'strike'; d.timer = 0; d.hitDone = false; d.move = move; d.ev = {}; d.gAcc = 0; d.cAcc = 0; d.tAcc = 0;
+            d.phase = 'strike'; d.timer = 0; d.hitDone = false; d.ex = 0; d.move = move; d.ev = {}; d.gAcc = 0; d.cAcc = 0; d.tAcc = 0;
             d.final = (d.n + 1 >= d.max);
             d.k = duelPlan(d); d.sx0 = d.cx; d.sy0 = d.cy;
             d.strikeMs = d.k.total; d.hitAt = d.k.hitAt;
@@ -24689,6 +24734,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             duelSetAura(s, duelColor(s), true, true);
             if (d.k.hit === 'clash') duelSetAura(v, duelColor(v), true, true);
             d.whoosh = 0; duelSfx('charge', d.n, d.final);
+            if (DUEL_NEW[d.k.hit]) duelTag(s, d.k.hit === 'combo' ? 'COMBO ×' + d.k.n : DUEL_NEW[d.k.hit]);
             playAttackCry(s);
             let mvx = move;
             if (d.counterBy === s) { mvx = Object.assign({}, mvx, { power: (mvx.power || 40) * 1.3 }); d.counterBy = null; d.cnt = true; } else d.cnt = false;
@@ -24714,8 +24760,9 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             }
             let mvH = d.move;
             if (d.n > 0) mvH = Object.assign({}, mvH, { power: (mvH.power || 40) * (1 + 0.06 * Math.min(d.n, 7)) }); // IMPULSO: cada golpe del duelo pega un poco más fuerte
+            if (d.k.hpw && d.k.hpw[0] !== 1) mvH = Object.assign({}, mvH, { power: (mvH.power || 40) * d.k.hpw[0] }); // combos / múltiples: el golpe principal es solo parte del total
             if (d.k.block) { mvH = Object.assign({}, mvH, { power: (mvH.power || 40) * 0.5 }); logMessage(`🛡️ ¡${v.name} se cubre y amortigua el golpe!`, 'attack'); }
-            forcePhysHit = true; physHitScale = (big ? 1.5 : 1.15) + 0.04 * Math.min(d.n, 6) + (st === 'slam' ? 0.2 : 0);
+            forcePhysHit = true; physHitScale = (big ? 1.5 : 1.15) + 0.04 * Math.min(d.n, 6) + ((st === 'slam' || st === 'dive') ? 0.2 : 0);
             let landed;
             try { landed = resolveSingleHit(mvH, s, v, x, y, sndHit, col, '#ffffff'); }
             finally { forcePhysHit = false; physHitScale = 1; }
@@ -24736,7 +24783,29 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                     const gc = document.getElementById('game-container'); if (gc) { const fl = document.createElement('div'); fl.className = 'duel-screenflash'; gc.appendChild(fl); setTimeout(() => fl.remove(), 400); }
                 } else if (d.n >= 2) duelRing(x, y + 10, '#fb923c', 90, 0, true);
             } catch (e) {}
-            d.hold = big ? 170 : (st === 'clash' ? 110 : (st === 'slam' ? 120 : 70));
+            d.hold = big ? 170 : (st === 'clash' ? 110 : (st === 'slam' || st === 'dive' ? 120 : (d.k.extra && d.k.extra.length ? 36 : 70)));
+        }
+
+        // Golpes adicionales de un turno con varios impactos (combo, ataque múltiple, torbellino, malabares): cada uno hace su parte del daño.
+        function duelExtraHit(d, s, v, ex, idx) {
+            if (!duelAlive(v) || !duelAlive(s)) return;
+            const c = fxSpriteCenter(v), x = c.x + (Math.random() - 0.5) * 16, y = c.y + (v.dyo || 0) + (Math.random() - 0.5) * 10, col = duelColor(s);
+            const mv = Object.assign({}, d.move, { power: (d.move.power || 40) * ex.pw * (1 + 0.06 * Math.min(d.n, 7)) });
+            forcePhysHit = true; physHitScale = 1.05 + (ex.big ? 0.25 : 0);
+            try { resolveSingleHit(mv, s, v, x, y, sndHit, col, '#ffffff'); } finally { forcePhysHit = false; physHitScale = 1; }
+            try {
+                if (ex.big && !s.fainted && !v.fainted) dashImpactFx(s, v);
+                spawnSparks(x, y, col, ex.big ? 10 : 6); spawnSparks(x, y, '#ffffff', 4); duelHitFlash(v);
+                duelSfx('hit', d.n + idx, !!ex.big); duelDust(x, y + (c.ry || 20) * 0.8, ex.big ? 5 : 2);
+                if (ex.big) { duelRing(x, y + 10, '#fde047', 120, 0, true); triggerCameraShake(4, 200 / gameSpeed); }
+                else duelRing(x, y + 10, '#ffffff', 70, 0, true);
+            } catch (e) {}
+            d.hold = ex.big ? 90 : 26;
+        }
+        // Rótulo flotante con el nombre de la coreografía (COMBO, ¡ATAQUE MÚLTIPLE!...).
+        function duelTag(s, text) {
+            try { const c = fxSpriteCenter(s), el = document.createElement('div'); el.className = 'duel-tag'; el.textContent = text;
+                el.style.left = Math.round(c.x) + 'px'; el.style.top = Math.round(c.y - (c.ry || 30) - 18) + 'px'; duelAdd(el, 1100); } catch (e) {}
         }
 
         // Puesta en escena de un turno: compone finta/carga + aproximación + golpe + recuperación y mueve a ambos.
@@ -24880,6 +24949,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 if ((d.timer >= d.restMs && cmIdle && ((!duelDashing(d, a) && !duelDashing(d, b)) || d.timer > d.restMs + 700)) || d.timer > d.restMs + 2200) startDuelStrike(d);
             } else if (d.phase === 'strike') {
                 if (!d.hitDone && p >= d.hitAt) duelStrikeHit(d, s, v);
+                if (d.hitDone && d.k.extra && !d.k.dodge) while (d.ex < d.k.extra.length && p >= d.k.extra[d.ex].at) { duelExtraHit(d, s, v, d.k.extra[d.ex], d.ex + 1); d.ex++; }
                 if (d.timer >= d.strikeMs) {
                     const shx = d.cx - d.sx0, shy = d.cy - d.sy0; // el centro viajó durante el turno: se confirma la nueva posición
                     [a, b].forEach(c => { const f = d.ft[c.id]; if (f) { f.x += shx; f.y += shy; f.vx = 0; f.vy = 0; } });
@@ -26300,6 +26370,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 }
 
                 attemptAttack(c, timestamp);
+                try { behaviorTick(c, timestamp, scaledDt); } catch (e) {}
                 updateEvoTimer(c, scaledDt);
                 updateCooldownBar(c, timestamp);
             });
@@ -26318,6 +26389,37 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             countdownTimers.forEach(id => { clearTimeout(id); clearInterval(id); }); countdownTimers = [];
             const old = document.getElementById('countdown-overlay'); if (old) old.remove();
             countingDown = false;
+        }
+
+        // ===== COMPORTAMIENTOS AMBIENTALES =====
+        // Cada pokémon libre (sin pelear, sin moverse) hace de vez en cuando algo propio: estirarse, sacudirse, saltitos, una pirueta,
+        // olfatear, provocar... Son solo animación (poses del motor de movimiento) con algún efecto suave. Se pausan con el juego.
+        const BEH_LIST = [
+            { t: 'stretch', ms: 1500, w: 3 }, { t: 'shake', ms: 950, w: 3, fx: 'dust' }, { t: 'hop3', ms: 1250, w: 3, fx: 'hops' }, { t: 'spin', ms: 950, w: 2, fx: 'ring' },
+            { t: 'wiggle', ms: 1150, w: 2 }, { t: 'puff', ms: 1400, w: 2 }, { t: 'sniff', ms: 1400, w: 2 }, { t: 'taunt', ms: 1400, w: 2, fx: 'spark' },
+            { t: 'flex', ms: 1250, w: 1, fx: 'spark' }, { t: 'pounce', ms: 1150, w: 2, fx: 'land' }
+        ];
+        function behaviorFree(c) {
+            return !c.duel && !c.pose && !c.fainted && !c.isSpawning && !c.isEvolving && !c.isChasing && !c.isCharging && !c.isMoving && !c.sleep && !c.freeze && !c.trap &&
+                !c.isAlpha && !c.isBoss && !c.digPhase && !c.flyPhase && !c.isUnderground && !c.isAirborne && !c.isPhantom && !c.gmax && c.hp > 0 &&
+                !(Math.hypot(c.kx || 0, c.ky || 0) > 0.4) && performance.now() > (c.atkBusyUntil || 0) + 500 && performance.now() - (c.lastDamagedAt || 0) > 1200;
+        }
+        function behaviorTick(c, ts, dt) {
+            if (gameOver || !gameRunning || pvpDuel || isRaid() || !c.wrapper) return;
+            if (c.behNext == null) { c.behNext = 4000 + Math.random() * 9000; c.behMs = 0; }
+            c.behMs += dt;
+            if (c.behMs < c.behNext || !behaviorFree(c)) return;
+            c.behMs = 0; c.behNext = 9000 + Math.random() * 14000;
+            let tot = 0; BEH_LIST.forEach(b => tot += b.w); let r = Math.random() * tot, B = BEH_LIST[0];
+            for (const b of BEH_LIST) { if ((r -= b.w) <= 0) { B = b; break; } }
+            const dir = c.facing || 1; ncPose(c, B.t, dir, 1, B.ms);
+            const at = (ms, fn) => { const t = setTimeout(() => { try { if (!c.fainted && !gameOver) fn(); } catch (e) {} }, ms / gameSpeed); activeTimers.push(t); };
+            const ft = () => feetOf(c), ctr = () => fxSpriteCenter(c);
+            if (B.fx === 'dust') for (let i = 0; i < 4; i++) at(120 + i * 170, () => { const f = ft(); dashDust(f.x, f.y, 1, i % 2 ? 1 : -1); spawnSparks(ctr().x, ctr().y, '#e5e7eb', 2); });
+            else if (B.fx === 'hops') [0.2, 0.52, 0.84].forEach((q, i) => at(B.ms * q, () => { const f = ft(); dashDust(f.x, f.y, 2, i % 2 ? 1 : -1); spawnSparks(f.x, f.y - 6, '#fde047', 3); }));
+            else if (B.fx === 'ring') at(B.ms * 0.76, () => { const f = ft(); dashDust(f.x, f.y, 3, dir); spawnSparks(ctr().x, ctr().y, '#bae6fd', 8); });
+            else if (B.fx === 'spark') for (let i = 0; i < 3; i++) at(200 + i * 330, () => spawnSparks(ctr().x, ctr().y - 10, '#fde68a', 4));
+            else if (B.fx === 'land') at(B.ms * 0.8, () => { const f = ft(); dashDust(f.x, f.y, 4, dir); });
         }
 
         // Sprite de la forma base de una especie (el mismo que usa la arena).

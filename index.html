@@ -666,6 +666,9 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         #raid-boss-bar .rb-fill { height: 100%; width: 100%; transform-origin: 0 50%; background: linear-gradient(180deg, #fca5a5, #dc2626); transition: transform 0.2s linear; }
         #raid-boss-bar .rb-name { flex: 0 0 auto; font-size: 0.5rem; color: #fecaca; text-shadow: 0 0 6px #ef4444, 1px 1px 0 #000; letter-spacing: 0.06em; }
         #raid-boss-bar .rb-name b { color: #f87171; }
+        #raid-boss-bar .rb-clock { display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 6px; font-style: normal; font-weight: 800; font-size: .5rem; letter-spacing: .05em; color: #fde68a; background: rgba(0,0,0,.45); border: 1px solid rgba(253,230,138,.45); font-variant-numeric: tabular-nums; }
+        #raid-boss-bar .rb-clock.low { color: #fecaca; border-color: #f87171; animation: rbClockPulse .8s ease-in-out infinite; }
+        @keyframes rbClockPulse { 50% { background: rgba(185,28,28,.65); } }
         #raid-boss-bar .rb-hp { flex: 0 0 auto; font-size: 0.4rem; color: #fff; text-shadow: 1px 1px 0 #000; }
         #raid-boss-bar .rb-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
         #raid-boss-bar .rb-sprite { max-height: 100%; max-width: 40%; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7)); }
@@ -2787,6 +2790,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
         .phys-chip { border-radius: 1px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
 
         /* ===== DUELO 1 vs 1: anillo bajo los duelistas, etiqueta con combo, ondas de choque y cartel ===== */
+        .duel-tag, .stat-drop-popup, .damage-popup.dodged, .damage-popup.no-effect { display: none !important; } /* sin textos de combos, efectos ni estados: solo los números de daño */
         .duel-tag { position: absolute; z-index: 27; pointer-events: none; transform: translate(-50%, 0); font-family: 'PA Chakra', 'Segoe UI', sans-serif; font-weight: 900; font-style: italic; font-size: .78rem; letter-spacing: .06em; white-space: nowrap; color: #fff; -webkit-text-stroke: 3px #1e1b4b; paint-order: stroke fill; text-shadow: 0 0 12px rgba(167, 139, 250, .9); animation: duelTagPop 1.05s cubic-bezier(.2, 1.4, .4, 1) both; }
         @keyframes duelTagPop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.4); } 16% { opacity: 1; transform: translate(-50%, -2px) scale(1.25); } 30% { transform: translate(-50%, -4px) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -26px) scale(1); } }
         .duel-shock { position: absolute; width: 40px; height: 40px; border-radius: 50%; pointer-events: none; z-index: 25; --dc: #fff;
@@ -8237,7 +8241,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
     <!-- Rey de la arena: el pokémon vivo con más KOs en su vida actual (a igualdad, más tiempo en esa vida) -->
     <section id="champion-bar" aria-label="Barra de estado">
       <button id="gmax-btn" type="button" aria-label="Activar Gigamax"><img class="gb-ico" id="gb-ico" alt=""><span class="gb-txt"><b>GIGAMAX</b><i id="gb-sub">¡ACTIVAR!</i></span><u class="gb-n" id="gb-n"></u><span class="gb-bar"><span id="gb-fill"></span></span></button>
-      <div id="raid-boss-bar"><div class="rb-left"><div class="rb-mid"><img id="rb-sprite" class="rb-sprite" alt=""></div><div class="rb-name"><b>ALFA</b><span id="rb-name-t"></span></div><div class="rb-track"><div class="rb-fill" id="rb-fill"></div></div><div class="rb-hp" id="rb-hp"></div></div><div class="rb-top" id="rb-top"></div></div>
+      <div id="raid-boss-bar"><div class="rb-left"><div class="rb-mid"><img id="rb-sprite" class="rb-sprite" alt=""></div><div class="rb-name"><b>ALFA</b><span id="rb-name-t"></span><i id="rb-clock" class="rb-clock">4:00</i></div><div class="rb-track"><div class="rb-fill" id="rb-fill"></div></div><div class="rb-hp" id="rb-hp"></div></div><div class="rb-top" id="rb-top"></div></div>
       <div id="hud-pager"><div class="hud-track" id="hud-track"><div class="hud-page" id="hud-page-main"><div id="champ-panel" class="champ-panel is-empty">
         <div class="hud-left">
           <div class="hud-champ">
@@ -15032,7 +15036,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             else if (effectiveness > 1) popup.classList.add('super-effective');
             else if (effectiveness < 1) popup.classList.add('not-very-effective');
             if (isCritical) popup.classList.add('critical');
-            popup.textContent = (effectiveness === 0 && damage <= 0) ? 'Inmune' : ('-' + damage + (isCritical ? ' ¡Crítico!' : '')); // inmunidad de tipo: texto "Inmune" en vez de "-0"
+            popup.textContent = (effectiveness === 0 && damage <= 0) ? '' : ('-' + damage); // inmunidad de tipo: texto "Inmune" en vez de "-0"
 
             const duration = 1400 / gameSpeed;
             popup.style.animationDuration = duration + 'ms';
@@ -18383,7 +18387,16 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         window.PA_BOSS = { force: id => { const c = id ? combatantsById[id] : combatants.find(x => !x.fainted && !x.isSpawning && !x.isEvolving); if (c && !bossC && !gameOver) { bossStart(c); return c.id; } return null; },
             get boss() { return bossC; }, beam: () => { if (bossC && !bossBeam) { bossBeamNextAt = 0; return true; } return false; }, cfg: { BOSS_MIN_KOS, BOSS_MIN_LIFE_MS } };
 
+        const RAID_MAX_MS = 240000; // tiempo máximo para derrotar al ALFA (4 min de juego)
+        let raidStartMs = 0, raidClockShown = -1;
+        function raidTimerTick() {
+            if (!raidState || gameOver || !gameRunning) return;
+            const left = Math.max(0, RAID_MAX_MS - (matchElapsedMs - raidStartMs)), sec = Math.ceil(left / 1000);
+            if (sec !== raidClockShown) { raidClockShown = sec; const el = document.getElementById('rb-clock'); if (el) { el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); el.classList.toggle('low', sec <= 30); } }
+            if (left <= 0) raidDefeat('time');
+        }
         function raidBegin(cx, cy) {
+            raidStartMs = matchElapsedMs; raidClockShown = -1;
             const meta = raidPendingAlpha || RAID_ALPHAS[Math.floor(Math.random() * RAID_ALPHAS.length)]; // el ALFA ya anunciado en la selección de equipo
             raidPendingAlpha = null;
             raidState = { alphaId: meta.id, name: meta.name };
@@ -18490,14 +18503,14 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         }
 
         // Todas las especies del equipo se quedaron sin vidas: gana el ALFA.
-        function raidDefeat() {
+        function raidDefeat(why) {
             if (gameOver || !raidState) return;
             const alpha = raidAlpha();
             if (!alpha || alpha.fainted) return;
             gameOver = true;
             try { ArenaLog.end(alpha, 'derrota'); } catch (e) {}
             clearWeather(true);
-            logMessage(`💀 ¡${alpha.name} ALFA arrasó con todo el equipo! RAID FALLIDA.`, 'faint');
+            logMessage(why === 'time' ? `⏱ ¡Se acabó el tiempo! ${alpha.name} ALFA resistió. RAID FALLIDA.` : `💀 ¡${alpha.name} ALFA arrasó con todo el equipo! RAID FALLIDA.`, 'faint');
             try { GameAudio.startMusic('victory'); } catch (e) {}
             if (alpha.sound) alpha.sound.play().catch(() => {});
             const src = alpha.currentFrontSrc || (alpha.imgEl ? alpha.imgEl.src : '');
@@ -18507,7 +18520,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             document.getElementById('wo-kos').textContent = alpha.arenaKOs || 0;
             document.getElementById('wo-time').textContent = fmtClock(matchElapsedMs);
             document.getElementById('wo-out').textContent = arenaPool.length;
-            document.getElementById('wo-sub').textContent = 'RAID FALLIDA · EL ALFA ARRASÓ CON EL EQUIPO';
+            document.getElementById('wo-sub').textContent = why === 'time' ? 'RAID FALLIDA · SE ACABÓ EL TIEMPO (4:00)' : 'RAID FALLIDA · EL ALFA ARRASÓ CON EL EQUIPO';
             const tagSpan = document.querySelector('#winner-overlay .wo-tag span'); if (tagSpan) tagSpan.textContent = '¡RAID FALLIDA!';
             // Sin recompensas: solo se muestran las estadísticas y los botones finales.
             const card = document.getElementById('wo-win-card'); if (card) card.style.pointerEvents = 'none';
@@ -22509,6 +22522,73 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             projClashFx(x, y, A.color || '#fff', B.color || '#fff');
             logMessage(`¡${A.move.name} de ${A.attacker.name} y ${B.move.name} de ${B.attacker.name} chocaron en el aire y se anularon!`, 'attack');
         }
+        // FORCEJEO: al chocar dos proyectiles, ambos se convierten en dos rayos que empujan un núcleo de energía entre sus lanzadores.
+        // Resiste el más débil, pero gana quien tiene más estadísticas: su rayo avanza, sobrepasa el del rival y golpea al pokémon más débil.
+        let projStruggles = 0;
+        function projStruggle(A, B, x, y) {
+            const a0 = A.attacker, b0 = B.attacker;
+            const tot = c => { const st = c.stats || {}; return (st.hp || 0) + (st.attack || 0) + (st.defense || 0) + (st.spAttack || 0) + (st.spDefense || 0) + (st.speed || 0); };
+            const sa = tot(a0) * (0.97 + Math.random() * 0.06), sb = tot(b0) * (0.97 + Math.random() * 0.06);
+            const W = sa >= sb ? A : B, Lo = W === A ? B : A, wa = W.attacker, la = Lo.attacker;
+            const ratio = Math.min(sa, sb) / Math.max(sa, sb, 1); // 1 = igualados
+            const cw = fxSpriteCenter(wa), cl = fxSpriteCenter(la);
+            const dx = cl.x - cw.x, dy = cl.y - cw.y, L = Math.hypot(dx, dy);
+            if (L < 40) return false;
+            const ux = dx / L, uy = dy / L, ang = Math.atan2(dy, dx) * 180 / Math.PI;
+            const t0 = Math.max(0.2, Math.min(0.8, ((x - cw.x) * ux + (y - cw.y) * uy) / L));
+            const DUR = 900 + 1000 * ratio; // juego más igualado = forcejeo más largo (ms de juego)
+            const mk = (css) => { const el = document.createElement('div'); el.style.cssText = 'position:absolute;pointer-events:none;z-index:24;' + css; return duelAdd(el, DUR / gameSpeed + 900); };
+            const bm = (c1, c2) => mk(`left:${cw.x}px;top:${cw.y}px;height:16px;margin-top:-8px;border-radius:9px;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,${c1} 22%,${c2} 70%,#fff 100%);box-shadow:0 0 14px ${c1},0 0 26px ${c2};`);
+            const eW = bm(W.color || '#fff', W.spark || '#fff'), eL = bm(Lo.color || '#fff', Lo.spark || '#fff');
+            eL.style.left = cl.x + 'px'; eL.style.top = cl.y + 'px';
+            const core = mk(`width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#fff7ae 35%,${W.color || '#fff'} 62%,${Lo.color || '#fff'} 82%,rgba(255,255,255,0) 100%);box-shadow:0 0 22px #fff,0 0 40px ${W.color || '#fff'};`);
+            projStruggles++;
+            let el = 0, last = performance.now(), sparkAcc = 0, shakeAcc = 0, done = false;
+            const finish = (hit) => {
+                if (done) return; done = true; projStruggles = Math.max(0, projStruggles - 1);
+                [eW, eL, core].forEach(e => e.remove());
+                if (!hit || !gameRunning || gameOver || wa.fainted || la.fainted || la.isEvolving) return;
+                const c2 = fxSpriteCenter(la);
+                spawnSparks(c2.x, c2.y, W.spark || '#fff', 14); spawnSparks(c2.x, c2.y, '#ffffff', 8); projClashFx(c2.x, c2.y, W.color || '#fff', '#fff');
+                try { triggerCameraShake(6, 280 / gameSpeed); } catch (e) {}
+                logMessage(`¡${W.move.name} de ${wa.name} se impone y arrolla a ${Lo.move.name} de ${la.name}!`, 'attack');
+                resolveSingleHit(W.move, wa, la, c2.x, c2.y, W.hitSound, W.color, W.spark, 'forcejeo ganado');
+                if (W.move.wave) { try { triggerSurfWave(W.move, wa, la, c2.x, c2.y); } catch (e) {} }
+            };
+            const step = (now) => {
+                if (done) return;
+                const dt = Math.min(50, now - last) * gameSpeed; last = now;
+                if (gameOver || !gameRunning || wa.fainted || la.fainted) { finish(false); return; }
+                if (document.hidden) { requestAnimationFrame(step); return; }
+                el += dt; const u = Math.min(1, el / DUR);
+                const w = fxSpriteCenter(wa), l = fxSpriteCenter(la), ddx = l.x - w.x, ddy = l.y - w.y, LL = Math.hypot(ddx, ddy) || 1, vx = ddx / LL, vy = ddy / LL, an = Math.atan2(ddy, ddx) * 180 / Math.PI;
+                // el núcleo resiste: oscila con fuerza creciente y se desplaza muy poco; en el último tramo el rayo ganador lo empuja hasta el rival
+                const shake = 0.045 * (0.4 + u) * Math.sin(el * 0.06) + 0.02 * Math.sin(el * 0.17);
+                const press = u < 0.78 ? t0 + (0.5 - t0) * u * 0.6 + 0.07 * (1 - ratio) * u : (t0 + (0.5 - t0) * 0.78 * 0.6 + 0.07 * (1 - ratio) * 0.78) + (1 - (t0 + (0.5 - t0) * 0.78 * 0.6 + 0.07 * (1 - ratio) * 0.78)) * Math.pow((u - 0.78) / 0.22, 2.2);
+                const tt = Math.max(0.08, Math.min(1, press + (u < 0.78 ? shake : 0)));
+                const cx = w.x + vx * LL * tt, cy = w.y + vy * LL * tt;
+                const thW = 12 + 12 * u + 3 * Math.sin(el * 0.05), thL = Math.max(5, 18 - 10 * Math.pow(u, 1.5) + 2 * Math.sin(el * 0.05 + 2));
+                eW.style.left = w.x + 'px'; eW.style.top = w.y + 'px'; eW.style.width = (LL * tt) + 'px'; eW.style.height = thW + 'px'; eW.style.marginTop = (-thW / 2) + 'px'; eW.style.transform = `rotate(${an}deg)`;
+                eL.style.left = l.x + 'px'; eL.style.top = l.y + 'px'; eL.style.width = (LL * (1 - tt)) + 'px'; eL.style.height = thL + 'px'; eL.style.marginTop = (-thL / 2) + 'px'; eL.style.transform = `rotate(${an + 180}deg)`;
+                const cs = 1 + 0.5 * Math.sin(el * 0.05) + 0.6 * u; core.style.left = cx + 'px'; core.style.top = cy + 'px'; core.style.transform = `scale(${cs * (1.4 - 0.4 * Math.abs(tt - 0.5))})`;
+                sparkAcc += dt; if (sparkAcc >= 70) { sparkAcc = 0; spawnSparks(cx, cy, Math.random() < 0.5 ? (W.spark || '#fff') : (Lo.spark || '#fff'), 3); }
+                shakeAcc += dt; if (shakeAcc >= 260) { shakeAcc = 0; try { triggerCameraShake(2 + 3 * u, 160 / gameSpeed); } catch (e) {} }
+                if (u >= 1) { finish(true); return; }
+                requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+            return true;
+        }
+        // Dos proyectiles chocan: forcejeo (si hay sitio y ambos tienen lanzador vivo) o, si no, se anulan.
+        function projClash(A, B, x, y) {
+            const ok = projStruggles < 3 && A.attacker && B.attacker && !A.attacker.fainted && !B.attacker.fainted && A.kind !== 'beam' && B.kind !== 'beam';
+            let started = false;
+            if (ok) { try { started = projStruggle(A, B, x, y); } catch (e) { console.error(e); started = false; } }
+            if (!started) { projAnnul(A, B, x, y); return; }
+            [A, B].forEach(P => { P.dead = true; if (P.grp) P.grp.dead = true; liveProj.delete(P); if (P.el) P.el.remove(); });
+            projClashFx(x, y, A.color || '#fff', B.color || '#fff');
+            logMessage(`¡${A.move.name} de ${A.attacker.name} y ${B.move.name} de ${B.attacker.name} chocan y forcejean!`, 'attack');
+        }
         // Un pokémon se interpone: recibe el golpe en lugar del objetivo.
         function projIntercept(P, body, x, y) {
             P.dead = true; liveProj.delete(P);
@@ -22532,7 +22612,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 if (Q.kind === 'beam') {
                     if (!Q.active || projPtSeg(x, y, Q.x0, Q.y0, Q.x1, Q.y1) > P.r + 8) continue;
                 } else if (projMovingDist(P.px, P.py, x, y, Q.px, Q.py, Q.x, Q.y) > P.r + Q.r) continue;
-                projAnnul(P, Q, Q.kind === 'beam' ? x : (x + Q.x) / 2, Q.kind === 'beam' ? y : (y + Q.y) / 2);
+                projClash(P, Q, Q.kind === 'beam' ? x : (x + Q.x) / 2, Q.kind === 'beam' ? y : (y + Q.y) / 2);
                 return { dead: true };
             }
             const h = projFirstBodyOnSegment(P.attacker, P.defender, P.px, P.py, x, y, P.r * 0.5);
@@ -24734,7 +24814,6 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             duelSetAura(s, duelColor(s), true, true);
             if (d.k.hit === 'clash') duelSetAura(v, duelColor(v), true, true);
             d.whoosh = 0; duelSfx('charge', d.n, d.final);
-            if (DUEL_NEW[d.k.hit]) duelTag(s, d.k.hit === 'combo' ? 'COMBO ×' + d.k.n : DUEL_NEW[d.k.hit]);
             playAttackCry(s);
             let mvx = move;
             if (d.counterBy === s) { mvx = Object.assign({}, mvx, { power: (mvx.power || 40) * 1.3 }); d.counterBy = null; d.cnt = true; } else d.cnt = false;
@@ -26375,6 +26454,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 updateCooldownBar(c, timestamp);
             });
 
+            try { raidTimerTick(); } catch (e) {}
             updateChampionUI(true);
             updateDevEvoButton(); // se oculta solo si el seleccionado empieza a evolucionar, se debilita o ya no tiene evolución pendiente
             updateCamera();

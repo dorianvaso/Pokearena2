@@ -20327,7 +20327,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             // (spawnPhysicalHitFx) + capa grave del puñetazo en los críticos (el sonido base ya sonó en playMoveHitSound).
             if (isPhysicalHit) {
                 spawnPhysicalHitFx(targetX, targetY, { power: move.power, crit: isCritical, eff: effectiveness, type: move.type,
-                    attacker, defender, scale: (move.ranged && !forcePhysHit) ? 0.8 : 1, soft: !!(move.slash || move.bite), lean: leanFx });
+                    attacker, defender, move, scale: (move.ranged && !forcePhysHit) ? 0.8 : 1, soft: !!(move.slash || move.bite), lean: leanFx });
                 if (isCritical && isPhysContactHit(move) && !move.slash && !move.bite) playPhysicalHitSfx(move.power, { layer: true });
             }
 
@@ -35896,11 +35896,11 @@ window.PARaidFx = (function () {
   function lay() { return (typeof container !== 'undefined' && container) || document.getElementById('camera-layer'); }
   function quality() { const q = window.PA_FXL; return q == null ? 1 : q; }
   function add(o) {
-    const L = lay(); if (!L) return null;
-    if (live.length >= 32) { const old = live.find(f => !f.keep); if (old) kill(old); else return null; }
+    const L = o.parent || lay(); if (!L) return null;
+    if (live.length >= 56) { const old = live.find(f => !f.keep); if (old) kill(old); else return null; }
     const w = Math.ceil(o.w), h = Math.ceil(o.h || o.w), s = o.s || Math.min(2, Math.max(1, Math.sqrt(3.2e6 / (w * h))));
     const cv = document.createElement('canvas'); cv.width = Math.round(w * s); cv.height = Math.round(h * s);
-    cv.style.cssText = 'position:absolute;pointer-events:none;left:' + Math.round(o.x - w / 2) + 'px;top:' + Math.round(o.y - h / 2) + 'px;width:' + w + 'px;height:' + h + 'px;z-index:' + (o.z || 26) + ';' + (o.normal ? '' : 'mix-blend-mode:screen;');
+    cv.style.cssText = o.css ? ('position:absolute;pointer-events:none;width:' + w + 'px;height:' + h + 'px;' + o.css + (o.normal ? '' : 'mix-blend-mode:screen;')) : ('position:absolute;pointer-events:none;left:' + Math.round(o.x - w / 2) + 'px;top:' + Math.round(o.y - h / 2) + 'px;width:' + w + 'px;height:' + h + 'px;z-index:' + (o.z || 26) + ';' + (o.normal ? '' : 'mix-blend-mode:screen;'));
     const g = cv.getContext('2d'); g.scale(s, s);
     const f = Object.assign({ cv, g, w, h, t: 0, dur: 600, dead: false }, o); L.appendChild(cv); live.push(f);
     if (f.init) f.init(f); if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
@@ -35911,6 +35911,7 @@ window.PARaidFx = (function () {
     raf = 0; const gs = Math.max(1, window.gameSpeed || 1), dt = Math.max(0, Math.min(50, ts - last)) * gs; last = Math.max(last, ts);
     for (let i = live.length - 1; i >= 0; i--) {
       const f = live[i]; if (f.dead) { kill(f); continue; }
+      if (f.watch && (!f.watch.isConnected || !f.cv.isConnected)) { kill(f); continue; }
       f.t += dt; const u = f.t / f.dur;
       if (u >= 1) { kill(f); continue; }
       if (document.hidden) continue;
@@ -36011,7 +36012,7 @@ window.PARaidFx = (function () {
     return V;
   }
 
-  window.PAFX = { hit, flash, ring, explosion, smoke, sparks, struggle, rgb, filterColor, hsl, live: () => live.length };
+  window.PAFX = { hit, flash, ring, explosion, smoke, sparks, struggle, rgb, filterColor, hsl, live: () => live.length, h: { glow, ringSoft, ray, streak, star, A, rgb, lite, dark, hsl, rnd, clamp, eo, ei, add, kill, later, TAU, mkSparks, drawSparks, filterColor, lay } };
 
   // ===== Enrutado: los efectos genéricos del juego pasan al motor nuevo =====
   const STUB = { style: {}, spRemove() {}, remove() {} };
@@ -36085,6 +36086,484 @@ window.projStruggle = function (A, B, x, y) {
   requestAnimationFrame(step);
   return true;
 };
+
+</script>
+<script id="pa-fx3">
+/* ===== PAFX3: rediseño por familias — proyectiles, rayos, impactos, melee y forcejeo según pareja ===== */
+(function () {
+  'use strict';
+  if (!window.PAFX || !PAFX.h) return;
+  const { glow, ringSoft, ray, streak, star, A, rgb, lite, dark, rnd, clamp, eo, add, kill, later, TAU } = PAFX.h;
+  const hs = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
+  const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const WHITE = [255, 255, 255];
+  const gs = () => Math.max(1, window.gameSpeed || 1);
+  const sndHitPlay = v => { try { const a = sndHit.cloneNode(); a.volume = v; a.play().catch(() => {}); } catch (e) {} };
+
+  // =====================================================================================
+  //  RAYOS CONTINUOS (estilo por move.visual)
+  // =====================================================================================
+  const BC = { lightning: [250, 204, 21], flamethrower: [249, 115, 22], icebeam: [96, 200, 250], solarbeam: [163, 230, 53], twinbeam: [236, 72, 153] };
+  const TH = { lightning: 9, flamethrower: 34, icebeam: 12, solarbeam: 32, twinbeam: 10 };
+  function beamTip(g, x, y, c, r, a, T, ro) { glow(g, x, y, r * 1.8, c, 0.45 * a); glow(g, x, y, r * 0.9, lite(c, 0.5), 0.8 * a); glow(g, x, y, r * 0.42, WHITE, a); star(g, x, y, r * 1.5, lite(c, 0.6), 0.6 * a, T * 0.004 + (ro || 0)); }
+  function beamDraw(g, vis, x0, y0, x1, y1, th, T, a, o) {
+    o = o || {}; const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (!(L > 3) || !(a > 0)) return;
+    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, c = BC[vis] || [255, 255, 255];
+    const P = (s, off) => [x0 + ux * s + nx * off, y0 + uy * s + ny * off];
+    const path = (pts, w, col, al) => { g.strokeStyle = A(col, al * a); g.lineWidth = w; g.lineJoin = 'round'; g.lineCap = 'round'; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); };
+    const line = (w, col, al, off) => path([P(0, off || 0), P(L, off || 0)], w, col, al);
+    const env = t => Math.pow(Math.sin(Math.PI * clamp(t)), 0.55);
+    if (vis === 'lightning') {
+      const seed = Math.floor(T / 48), N = Math.max(6, Math.ceil(L / 15));
+      const jag = (sd, amp) => { const pts = []; for (let i = 0; i <= N; i++) { const t = i / N; pts.push(P(L * t, (hs(i, sd) - 0.5) * 2 * amp * (i === 0 || i === N ? 0.25 : 1) * env(t))); } return pts; };
+      const m = jag(seed, th * 2.3), m2 = jag(seed + 7, th * 3.4), m3 = jag(seed + 13, th * 2.8);
+      path(m2, th * 0.5, c, 0.55); path(m3, th * 0.4, lite(c, 0.4), 0.45);
+      path(m, th * 3.4, c, 0.13); path(m, th * 1.9, c, 0.36); path(m, th * 1.0, lite(c, 0.55), 0.95); path(m, th * 0.4, WHITE, 1);
+      for (let k = 0; k < 3; k++) {
+        const idx = 1 + Math.floor(hs(k, seed + 3) * (N - 2)), side = hs(k, seed + 5) > 0.5 ? 1 : -1; let [px, py] = m[idx], an = Math.atan2(uy, ux) + side * (0.5 + hs(k, seed + 9) * 0.5); const pts = [[px, py]];
+        for (let s = 0; s < 3; s++) { const ln = 9 + hs(k * 3 + s, seed + 11) * 14; px += Math.cos(an) * ln; py += Math.sin(an) * ln; pts.push([px, py]); an += (hs(k * 3 + s, seed + 17) - 0.5) * 1.3; }
+        path(pts, th * 0.8, c, 0.7); path(pts, th * 0.28, WHITE, 0.95);
+      }
+      const nodes = 5; for (let k = 0; k < nodes; k++) { const t = ((T * 0.0009 * (1 + hs(k, 1) * 0.5) + k / nodes) % 1); const p = P(L * t, (hs(k, seed) - 0.5) * th * 2); glow(g, p[0], p[1], th * 1.4, [255, 250, 200], 0.55 * a); }
+      glow(g, x0, y0, th * 3.2, c, 0.7 * a); glow(g, x0, y0, th * 1.4, WHITE, 0.9 * a);
+      if (!o.noTip) beamTip(g, x1, y1, c, th * 2.6, a, T);
+    } else if (vis === 'flamethrower') {
+      const n = Math.min(110, Math.round(L / 4) + 34), sp = T * 0.0011;
+      line(th * 0.5, [255, 236, 150], 0.4);
+      for (let k = 0; k < n; k++) {
+        const p = ((k * 0.61803 + sp * (0.8 + hs(k, 1) * 0.6)) % 1), s = L * p, r = th * (0.34 + 1.25 * p) * (0.75 + 0.6 * hs(k, 2));
+        const off = Math.sin(k * 7.3 + T * 0.012) * th * 0.55 * p + (hs(k, 3) - 0.5) * th * 0.5 * p;
+        const col = p < 0.15 ? mixc([255, 250, 210], [255, 200, 70], p / 0.15) : p < 0.5 ? mixc([255, 200, 70], [255, 105, 20], (p - 0.15) / 0.35) : mixc([255, 105, 20], [190, 28, 10], (p - 0.5) / 0.5);
+        const pt = P(s, off); glow(g, pt[0], pt[1], r, col, Math.pow(1 - p, 1.1) * 0.62 * (0.7 + 0.3 * hs(k, 4)));
+      }
+      for (let k = 0; k < 9; k++) { const p = ((k * 0.43 + T * 0.0016 * (1 + hs(k, 6))) % 1), pt = P(L * p, (hs(k, 7) - 0.5) * th * (0.6 + 2 * p)); glow(g, pt[0], pt[1], 2.2, [255, 230, 150], (1 - p) * 0.9 * a); }
+      glow(g, x0, y0, th * 1.7, [255, 220, 120], 0.75 * a); glow(g, x0, y0, th * 0.8, WHITE, 0.9 * a);
+      if (!o.noTip) { glow(g, x1, y1, th * 1.8, [255, 140, 40], 0.45 * a); glow(g, x1, y1, th * 0.9, [255, 230, 150], 0.55 * a); }
+    } else if (vis === 'icebeam') {
+      const N = Math.ceil(L / 10), pts = []; for (let i = 0; i <= N; i++) { const t = i / N; pts.push(P(L * t, Math.sin(t * 9 - T * 0.012) * th * 0.14 * Math.sin(Math.PI * t))); }
+      path(pts, th * 3.4, c, 0.12); path(pts, th * 2.0, c, 0.34); path(pts, th * 1.1, lite(c, 0.5), 0.9); path(pts, th * 0.45, WHITE, 1);
+      const step = 28, off0 = (T * 0.1) % step;
+      for (let s = off0 - step; s < L; s += step) { if (s < 0) continue; const w2 = th * 0.95 * Math.pow(Math.sin(Math.PI * clamp(s / L)), 0.5), q = [P(s - step / 2, 0), P(s, w2), P(s + step / 2, 0), P(s, -w2)]; g.strokeStyle = A(lite(c, 0.65), 0.5 * a); g.lineWidth = 1.2; g.beginPath(); q.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.stroke(); }
+      for (let k = 0; k < 16; k++) {
+        const p = ((k * 0.37 + T * 0.0008 * (1 + hs(k, 2))) % 1), pt = P(L * p, (hs(k, 4) - 0.5) * th * 2.6), sz = 2.5 + hs(k, 5) * 4, rot = T * 0.004 * (hs(k, 6) - 0.5) + k;
+        g.save(); g.translate(pt[0], pt[1]); g.rotate(rot); g.fillStyle = A(lite(c, 0.8), 0.85 * a * (1 - 0.4 * p)); g.beginPath(); g.moveTo(0, -sz * 1.5); g.lineTo(sz, 0); g.lineTo(0, sz * 1.5); g.lineTo(-sz, 0); g.closePath(); g.fill(); g.restore();
+        glow(g, pt[0], pt[1], sz * 3, c, 0.14 * a);
+      }
+      for (let k = 0; k < 5; k++) { const p = (k * 0.2 + T * 0.0003) % 1, pt = P(L * p, 0); glow(g, pt[0], pt[1], th * 1.8, [205, 238, 255], 0.1 * a); }
+      glow(g, x0, y0, th * 2.4, c, 0.6 * a); glow(g, x0, y0, th, WHITE, 0.85 * a);
+      if (!o.noTip) beamTip(g, x1, y1, c, th * 2.4, a, T, 0.3);
+    } else if (vis === 'solarbeam') {
+      line(th * 2.3, c, 0.16); line(th * 1.5, c, 0.34); line(th * 0.9, lite(c, 0.4), 0.7); line(th * 0.34, [255, 255, 235], 0.95);
+      const N = Math.ceil(L / 8);
+      for (let ph = 0; ph < 2; ph++) { const pts = []; for (let i = 0; i <= N; i++) { const t = i / N; pts.push(P(L * t, Math.sin(t * L / 36 - T * 0.014 + ph * Math.PI) * th * 0.72 * (0.55 + 0.45 * Math.sin(Math.PI * t)))); } path(pts, th * 0.26, [254, 249, 170], 0.85); }
+      for (let k = 0; k < 22; k++) { const p = ((k * 0.29 + T * 0.0009 * (1 + hs(k, 2) * 0.7)) % 1), pt = P(L * p, (hs(k, 3) - 0.5) * th * 1.6); glow(g, pt[0], pt[1], 3 + hs(k, 8) * 3, [255, 255, 200], 0.7 * a); }
+      glow(g, x0, y0, th * 2.4, c, 0.7 * a); star(g, x0, y0, th * 2.8, [254, 249, 170], 0.9 * a, T * 0.004);
+      if (!o.noTip) beamTip(g, x1, y1, c, th * 2.2, a, T);
+    } else if (vis === 'twinbeam') {
+      const N = Math.ceil(L / 8), S = [[], []];
+      for (let i = 0; i <= N; i++) { const t = i / N, w = Math.sin(t * L / 30 - T * 0.012) * th * 1.1 * Math.pow(Math.sin(Math.PI * clamp(t)), 0.5); S[0].push(P(L * t, w)); S[1].push(P(L * t, -w)); }
+      for (let k = 0; k < 2; k++) { path(S[k], th * 2.6, c, 0.16); path(S[k], th * 1.35, lite(c, 0.25), 0.8); path(S[k], th * 0.55, WHITE, 1); }
+      g.strokeStyle = A(lite(c, 0.5), 0.35 * a); g.lineWidth = 1.2; for (let i = 2; i < N; i += 3) { g.beginPath(); g.moveTo(S[0][i][0], S[0][i][1]); g.lineTo(S[1][i][0], S[1][i][1]); g.stroke(); }
+      for (let k = 0; k < 10; k++) { const p = ((k * 0.33 + T * 0.001) % 1), pt = P(L * p, (hs(k, 1) - 0.5) * th * 2); glow(g, pt[0], pt[1], 3, [255, 220, 245], 0.75 * a); }
+      glow(g, x0, y0, th * 3, c, 0.6 * a); glow(g, x0, y0, th, WHITE, 0.85 * a);
+      if (!o.noTip) beamTip(g, x1, y1, c, th * 2.4, a, T);
+    } else { line(th * 3, c, 0.2); line(th, WHITE, 0.9); }
+  }
+
+  // envoltorio de fxBeam: la forma la dibuja el canvas; la lógica de colisión y daño sigue siendo la original
+  const _fxBeam = window.fxBeam;
+  window.fxBeam = function (o) {
+    const vis = o && o.move && o.move.visual, H = { c: null, t: 0 };
+    if (!o || !BC[vis]) return _fxBeam.apply(this, arguments);
+    const before = new Set(liveProj); o.build = c => { H.c = c; H.t = performance.now(); return ''; };
+    const r = _fxBeam.apply(this, arguments); let B = null; for (const q of liveProj) if (!before.has(q) && q.kind === 'beam') B = q; if (!B) return r;
+    B.style = vis; const th0 = TH[vis];
+    const lay = PAFX.h.lay(), W = Math.max(320, (lay && lay.clientWidth) || 900), Hh = Math.max(320, (lay && lay.clientHeight) || 600);
+    const f = add({ x: W / 2, y: Hh / 2, w: W, h: Hh, s: Math.min(1.5, Math.sqrt(2.6e6 / (W * Hh))), dur: 9000, keep: true, z: 25, watch: B.el, normal: true,
+      draw(g, u, dt, F) {
+        g.globalCompositeOperation = 'lighter';
+        const c = H.c; if (!c || B.mute || performance.now() - H.t > 160) { if (B.mute) kill(F); return; }
+        const L = Math.hypot(B.x1 - B.x0, B.y1 - B.y0); if (L < 3) return; const ux = (B.x1 - B.x0) / L, uy = (B.y1 - B.y0) / L, a = clamp(c.alpha);
+        const s0 = Math.min(L - 2, c.tail || 0), ex = B.x0 + ux * L, ey = B.y0 + uy * L, sx = B.x0 + ux * s0, sy = B.y0 + uy * s0;
+        beamDraw(g, vis, sx, sy, ex, ey, th0 * (0.85 + 0.15 * Math.sin(F.t * 0.03)), F.t, a);
+      } });
+    return r;
+  };
+
+  // =====================================================================================
+  //  PIEZAS (proyectiles) — una apariencia por familia, nunca un rayo
+  // =====================================================================================
+  const CLS = { fire: 'fire', bubble: 'bubble', mudwater: 'glob', sludgebomb: 'glob', belch: 'glob', poison: 'glob', psychic: 'orb', twinbeam: 'orb', fairy: 'orb', overdrive: 'orb', shadow: 'orb', sound: 'wave', seeds: 'seed', vine: 'leaf', rock: 'solid', bone: 'solid', lightning: 'beam', flamethrower: 'beam', icebeam: 'beam', solarbeam: 'beam' };
+  const RAD = { fire: 26, bubble: 19, glob: 19, orb: 19, wave: 24, seed: 13, leaf: 15, shard: 22, solid: 18 };
+  const NORM = { bubble: 1, glob: 1, seed: 1, leaf: 1, solid: 1 };
+  function clsOf(P) {
+    if (P.kind === 'beam') return 'beam'; const m = P.move || {}, v = m.visual;
+    if (v === 'seeds' && m.iceSpike) return 'shard'; return CLS[v] || 'orb';
+  }
+  const isNormal = (cls, vis) => !!NORM[cls] || vis === 'shadow';
+  function blobPath(g, R, T, k0) {
+    const N = 12, pts = []; for (let k = 0; k < N; k++) { const a = k / N * TAU, r = R * (1 + 0.13 * Math.sin(T * 0.011 + k * 1.9 + k0) + 0.06 * Math.sin(T * 0.017 + k * 3.1)); pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+    g.beginPath(); for (let k = 0; k < N; k++) { const p0 = pts[k], p1 = pts[(k + 1) % N], mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2; if (k === 0) g.moveTo((pts[N - 1][0] + p0[0]) / 2, (pts[N - 1][1] + p0[1]) / 2); g.quadraticCurveTo(p0[0], p0[1], mx, my); } g.closePath();
+  }
+  // dibuja una pieza en (x,y); ang = dirección de avance; o.sq = aplastamiento 0..1 contra el eje; o.col = color base
+  function skinDraw(g, cls, vis, x, y, R, ang, T, a, o) {
+    o = o || {}; const c = o.col || [255, 255, 255]; g.save(); g.translate(x, y);
+    if (o.sq) { g.rotate(ang); g.scale(1 - o.sq * 0.34, 1 + o.sq * 0.3); g.rotate(-ang); }
+    g.globalAlpha = clamp(a);
+    if (cls === 'fire') {
+      g.save(); g.rotate(ang);
+      for (let i = 0; i < 10; i++) { const t = i / 10, d = R * (0.35 + 1.9 * t), wob = Math.sin(T * 0.02 + i * 1.3) * R * 0.14 * t, r = R * (0.9 - 0.62 * t), col = mixc([255, 235, 150], [230, 60, 15], t); glow(g, -d, wob, r, col, (1 - t * 0.7) * 0.55); }
+      for (let k = 0; k < 5; k++) { const p = (T * 0.003 * (1 + hs(k, 2)) + k * 0.31) % 1; glow(g, -R * (0.6 + p * 2.4), (hs(k, 5) - 0.5) * R * (0.4 + p), 2.2, [255, 210, 120], (1 - p) * 0.9); }
+      glow(g, 0, 0, R * 1.7, [249, 115, 22], 0.5); glow(g, 0, 0, R * 1.05, [255, 190, 60], 0.9); glow(g, 0, 0, R * 0.55, WHITE, 0.95); g.restore();
+    } else if (cls === 'bubble') {
+      const wob = 1 + 0.05 * Math.sin(T * 0.012), rx = R * wob, ry = R / wob;
+      const gr = g.createRadialGradient(-R * 0.3, -R * 0.35, R * 0.1, 0, 0, R * 1.05); gr.addColorStop(0, 'rgba(255,255,255,.34)'); gr.addColorStop(0.55, A(c, 0.16)); gr.addColorStop(1, A(c, 0.52));
+      g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, TAU); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.7; g.stroke();
+      g.lineWidth = 2; g.strokeStyle = 'rgba(255,150,225,.38)'; g.beginPath(); g.ellipse(0, 0, rx * 0.86, ry * 0.86, 0, 0.2, 1.5); g.stroke(); g.strokeStyle = 'rgba(130,255,230,.38)'; g.beginPath(); g.ellipse(0, 0, rx * 0.86, ry * 0.86, 0, 3.3, 4.6); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.ellipse(-R * 0.36, -R * 0.42, R * 0.28, R * 0.15, -0.6, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.arc(R * 0.38, R * 0.4, R * 0.09, 0, TAU); g.fill();
+    } else if (cls === 'glob') {
+      g.save(); g.rotate(ang);
+      for (let i = 1; i <= 3; i++) { const r = R * (0.5 - i * 0.1), d = R * (0.9 + i * 0.7), wb = Math.sin(T * 0.015 + i * 2) * R * 0.15; g.fillStyle = A(dark(c, 0.15), 0.8 - i * 0.18); g.beginPath(); g.arc(-d, wb, r, 0, TAU); g.fill(); }
+      g.restore();
+      g.shadowColor = A(lite(c, 0.2), 0.7); g.shadowBlur = 10; blobPath(g, R, T, o.seed || 0);
+      const gr = g.createRadialGradient(-R * 0.3, -R * 0.35, R * 0.1, 0, 0, R * 1.1); gr.addColorStop(0, A(lite(c, 0.4), 1)); gr.addColorStop(0.6, A(c, 1)); gr.addColorStop(1, A(dark(c, 0.4), 1)); g.fillStyle = gr; g.fill(); g.shadowBlur = 0;
+      g.strokeStyle = A(dark(c, 0.55), 0.9); g.lineWidth = 1.8; g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.ellipse(-R * 0.36, -R * 0.4, R * 0.26, R * 0.14, -0.6, 0, TAU); g.fill();
+      const toxic = vis === 'poison' || vis === 'sludgebomb' || vis === 'belch';
+      if (toxic) for (let k = 0; k < 3; k++) { const p = (T * 0.0016 + k * 0.34) % 1, bx = (hs(k, 3) - 0.5) * R * 1.1, by = -R * 0.2 - p * R * 1.3, br = 2 + hs(k, 4) * 2.5; g.strokeStyle = A(lite(c, 0.6), (1 - p) * 0.85); g.lineWidth = 1.3; g.beginPath(); g.arc(bx, by, br, 0, TAU); g.stroke(); }
+    } else if (cls === 'orb') {
+      if (vis === 'shadow') {
+        g.shadowColor = 'rgba(168,85,247,.9)'; g.shadowBlur = 16; const gr = g.createRadialGradient(0, 0, 0, 0, 0, R * 1.15); gr.addColorStop(0, 'rgba(10,3,24,1)'); gr.addColorStop(0.6, 'rgba(34,10,64,.98)'); gr.addColorStop(0.9, 'rgba(110,50,170,.9)'); gr.addColorStop(1, 'rgba(150,80,220,.0)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, R * 1.15, 0, TAU); g.fill(); g.shadowBlur = 0;
+        for (let k = 0; k < 3; k++) { g.strokeStyle = 'rgba(192,132,252,' + (0.55 - k * 0.12) + ')'; g.lineWidth = 2.2 - k * 0.5; g.beginPath(); g.arc(0, 0, R * (0.82 + k * 0.1), T * 0.007 * (k % 2 ? -1 : 1) + k * 2, T * 0.007 * (k % 2 ? -1 : 1) + k * 2 + 1.5); g.stroke(); }
+        g.save(); g.rotate(ang); for (let i = 1; i <= 5; i++) { g.fillStyle = 'rgba(60,20,100,' + (0.5 - i * 0.08) + ')'; g.beginPath(); g.arc(-R * (0.9 + i * 0.55), Math.sin(T * 0.012 + i) * R * 0.18, R * (0.6 - i * 0.08), 0, TAU); g.fill(); } g.restore();
+      } else if (vis === 'overdrive') {
+        glow(g, 0, 0, R * 2.1, c, 0.42); glow(g, 0, 0, R * 1.2, lite(c, 0.4), 0.85); glow(g, 0, 0, R * 0.6, WHITE, 1);
+        const seed = Math.floor(T / 55); for (let b = 0; b < 6; b++) { let an = hs(b, seed) * TAU, px = 0, py = 0; const pts = [[0, 0]]; for (let s = 0; s < 4; s++) { an += (hs(b * 4 + s, seed + 3) - 0.5) * 1.1; const l = R * (0.45 + hs(b, s + seed) * 0.35); px += Math.cos(an) * l; py += Math.sin(an) * l; pts.push([px, py]); } g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = A(c, 0.5); g.lineWidth = 3; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 1.1; g.stroke(); }
+      } else if (vis === 'fairy') {
+        glow(g, 0, 0, R * 2, c, 0.4); glow(g, 0, 0, R * 1.1, lite(c, 0.5), 0.8); glow(g, 0, 0, R * 0.55, WHITE, 1); star(g, 0, 0, R * 1.6, lite(c, 0.6), 0.9, T * 0.004);
+        for (let k = 0; k < 4; k++) { const an = T * 0.006 + k * TAU / 4, rr = R * 1.5, tw = 0.5 + 0.5 * Math.sin(T * 0.012 + k * 2); star(g, Math.cos(an) * rr, Math.sin(an) * rr * 0.8, R * 0.55 * tw + 2, WHITE, 0.9, an); }
+        g.save(); g.rotate(ang); for (let k = 0; k < 6; k++) { const p = (T * 0.002 + k * 0.17) % 1; glow(g, -R * (1 + p * 2.6), (hs(k, 2) - 0.5) * R, 2.4, lite(c, 0.7), (1 - p)); } g.restore();
+      } else { // psíquico / doble rayo (bola)
+        glow(g, 0, 0, R * 2.1, c, 0.45); glow(g, 0, 0, R * 1.2, lite(c, 0.35), 0.85); glow(g, 0, 0, R * 0.6, WHITE, 1);
+        for (let k = 0; k < 3; k++) { g.save(); g.rotate(T * 0.0058 * (k % 2 ? -1 : 1) + k * 1.05); g.scale(1, 0.38); g.strokeStyle = A(lite(c, 0.45), 0.85 - k * 0.12); g.lineWidth = 2.2; g.beginPath(); g.arc(0, 0, R * 1.3, 0, TAU); g.stroke(); g.restore(); }
+        for (let k = 0; k < 3; k++) { const an = T * 0.01 + k * TAU / 3; glow(g, Math.cos(an) * R * 1.45, Math.sin(an) * R * 1.45, 3.6, WHITE, 0.95); }
+      }
+    } else if (cls === 'wave') {
+      g.save(); g.rotate(ang);
+      for (let k = 0; k < 3; k++) { const p = ((T * 0.0036 + k / 3) % 1), rr = R * (0.45 + p * 1.6), al = (1 - p) * (0.5 + 0.5 * Math.min(1, p * 5)); g.strokeStyle = A(k === 0 ? lite(c, 0.4) : c, al); g.lineWidth = 3.8 * (1 - p) + 1; g.lineCap = 'round'; g.beginPath(); g.arc(-R * 0.35, 0, rr, -1.05, 1.05); g.stroke(); }
+      glow(g, 0, 0, R * 0.9, c, 0.45); glow(g, 0, 0, R * 0.4, WHITE, 0.9); g.restore();
+    } else if (cls === 'seed') {
+      g.save(); g.rotate(ang + T * 0.012); g.shadowColor = A(c, 0.8); g.shadowBlur = 9; const gr = g.createLinearGradient(-R, 0, R, 0); gr.addColorStop(0, A(dark(c, 0.3), 1)); gr.addColorStop(0.5, A(lite(c, 0.35), 1)); gr.addColorStop(1, A(c, 1)); g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, R * 1.05, R * 0.62, 0, 0, TAU); g.fill(); g.shadowBlur = 0; g.strokeStyle = A(dark(c, 0.55), 0.9); g.lineWidth = 1.3; g.stroke(); g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-R * 0.3, -R * 0.2, R * 0.38, R * 0.14, 0, 0, TAU); g.fill(); g.restore();
+    } else if (cls === 'leaf') {
+      g.save(); g.rotate(ang + Math.sin(T * 0.012) * 0.5 + T * 0.004); g.shadowColor = A(c, 0.8); g.shadowBlur = 9; const gr = g.createLinearGradient(-R, 0, R, 0); gr.addColorStop(0, A(dark(c, 0.35), 1)); gr.addColorStop(1, A(lite(c, 0.3), 1)); g.fillStyle = gr; g.beginPath(); g.moveTo(-R * 1.2, 0); g.quadraticCurveTo(0, -R * 0.95, R * 1.3, 0); g.quadraticCurveTo(0, R * 0.95, -R * 1.2, 0); g.fill(); g.shadowBlur = 0; g.strokeStyle = A(lite(c, 0.7), 0.85); g.lineWidth = 1.2; g.beginPath(); g.moveTo(-R * 1.2, 0); g.lineTo(R * 1.15, 0); g.stroke(); g.restore();
+    } else if (cls === 'shard') {
+      g.save(); g.rotate(ang); glow(g, 0, 0, R * 1.5, [125, 211, 252], 0.4);
+      const gr = g.createLinearGradient(-R, -R * 0.5, R * 1.4, R * 0.5); gr.addColorStop(0, 'rgba(186,230,253,.95)'); gr.addColorStop(0.5, 'rgba(255,255,255,.98)'); gr.addColorStop(1, 'rgba(56,189,248,.95)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(R * 1.55, 0); g.lineTo(0, R * 0.52); g.lineTo(-R * 0.95, 0); g.lineTo(0, -R * 0.52); g.closePath(); g.fill(); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 1.2; g.stroke();
+      g.strokeStyle = 'rgba(125,211,252,.8)'; g.beginPath(); g.moveTo(-R * 0.95, 0); g.lineTo(R * 1.55, 0); g.moveTo(0, R * 0.52); g.lineTo(0, -R * 0.52); g.stroke();
+      for (let k = 0; k < 5; k++) { const p = (T * 0.003 + k * 0.21) % 1; glow(g, -R * (1 + p * 2), (hs(k, 2) - 0.5) * R * 1.1, 2.2, [220, 245, 255], (1 - p)); } g.restore();
+    } else if (cls === 'solid') {
+      g.save(); g.rotate(T * 0.006 + (o.seed || 0)); if (vis === 'bone') { g.fillStyle = '#efe3c4'; g.strokeStyle = '#8a7a57'; g.lineWidth = 1.5; g.beginPath(); g.rect(-R, -R * 0.2, R * 2, R * 0.4); g.fill(); g.stroke(); [[-R, -1], [-R, 1], [R, -1], [R, 1]].forEach(([bx, sy]) => { g.beginPath(); g.arc(bx, sy * R * 0.25, R * 0.28, 0, TAU); g.fill(); g.stroke(); }); }
+      else { g.fillStyle = '#9ca3af'; g.strokeStyle = '#4b5563'; g.lineWidth = 1.6; g.beginPath(); for (let k = 0; k < 8; k++) { const an = k / 8 * TAU, r = R * (0.85 + 0.3 * hs(k, 9)); k ? g.lineTo(Math.cos(an) * r, Math.sin(an) * r) : g.moveTo(Math.cos(an) * r, Math.sin(an) * r); } g.closePath(); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.ellipse(-R * 0.25, -R * 0.3, R * 0.4, R * 0.2, -0.5, 0, TAU); g.fill(); }
+      g.restore();
+    }
+    g.restore();
+  }
+
+  // pieza viva: el elemento DOM del proyectil conserva movimiento/colisión; sólo cambia su apariencia
+  const _projRegister = window.projRegister;
+  window.projRegister = function (o) {
+    const P = _projRegister.apply(this, arguments);
+    try { attachSkin(P); } catch (e) { console.error(e); }
+    return P;
+  };
+  function attachSkin(P) {
+    if (P.kind !== 'ball' || P.skinned || !P.el || !P.move) return;
+    const cls = clsOf(P); if (!cls || cls === 'solid' || cls === 'beam') return;
+    const vis = P.move.visual, el = P.el, s = parseFloat(el.style.width) || 32, R = RAD[cls] || 16, Wc = Math.ceil(R * 7.4), col = rgb(P.color, [255, 255, 255]);
+    let ang = 0;
+    const f = add({ parent: el, watch: el, css: 'left:' + (s / 2 - Wc / 2) + 'px;top:' + (s / 2 - Wc / 2) + 'px;z-index:2;', w: Wc, h: Wc, dur: 8000, keep: true, normal: isNormal(cls, vis),
+      draw(g, u, dt, F) {
+        const dx = P.x - P.px, dy = P.y - P.py; if (dx * dx + dy * dy > 0.04) { const na = Math.atan2(dy, dx); let d = na - ang; d = Math.atan2(Math.sin(d), Math.cos(d)); ang += d * 0.45; }
+        else if (P.defender) { const c = fxSpriteCenter(P.defender); ang = Math.atan2(c.y - P.y, c.x - P.x); }
+        skinDraw(g, cls, vis, Wc / 2, Wc / 2, R, ang, F.t, 1, { col, seed: P.x * 0.01 });
+      } });
+    if (!f) return; P.skinned = true; P.cls = cls;
+    el.style.backgroundImage = 'none'; el.style.filter = 'none'; el.style.transform = 'none'; try { el.getAnimations().forEach(a => a.cancel()); } catch (e) {}
+  }
+
+  // =====================================================================================
+  //  IMPACTOS POR FAMILIA
+  // =====================================================================================
+  function pburst(x, y, o) {
+    const S = o.R || 90, n = Math.max(3, Math.round((o.n || 12) * (0.6 + 0.4 * (window.PA_FXL == null ? 1 : window.PA_FXL)))), cols = (o.cols || ['#fff']).map(c => rgb(c));
+    add({ x, y, w: S * 3.2, h: S * 3.2, dur: o.life || 760, z: o.z || 27, normal: !!o.normal,
+      init(f) { f.p = []; for (let i = 0; i < n; i++) { const up = o.up != null, a = up ? -Math.PI / 2 + (Math.random() - 0.5) * 2 * o.up : rnd(0, TAU), v = rnd(0.45, 1) * S * (o.speed || 1); f.p.push({ vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd(0.6, 1) * (o.size || 5), rot: rnd(0, TAU), vr: rnd(-7, 7), col: cols[i % cols.length], ph: Math.random() }); } },
+      draw(g, u, dt, f) {
+        const t = f.t / 1000, k = 3.2, grav = (o.grav == null ? 0.6 : o.grav) * S;
+        for (const p of f.p) {
+          const dm = (1 - Math.exp(-k * t)) / k, px = f.w / 2 + p.vx * dm, py = f.h / 2 + p.vy * dm + grav * t * t, al = Math.pow(1 - u, 0.85), rot = p.rot + p.vr * t, r = p.r * (o.shrink ? 1 - u * 0.5 : 1), kind = o.kind || 'spark';
+          g.save(); g.translate(px, py);
+          if (kind === 'drop') { g.rotate(Math.atan2(p.vy + 2 * grav * t, p.vx)); g.fillStyle = A(p.col, 0.9 * al); g.beginPath(); g.ellipse(0, 0, r * 1.8, r * 0.9, 0, 0, TAU); g.fill(); if (!o.normal) { g.fillStyle = A(WHITE, 0.6 * al); g.beginPath(); g.ellipse(r * 0.4, -r * 0.2, r * 0.6, r * 0.25, 0, 0, TAU); g.fill(); } }
+          else if (kind === 'bubble') { const b = r * (1 + 0.6 * u); g.strokeStyle = A(lite(p.col, 0.5), 0.9 * al); g.lineWidth = 1.3; g.beginPath(); g.arc(0, 0, b, 0, TAU); g.stroke(); g.fillStyle = A(WHITE, 0.6 * al); g.beginPath(); g.arc(-b * 0.35, -b * 0.35, b * 0.25, 0, TAU); g.fill(); }
+          else if (kind === 'shard') { g.rotate(rot); g.fillStyle = A(lite(p.col, 0.6), 0.95 * al); g.strokeStyle = A(WHITE, al); g.lineWidth = 1; g.beginPath(); g.moveTo(0, -r * 2.2); g.lineTo(r * 0.8, 0); g.lineTo(0, r * 1.4); g.lineTo(-r * 0.8, 0); g.closePath(); g.fill(); g.stroke(); }
+          else if (kind === 'leaf') { g.rotate(rot); g.fillStyle = A(p.col, 0.95 * al); g.beginPath(); g.moveTo(-r * 1.6, 0); g.quadraticCurveTo(0, -r * 1.1, r * 1.6, 0); g.quadraticCurveTo(0, r * 1.1, -r * 1.6, 0); g.fill(); g.strokeStyle = A(lite(p.col, 0.6), 0.8 * al); g.lineWidth = 0.9; g.beginPath(); g.moveTo(-r * 1.5, 0); g.lineTo(r * 1.5, 0); g.stroke(); }
+          else if (kind === 'debris') { g.rotate(rot); g.fillStyle = A(p.col, al); g.strokeStyle = A(dark(p.col, 0.5), al); g.lineWidth = 1; g.beginPath(); for (let q = 0; q < 5; q++) { const an = q / 5 * TAU, rr = r * (0.8 + 0.5 * hs(q, p.ph * 9)); q ? g.lineTo(Math.cos(an) * rr, Math.sin(an) * rr) : g.moveTo(Math.cos(an) * rr, Math.sin(an) * rr); } g.closePath(); g.fill(); g.stroke(); }
+          else if (kind === 'star') { star(g, 0, 0, r * 2.6 * (1 - u * 0.4), p.col, al, rot); }
+          else if (kind === 'heart') { g.rotate(Math.sin(rot) * 0.3); g.fillStyle = A(p.col, al); g.beginPath(); const h = r * 1.6; g.moveTo(0, h * 0.9); g.bezierCurveTo(-h * 1.6, -h * 0.2, -h * 0.6, -h * 1.4, 0, -h * 0.5); g.bezierCurveTo(h * 0.6, -h * 1.4, h * 1.6, -h * 0.2, 0, h * 0.9); g.fill(); }
+          else if (kind === 'feather') { g.rotate(rot); g.fillStyle = A(p.col, 0.9 * al); g.beginPath(); g.ellipse(0, 0, r * 2.4, r * 0.8, 0, 0, TAU); g.fill(); g.strokeStyle = A(WHITE, al); g.lineWidth = 0.8; g.beginPath(); g.moveTo(-r * 2.4, 0); g.lineTo(r * 2.4, 0); g.stroke(); }
+          else if (kind === 'ember') { glow(g, 0, 0, r * 2.4, p.col, 0.5 * al); glow(g, 0, 0, r * 1.1, [255, 240, 190], 0.95 * al); }
+          else { g.restore(); streak(g, px, py, p.vx, p.vy + grav * t * 2, 10 * (1 - u) + 3, 1.6, p.col, al); glow(g, px, py, 3, WHITE, 0.8 * al); continue; }
+          g.restore();
+        }
+      } });
+  }
+  function boltsFx(x, y, c, S) {
+    S = S || 70; add({ x, y, w: S * 3, h: S * 3, dur: 420, z: 27,
+      draw(g, u, dt, f) { const seed = Math.floor(f.t / 45), cx = f.w / 2, cy = f.h / 2, al = 1 - u; glow(g, cx, cy, S * 0.8 * (1 - u * 0.4), c, 0.55 * al); glow(g, cx, cy, S * 0.35, WHITE, 0.9 * al);
+        for (let b = 0; b < 7; b++) { let an = b / 7 * TAU + hs(b, 3) * 0.6, px = cx, py = cy; const pts = [[px, py]]; for (let s = 0; s < 5; s++) { an += (hs(b * 5 + s, seed) - 0.5) * 1.0; const l = S * (0.2 + 0.15 * hs(b, s)) * (0.5 + eo(u)); px += Math.cos(an) * l; py += Math.sin(an) * l; pts.push([px, py]); } g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = A(c, 0.5 * al); g.lineWidth = 4.4; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.strokeStyle = A(WHITE, al); g.lineWidth = 1.5; g.stroke(); } } });
+  }
+  function darkBurst(x, y, S) {
+    S = S || 70; add({ x, y, w: S * 3, h: S * 3, dur: 640, z: 27, normal: true,
+      draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, imp = u < 0.3, r = imp ? S * 0.7 * (1 - u / 0.3 * 0.7) : S * (0.2 + 0.9 * eo((u - 0.3) / 0.7)), al = imp ? 1 : 1 - (u - 0.3) / 0.7;
+        const gr = g.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, 'rgba(8,2,18,' + 0.95 * al + ')'); gr.addColorStop(0.65, 'rgba(48,14,90,' + 0.8 * al + ')'); gr.addColorStop(1, 'rgba(150,80,220,0)'); g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill();
+        g.lineCap = 'round'; for (let k = 0; k < 6; k++) { const an = k / 6 * TAU + u * 3, rr = r * (0.9 + 0.2 * Math.sin(u * 9 + k)); g.strokeStyle = 'rgba(192,132,252,' + 0.7 * al + ')'; g.lineWidth = 3 * al + 0.6; g.beginPath(); g.arc(cx, cy, rr, an, an + 0.7); g.stroke(); } } });
+  }
+  function steam(x, y, S) { PAFX.smoke(x, y, { size: S || 46, n: 6, color: [225, 232, 240] }); pburst(x, y, { R: S || 46, n: 8, kind: 'bubble', cols: ['#e2e8f0'], up: 1.1, speed: 0.6, grav: -0.5, size: 3, life: 800 }); }
+  const IMP = {
+    fire: (x, y) => { PAFX.explosion(x, y, { size: 70 }); pburst(x, y, { R: 80, n: 10, kind: 'ember', cols: ['#fb923c', '#fde047'], size: 3, grav: 0.35, life: 800 }); },
+    flamethrower: (x, y) => { PAFX.explosion(x, y, { size: 86 }); pburst(x, y, { R: 100, n: 14, kind: 'ember', cols: ['#f97316', '#fde047', '#fb923c'], size: 3.4, grav: 0.3, life: 900 }); },
+    bubble: (x, y) => { PAFX.ring(x, y + 8, { size: 120, color: [150, 210, 255], flat: true }); pburst(x, y, { R: 80, n: 14, kind: 'drop', cols: ['#93c5fd', '#bae6fd', '#e0f2fe'], up: 1.3, size: 3.4, grav: 1.4, life: 700 }); pburst(x, y, { R: 52, n: 6, kind: 'bubble', cols: ['#93c5fd'], up: 1.2, speed: 0.5, grav: -0.4, size: 3.6, life: 760 }); },
+    mudwater: (x, y) => { pburst(x, y, { R: 74, n: 12, kind: 'drop', cols: ['#7c5a2b', '#5e4220', '#8b6a38'], normal: true, up: 1.4, size: 4.4, grav: 1.4, life: 760 }); PAFX.smoke(x, y + 6, { size: 36, n: 4, color: [120, 88, 48] }); },
+    poison: (x, y) => { PAFX.smoke(x, y, { size: 54, n: 6, color: [150, 70, 210] }); pburst(x, y, { R: 60, n: 7, kind: 'bubble', cols: ['#c084fc'], up: 1.1, speed: 0.55, grav: -0.5, size: 3.6, life: 800 }); pburst(x, y, { R: 62, n: 8, kind: 'drop', cols: ['#a855f7', '#7e22ce'], normal: true, up: 1.4, size: 3.6, grav: 1.4, life: 700 }); },
+    psychic: (x, y) => { [0, 90, 180].forEach((d, i) => PAFX.ring(x, y, { size: 90 + i * 52, color: [236, 100, 175], delay: d })); pburst(x, y, { R: 70, n: 8, kind: 'star', cols: ['#f9a8d4', '#fff'], size: 3, grav: -0.1, life: 700 }); PAFX.flash(x, y, { size: 74, color: [255, 190, 230] }); },
+    shadow: (x, y) => { darkBurst(x, y, 70); },
+    fairy: (x, y) => { PAFX.flash(x, y, { size: 80, color: [255, 205, 235] }); pburst(x, y, { R: 80, n: 11, kind: 'star', cols: ['#f9a8d4', '#fff', '#fbcfe8'], size: 3.2, grav: -0.12, life: 800 }); PAFX.ring(x, y, { size: 120, color: [255, 180, 225] }); },
+    overdrive: (x, y) => { boltsFx(x, y, [250, 204, 21], 72); PAFX.ring(x, y + 10, { size: 120, color: [255, 240, 150], flat: true }); },
+    lightning: (x, y) => { boltsFx(x, y, [250, 204, 21], 84); PAFX.flash(x, y, { size: 84, color: [255, 250, 190] }); pburst(x, y, { R: 80, n: 10, kind: 'spark', cols: ['#fde047', '#fff'], grav: 0.3, life: 520 }); },
+    sound: (x, y) => { [0, 90, 180].forEach((d, i) => PAFX.ring(x, y + 4, { size: 70 + i * 55, color: [232, 121, 249], delay: d })); },
+    seeds: (x, y) => { pburst(x, y, { R: 70, n: 9, kind: 'leaf', cols: ['#84cc16', '#a3e635', '#65a30d'], normal: true, size: 3, grav: 0.8, life: 800 }); PAFX.smoke(x, y + 6, { size: 30, n: 3, color: [150, 190, 100] }); },
+    vine: (x, y) => { pburst(x, y, { R: 86, n: 12, kind: 'leaf', cols: ['#4ade80', '#22c55e', '#86efac'], normal: true, size: 3.4, grav: 0.7, life: 860 }); PAFX.flash(x, y, { size: 50, color: [190, 255, 190] }); },
+    ice: (x, y) => { PAFX.ring(x, y + 6, { size: 130, color: [180, 230, 255], flat: true }); pburst(x, y, { R: 90, n: 13, kind: 'shard', cols: ['#7dd3fc', '#bae6fd', '#e0f2fe'], size: 3.4, grav: 0.7, life: 800 }); PAFX.flash(x, y, { size: 74, color: [210, 240, 255] }); },
+    icebeam: (x, y) => IMP.ice(x, y),
+    solarbeam: (x, y) => { PAFX.flash(x, y, { size: 120, color: [255, 250, 190] }); PAFX.explosion(x, y, { size: 90, color: [190, 242, 100] }); pburst(x, y, { R: 100, n: 12, kind: 'spark', cols: ['#fef9c3', '#bef264'], grav: 0.1, life: 640 }); },
+    twinbeam: (x, y) => IMP.psychic(x, y),
+    rock: (x, y) => { pburst(x, y, { R: 80, n: 10, kind: 'debris', cols: ['#a8a29e', '#78716c', '#d6d3d1'], normal: true, size: 4, grav: 1.2, life: 780 }); PAFX.smoke(x, y + 8, { size: 44, n: 5 }); PAFX.ring(x, y + 12, { size: 100, color: [220, 214, 200], flat: true }); },
+    bone: (x, y) => { pburst(x, y, { R: 70, n: 8, kind: 'debris', cols: ['#efe3c4', '#d6c7a0'], normal: true, size: 3.4, grav: 1.1, life: 700 }); PAFX.hit(x, y, { size: 60, color: [255, 240, 200] }); }
+  };
+  IMP.sludgebomb = IMP.poison; IMP.belch = IMP.poison;
+  const _spImpact = window.spImpact;
+  window.spImpact = function (visual, x, y, move) { if (move && move.iceSpike) { IMP.ice(x, y); return; } const f = IMP[visual]; if (f) { try { f(x, y, move); } catch (e) { console.error(e); } return; } return _spImpact ? _spImpact.apply(this, arguments) : undefined; };
+
+  // =====================================================================================
+  //  CORTES, GARRAS Y GOLPES CUERPO A CUERPO
+  // =====================================================================================
+  const SL = { // r: radio, sp: abertura (grados), th: grosor, c: color, w: núcleo
+    blade: { c: [148, 190, 255], w: [245, 250, 255], r: 0.55, sp: 130, th: 0.2 }, x: { c: [132, 204, 22], w: [236, 252, 203], r: 0.52, sp: 120, th: 0.18, cross: 1 },
+    dark: { c: [124, 58, 237], w: [221, 214, 254], r: 0.56, sp: 140, th: 0.24 }, psychic: { c: [236, 72, 153], w: [252, 231, 243], r: 0.62, sp: 140, th: 0.22, sparkle: 1 },
+    solar: { c: [190, 242, 100], w: [254, 252, 190], r: 0.7, sp: 150, th: 0.26, rays: 1 }, fury: { c: [132, 204, 22], w: [236, 252, 203], r: 0.4, sp: 110, th: 0.16, multi: 3 },
+    air: { c: [125, 211, 252], w: [240, 249, 255], r: 0.5, sp: 130, th: 0.15, wind: 1 }, claw: { c: [167, 139, 250], w: [237, 233, 254], r: 0.5, claw: 1 }
+  };
+  function slashFx(x, y, o) {
+    const P = SL[o.key] || SL.blade, S = o.size || 70, R = S * P.r * (o.crit ? 1.3 : 1), crit = !!o.crit, c = crit ? [251, 191, 36] : P.c, w = crit ? [255, 251, 235] : P.w, rot = (o.rot || 0) * Math.PI / 180, flip = o.flip || 1;
+    const n = P.claw ? 3 : (P.multi || (P.cross ? 2 : 1)), dur = 460;
+    for (let i = 0; i < n; i++) later((o.delay || 0) + i * (P.claw ? 60 : P.multi ? 70 : P.cross ? 70 : 0), () => {
+      add({ x, y, w: R * 3.6 + 30, h: R * 3.6 + 30, dur, z: 28,
+        draw(g, u, dt, f) {
+          const cx = f.w / 2, cy = f.h / 2, sweep = clamp(u / 0.32), head = eo(sweep), tail = clamp((u - 0.18) / 0.82), al = Math.pow(1 - clamp((u - 0.35) / 0.65), 1.4);
+          if (P.claw) {
+            const off = (i - 1) * R * 0.34; g.save(); g.translate(cx, cy); g.rotate(rot); g.scale(1, flip); g.translate(0, off); const len = R * 1.9, x0 = -len / 2, x1 = x0 + len * head, xt = x0 + len * eo(tail) * 0.9;
+            for (const [wd, col, a2] of [[R * 0.2, c, 0.28], [R * 0.11, lite(c, 0.5), 0.8], [R * 0.045, w, 1]]) { g.strokeStyle = A(col, a2 * al); g.lineWidth = wd; g.lineCap = 'round'; g.beginPath(); g.moveTo(xt, -R * 0.36 * (xt - x0) / len * 0 + (xt - x0) * 0.18); g.quadraticCurveTo((xt + x1) / 2, -R * 0.12, x1, (x1 - x0) * 0.18 - R * 0.05); g.stroke(); }
+            glow(g, x1, (x1 - x0) * 0.18, R * 0.35, w, 0.8 * al); g.restore(); return;
+          }
+          g.save(); g.translate(cx, cy); const baseRot = rot + (P.cross ? (i ? 1 : -1) * 0.7 : 0) + (P.multi ? (i - 1) * 0.55 : 0); g.rotate(baseRot); g.scale(1, flip);
+          const span = P.sp * Math.PI / 180, a0 = -span / 2, aH = a0 + span * head, aT = a0 + span * eo(tail) * 0.85, N = 28, th = R * P.th;
+          const outer = [], inner = []; for (let k = 0; k <= N; k++) { const t = k / N, an = aT + (aH - aT) * t; if (aH - aT <= 0.001) break; const prof = Math.pow(Math.sin(Math.PI * Math.max(0.02, t)), 0.8); outer.push([Math.cos(an) * R, Math.sin(an) * R]); inner.push([Math.cos(an) * (R - th * prof * (0.3 + 0.7 * (1 - tail * 0.5))), Math.sin(an) * (R - th * prof * (0.3 + 0.7 * (1 - tail * 0.5)))]); }
+          if (outer.length > 2) {
+            g.lineJoin = 'round'; g.lineCap = 'round';
+            const shape = () => { g.beginPath(); outer.forEach((p, k) => k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); for (let k = inner.length - 1; k >= 0; k--) g.lineTo(inner[k][0], inner[k][1]); g.closePath(); };
+            g.strokeStyle = A(c, 0.3 * al); g.lineWidth = th * 1.2; shape(); g.stroke(); g.fillStyle = A(lite(c, 0.25), 0.85 * al); shape(); g.fill();
+            g.strokeStyle = A(w, al); g.lineWidth = Math.max(1.4, th * 0.2); g.beginPath(); outer.forEach((p, k) => k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke();
+            const hp = outer[outer.length - 1]; glow(g, hp[0], hp[1], th * 1.5, w, 0.9 * al);
+            if (P.wind) for (let k = 0; k < 3; k++) { g.strokeStyle = A(w, 0.45 * al); g.lineWidth = 1.2; g.beginPath(); g.arc(0, 0, R * (1.18 + k * 0.14), aT, aT + (aH - aT) * (0.9 - k * 0.2)); g.stroke(); }
+            if (P.sparkle) for (let k = 0; k < 4; k++) { const an = aT + (aH - aT) * hs(k, 3), rr = R * (0.85 + hs(k, 4) * 0.4); star(g, Math.cos(an) * rr, Math.sin(an) * rr, 6 + hs(k, 5) * 5, w, al * 0.9, k); }
+          }
+          if (P.rays && u < 0.7) for (let k = 0; k < 8; k++) ray(g, 0, 0, k / 8 * TAU + u, R * 1.3 * (1 - u), 4, [255, 252, 190], 0.5 * (1 - u / 0.7));
+          g.restore();
+        } });
+    });
+    later((o.delay || 0) + 80, () => PAFX.sparks(x, y, crit ? '#fde047' : A(lite(c, 0.4), 1), crit ? 12 : 6));
+  }
+  const slashKey = (f) => { if (!f) return 'blade'; if (/hue-rotate\(75deg\)/.test(f)) return 'claw'; return 'blade'; };
+  window.spawnSlashFx = function (x, y, move, attacker, crit) {
+    const key = move.slash || 'blade', ax = attacker ? attacker.x + 35 : x - 40, ay = attacker ? attacker.y + 40 : y - 10; let dir = Math.atan2(y - ay, x - ax) * 180 / Math.PI; if (!isFinite(dir)) dir = 0; const side = Math.random() < 0.5 ? 1 : -1;
+    const size = 74 * ((SL[key] && SL[key].r) || 0.5) / 0.5 * (key === 'claw' ? 1 : 1);
+    slashFx(x, y, { key, rot: dir + (key === 'claw' ? -8 : (Math.random() - 0.5) * 40), flip: side, size: key === 'claw' ? 84 : size * 1.05, crit });
+    if (crit) PAFX.hit(x, y, { size: 80, color: [255, 214, 90], crit: true });
+  };
+
+  // golpes físicos por familia (key del movimiento → familia)
+  const FAM = {
+    punch: 'punofuego punodrenaje punoincremento punocertero punodinamico contraataque golpebajo resarcimiento buenabaza juegosucio golpefantasma golperastrero golperoca', ram: 'gigaimpacto derribo golpecuerpo enviteigneo acuajet ruedafuego hidroariete cascada pajaroosado cargadragon plancha buceo desenrollar planchavoltaica carantona esquema atadura asaltoestelar abocajarro',
+    head: 'cabezazo testarazo cabezahierro golpecabeza', pierce: 'picotazo picotaladro megacuerno puyanociva', tail: 'coladragon colaferrea acuacola latigazo', wing: 'ala alabis vuelo', kick: 'puntapie demolicion', hammer: 'martillocolosal martillazo cuerpopesado pataleta desahogo', quake: 'terremoto excavar',
+    lick: 'lenguetazo', kiss: 'besodrenaje', elec: 'chispa voltiocruel golpevoltaico'
+  };
+  const FAMOF = {}; for (const f in FAM) FAM[f].split(' ').forEach(k => FAMOF[k] = f);
+  let _keyCache = null;
+  function keyOf(m) { if (!m) return null; if (!_keyCache) { _keyCache = new Map(); try { for (const k in movesData) _keyCache.set(movesData[k], k); } catch (e) {} } return _keyCache.get(m) || null; }
+  function jawFx(x, y, ang, c, S) {
+    S = S || 56; add({ x, y, w: S * 3, h: S * 3, dur: 520, z: 28,
+      draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, close = eo(clamp(u / 0.28)), al = 1 - clamp((u - 0.45) / 0.55), gap = S * 0.62 * (1 - close) + 2; g.save(); g.translate(cx, cy); g.rotate(ang + Math.PI / 2);
+        for (const sg of [-1, 1]) { g.save(); g.scale(1, sg); const n = 6; g.fillStyle = A(WHITE, 0.95 * al); g.strokeStyle = A(c, 0.9 * al); g.lineWidth = 1.4; for (let k = 0; k < n; k++) { const tx = (k - (n - 1) / 2) * S * 0.2, h = S * (0.34 + 0.16 * Math.sin((k / (n - 1)) * Math.PI)); g.beginPath(); g.moveTo(tx - S * 0.09, -gap - S * 0.35); g.lineTo(tx, -gap + h * 0.55 - S * 0.35 + h * 0.0); g.lineTo(tx + S * 0.09, -gap - S * 0.35); g.closePath(); g.fill(); g.stroke(); } g.strokeStyle = A(c, 0.55 * al); g.lineWidth = 5; g.beginPath(); g.moveTo(-S * 0.62, -gap - S * 0.35); g.quadraticCurveTo(0, -gap - S * 0.62, S * 0.62, -gap - S * 0.35); g.stroke(); g.restore(); }
+        g.restore(); if (u > 0.26) { const v = clamp((u - 0.26) / 0.3); glow(g, cx, cy, S * (0.5 + 0.9 * v), c, 0.55 * (1 - v)); glow(g, cx, cy, S * 0.3, WHITE, 0.9 * (1 - v)); } } });
+  }
+  function sweepArc(x, y, ang, c, S, o) { // barrido en arco (cola, ala, patada)
+    o = o || {}; add({ x, y, w: S * 3, h: S * 3, dur: 430, z: 28,
+      draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, head = eo(clamp(u / 0.4)), tl = clamp((u - 0.12) / 0.7), al = Math.pow(1 - clamp((u - 0.35) / 0.65), 1.3), span = (o.span || 150) * Math.PI / 180, a0 = ang + Math.PI - span / 2 * (o.dir || 1), side = o.dir || 1;
+        g.save(); g.translate(cx, cy); const aH = a0 + side * span * head, aT = a0 + side * span * eo(tl) * 0.9; g.lineCap = 'round'; for (const [wd, col, a2] of [[S * 0.2, c, 0.25], [S * 0.11, lite(c, 0.5), 0.75], [S * 0.045, WHITE, 1]]) { g.strokeStyle = A(col, a2 * al); g.lineWidth = wd; g.beginPath(); g.arc(0, 0, S * 0.62, Math.min(aT, aH), Math.max(aT, aH)); g.stroke(); } const hx = Math.cos(aH) * S * 0.62, hy = Math.sin(aH) * S * 0.62; glow(g, hx, hy, S * 0.22, WHITE, 0.8 * al); g.restore(); } });
+  }
+  function physFam(fam, x, y, o, ang, col, k) {
+    const c = rgb(col, [253, 186, 116]), S = 70 * k;
+    switch (fam) {
+      case 'punch': PAFX.ring(x, y, { size: 110 * k, color: c }); pburst(x, y, { R: 70 * k, n: 8, kind: 'spark', cols: [A(lite(c, 0.5), 1), '#fff'], grav: 0.2, life: 460 }); break;
+      case 'ram': PAFX.ring(x, y, { size: 150 * k, color: c }); PAFX.ring(x, y + 10, { size: 190 * k, color: lite(c, 0.4), flat: true, delay: 70 }); PAFX.smoke(x, y + 8, { size: 50 * k, n: 5 }); add({ x, y, w: S * 3, h: S * 3, dur: 360, z: 27, draw(g, u, dt, f) { for (let q = -2; q <= 2; q++) { const off = q * S * 0.14, sx = f.w / 2 - Math.cos(ang) * S * 0.2 - Math.sin(ang) * off, sy = f.h / 2 - Math.sin(ang) * S * 0.2 + Math.cos(ang) * off; streak(g, sx, sy, Math.cos(ang), Math.sin(ang), S * (0.9 - Math.abs(q) * 0.15) * (1 - u), 2.4, lite(c, 0.5), 1 - u); } } }); break;
+      case 'head': PAFX.ring(x, y, { size: 130 * k, color: c }); star1(x, y, S * 1.3, c); pburst(x, y, { R: 60 * k, n: 6, kind: 'star', cols: ['#fff', A(lite(c, 0.6), 1)], size: 2.4, grav: 0, life: 520 }); break;
+      case 'pierce': add({ x, y, w: S * 3.4, h: S * 3.4, dur: 360, z: 28, draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, e = eo(clamp(u / 0.25)), al = 1 - clamp((u - 0.3) / 0.7); ray(g, cx - Math.cos(ang) * S * 0.9 * e, cy - Math.sin(ang) * S * 0.9 * e, ang, S * 1.8 * e, 5 * (1 - u * 0.5), c, al); glow(g, cx, cy, S * 0.5 * (1 - u * 0.5), WHITE, 0.9 * al); star(g, cx, cy, S * 0.9, lite(c, 0.5), 0.7 * al, 0.2); } }); break;
+      case 'tail': sweepArc(x, y, ang, c, S, { dir: Math.random() < 0.5 ? 1 : -1 }); PAFX.ring(x, y, { size: 100 * k, color: c, delay: 90 }); break;
+      case 'wing': sweepArc(x, y, ang, [225, 240, 255], S, { dir: Math.random() < 0.5 ? 1 : -1, span: 170 }); pburst(x, y, { R: 74 * k, n: 8, kind: 'feather', cols: ['#e0f2fe', '#fff'], normal: false, size: 3, grav: 0.35, life: 800, up: 1.6 }); break;
+      case 'kick': sweepArc(x, y, ang, c, S * 1.1, { dir: 1, span: 110 }); PAFX.ring(x, y, { size: 120 * k, color: c, delay: 70 }); pburst(x, y, { R: 60 * k, n: 6, kind: 'spark', cols: ['#fff', A(c, 1)], life: 420 }); break;
+      case 'hammer': PAFX.ring(x, y + 12, { size: 200 * k, color: c, flat: true }); PAFX.ring(x, y, { size: 140 * k, color: lite(c, 0.5), delay: 60 }); pburst(x, y, { R: 90 * k, n: 9, kind: 'debris', cols: ['#a8a29e', '#78716c', '#d6d3d1'], normal: true, size: 4, grav: 1.3, life: 800 }); PAFX.smoke(x, y + 10, { size: 56 * k, n: 6 }); break;
+      case 'quake': PAFX.ring(x, y + 14, { size: 220 * k, color: [196, 170, 120], flat: true }); pburst(x, y, { R: 90 * k, n: 12, kind: 'debris', cols: ['#a16207', '#78716c', '#d6b97a'], normal: true, size: 4.4, grav: 1.4, life: 860, up: 1.5 }); PAFX.smoke(x, y + 10, { size: 66 * k, n: 7, color: [190, 165, 120] }); break;
+      case 'lick': pburst(x, y, { R: 60 * k, n: 8, kind: 'drop', cols: ['#a78bfa', '#7c3aed'], normal: true, size: 3.6, grav: 1.1, up: 1.6, life: 700 }); sweepArc(x, y, ang, [167, 139, 250], S * 0.9, { dir: 1, span: 90 }); break;
+      case 'kiss': PAFX.flash(x, y, { size: 70 * k, color: [255, 200, 225] }); pburst(x, y, { R: 80 * k, n: 8, kind: 'heart', cols: ['#fb7185', '#f9a8d4', '#fda4af'], size: 3.4, grav: -0.35, life: 900, up: 1.4 }); break;
+      case 'elec': boltsFx(x, y, [250, 204, 21], 62 * k); PAFX.ring(x, y, { size: 110 * k, color: [255, 240, 150] }); break;
+    }
+  }
+  function star1(x, y, r, c) { add({ x, y, w: r * 3, h: r * 3, dur: 380, z: 28, draw(g, u, dt, f) { star(g, f.w / 2, f.h / 2, r * (0.5 + 0.8 * eo(u)), lite(c, 0.5), (1 - u) * 0.95, u * 0.8); glow(g, f.w / 2, f.h / 2, r * 0.5 * (1 - u), WHITE, 0.9 * (1 - u)); } }); }
+  const _spPhysHit = window.spPhysHit;
+  window.spPhysHit = function (x, y, o) {
+    o = o || {}; const m = o.move; let fam = null; if (m) { if (m.bite) fam = 'jaw'; else fam = FAMOF[keyOf(m)]; if (m.slash) fam = null; }
+    _spPhysHit.apply(this, arguments);
+    if (!fam || o.mini) return;
+    const pw = Math.max(0.5, Math.min(1.9, (o.power || 70) / 70)), k = Math.min(1.5, 0.7 + pw * 0.35) * (o.scale || 1), at = o.attacker, ang = at ? Math.atan2(y - (at.y + 40), x - (at.x + 35)) : 0, col = (window.PHYS_HIT_TINT && PHYS_HIT_TINT[o.type]) || '#fdba74';
+    try { if (fam === 'jaw') { const bt = m.bite; jawFx(x, y, ang, rgb(bt === 'bug' ? '#84cc16' : bt === 'fire' ? '#f97316' : col, [200, 200, 220]), 56 * k); } else physFam(fam, x, y, o, ang, col, k); } catch (e) { console.error(e); }
+  };
+
+  // enrutado extra de los sprites de impacto sueltos
+  const _spfx3 = window.spfx;
+  window.spfx = function (name, x, y, o) {
+    o = o || {}; const f = o.filter || '', S = o.size || 60;
+    switch (name) {
+      case 'lightning-strike': IMP.lightning(x, y - 10); return { style: {}, spRemove() {}, remove() {} };
+      case 'water-splash': IMP.bubble(x, y); return { style: {}, spRemove() {}, remove() {} };
+      case 'water-ripple': PAFX.ring(x, y, { size: S * 1.6, color: [150, 210, 255], flat: true }); return { style: {}, spRemove() {}, remove() {} };
+      case 'poison-cloud': IMP.poison(x, y); return { style: {}, spRemove() {}, remove() {} };
+      case 'ice-shard': IMP.ice(x, y); return { style: {}, spRemove() {}, remove() {} };
+      case 'ground-slam': physFam('hammer', x, y, {}, 0, '#d6b97a', Math.min(1.4, S / 80)); return { style: {}, spRemove() {}, remove() {} };
+      case 'magic-sparkle': { const dark2 = /brightness\(\.[0-7]/.test(f); if (dark2) darkBurst(x, y, S * 1.1); else { const col = f ? PAFX.filterColor(f, 330, [249, 168, 212]) : [249, 168, 212]; PAFX.flash(x, y, { size: S * 1.4, color: lite(col, 0.5) }); pburst(x, y, { R: S * 1.4, n: 9, kind: 'star', cols: [A(lite(col, 0.4), 1), '#fff'], size: 3, grav: -0.1, life: 760 }); } return { style: {}, spRemove() {}, remove() {} }; }
+      case 'sword-slash': slashFx(x, y, { key: 'blade', rot: o.rot || 0, flip: o.flip || 1, size: S, delay: o.delay }); return { style: {}, spRemove() {}, remove() {} };
+      case 'claw-slash': slashFx(x, y, { key: 'claw', rot: o.rot || 0, flip: o.flip || 1, size: S, crit: /hue-rotate\(75deg\)/.test(f), delay: o.delay }); return { style: {}, spRemove() {}, remove() {} };
+    }
+    return _spfx3.apply(this, arguments);
+  };
+
+  // =====================================================================================
+  //  FORCEJEO SEGÚN LA PAREJA DE PROYECTILES
+  //   rayo↔rayo · rayo↔pieza · pieza↔pieza (la pieza nunca se dibuja como rayo)
+  // =====================================================================================
+  const total = c => { const st = c.stats || {}; return (st.hp || 0) + (st.attack || 0) + (st.defense || 0) + (st.spAttack || 0) + (st.spDefense || 0) + (st.speed || 0); };
+  const isFire = P => { const v = P.move && P.move.visual; return v === 'fire' || v === 'flamethrower'; };
+  const isWater = P => { const v = P.move && P.move.visual; return v === 'bubble' || v === 'mudwater'; };
+  function sideInfo(P) { const cls = clsOf(P), vis = P.move.visual; return { P, cls, vis, beam: cls === 'beam', R: RAD[cls] || 16, col: rgb(P.color, BC[vis] || [255, 255, 255]), att: P.attacker, th: TH[vis] || 8 }; }
+  function struggle2(A_, B_, x, y) {
+    const a0 = A_.attacker, b0 = B_.attacker, sa = total(a0) * (0.97 + Math.random() * 0.06), sb = total(b0) * (0.97 + Math.random() * 0.06);
+    const Wp = sa >= sb ? A_ : B_, Lp = Wp === A_ ? B_ : A_, wa = Wp.attacker, la = Lp.attacker, ratio = Math.min(sa, sb) / Math.max(sa, sb, 1);
+    const cw0 = fxSpriteCenter(wa), cl0 = fxSpriteCenter(la), L0 = Math.hypot(cl0.x - cw0.x, cl0.y - cw0.y); if (L0 < 40 || L0 > 1500) return false;
+    const ux0 = (cl0.x - cw0.x) / L0, uy0 = (cl0.y - cw0.y) / L0, t0 = clamp(((x - cw0.x) * ux0 + (y - cw0.y) * uy0) / L0, 0.22, 0.78);
+    const W = sideInfo(Wp), Lo = sideInfo(Lp), kind = (W.beam && Lo.beam) ? 'BB' : (W.beam || Lo.beam) ? 'BX' : 'XX', DUR = 1050 + 1000 * ratio;
+    const mixCol = mixc(W.col, Lo.col, 0.5), react = (isFire(Wp) && isWater(Lp)) || (isWater(Wp) && isFire(Lp));
+    const pad = 240, x0 = Math.min(cw0.x, cl0.x) - pad, y0 = Math.min(cw0.y, cl0.y) - pad, w = Math.abs(cw0.x - cl0.x) + pad * 2, h = Math.abs(cw0.y - cl0.y) + pad * 2;
+    const wN = !W.beam && isNormal(W.cls, W.vis), loN = !Lo.beam && isNormal(Lo.cls, Lo.vis);
+    const V = { st: null, sp: [], rings: [], bolts: [], boltT: 0, ringT: 0, spT: 0, popped: false, steamT: 0 };
+    const norm = (W.cls === 'bubble' || W.cls === 'glob' || Lo.cls === 'bubble' || Lo.cls === 'glob'); // se dibujan en 2 lienzos: aditivo (rayos/halos) + normal (piezas opacas)
+    const drawObj = (g, isW) => { const s = V.st, T = V.T || 0, S = isW ? W : Lo, other = isW ? Lo : W, ux = s.ux, uy = s.uy; let px = s.cx, py = s.cy; if (!other.beam) { const off = S.R * 0.8 * (1 - (s.u > 0.78 && isW ? clamp((s.u - 0.78) / 0.22) : 0)); px += (isW ? -ux : ux) * off; py += (isW ? -uy : uy) * off; } const dir = isW ? 1 : -1; skinDraw(g, S.cls, S.vis, px, py, S.R * (isW ? 1 + 0.25 * s.u : 1 - 0.18 * s.u), Math.atan2(uy * dir, ux * dir), T, 1, { col: S.col, sq: isW ? 0.12 + 0.1 * Math.sin(T * 0.05) : 0.3 + 0.35 * s.u + 0.1 * Math.sin(T * 0.06), seed: isW ? 1 : 2 }); };
+    const addN = (wN || loN) ? add({ x: x0 + w / 2, y: y0 + h / 2, w, h, dur: 1e9, keep: true, z: 28, normal: true, draw(g, u, dt, F) { const s = V.st; if (!s) return; V.T = F.t; g.save(); g.translate(-x0, -y0); if (wN) drawObj(g, true); if (loN && !V.popped) drawObj(g, false); g.restore(); } }) : null;
+    const addW = add({ x: x0 + w / 2, y: y0 + h / 2, w, h, dur: 1e9, keep: true, z: 27, normal: true,
+      draw(g, u, dt, F) {
+        g.globalCompositeOperation = 'lighter';
+        const s = V.st; if (!s) return; g.save(); g.translate(-x0, -y0); const T = F.t; V.T = T; const pulse = 0.5 + 0.5 * Math.sin(T * 0.045), C = { x: s.cx, y: s.cy }, ux = s.ux, uy = s.uy;
+        const drawBeam = (S, from, to, th) => beamDraw(g, S.vis, from.x, from.y, to.x, to.y, th, T, 1, { noTip: true });
+        const endFor = (S, isW) => { const other = isW ? Lo : W; if (!other.beam) { const d = other.R * 0.95; return isW ? { x: C.x - ux * d, y: C.y - uy * d } : { x: C.x + ux * d, y: C.y + uy * d }; } return C; };
+        // lanzadores
+        glow(g, s.w.x, s.w.y, 30 + 8 * pulse, W.col, 0.55); glow(g, s.l.x, s.l.y, 26 + 8 * pulse, Lo.col, 0.5);
+        if (W.beam) drawBeam(W, s.w, endFor(W, true), s.thW); else { const d = Math.hypot(C.x - s.w.x, C.y - s.w.y); if (d > 20) { for (let k = 0; k < 6; k++) { const p = ((T * 0.0016 + k / 6) % 1); glow(g, s.w.x + ux * d * p, s.w.y + uy * d * p, 4, W.col, 0.35 * (1 - p)); } } }
+        if (Lo.beam) drawBeam(Lo, s.l, endFor(Lo, false), s.thL); else { const d = Math.hypot(C.x - s.l.x, C.y - s.l.y); if (d > 20) { for (let k = 0; k < 6; k++) { const p = ((T * 0.0016 + k / 6) % 1); glow(g, s.l.x - ux * d * p, s.l.y - uy * d * p, 4, Lo.col, 0.35 * (1 - p)); } } }
+        // núcleo de contacto
+        const big = kind === 'BB' ? 1 : kind === 'BX' ? 0.7 : 0.55, cs = s.cs * big;
+        glow(g, C.x, C.y, 86 * cs, mixCol, 0.34 + 0.1 * pulse); glow(g, C.x, C.y, 48 * cs, lite(mixCol, 0.4), 0.55); glow(g, C.x, C.y, 22 * cs, WHITE, 0.85);
+        if (kind === 'BB') { for (let k = 0; k < 3; k++) { const rr = (24 + k * 12) * cs, st = T * 0.006 * (k % 2 ? -1 : 1) + k; g.strokeStyle = A(k % 2 ? lite(Lo.col, 0.35) : lite(W.col, 0.35), 0.75 - k * 0.15); g.lineWidth = 3.2 - k * 0.8; g.lineCap = 'round'; for (let a = 0; a < 3; a++) { g.beginPath(); g.arc(C.x, C.y, rr, st + a * TAU / 3, st + a * TAU / 3 + 1.05); g.stroke(); } } }
+        star(g, C.x, C.y, 64 * cs, lite(mixCol, 0.5), 0.55 + 0.3 * pulse, T * 0.002);
+        // piezas
+        if (!W.beam && !wN) drawObj(g, true); if (!Lo.beam && !loN && !V.popped) drawObj(g, false);
+        // chispas / rayos eléctricos de choque / ondas
+        if (kind === 'BB') { V.boltT -= dt; if (V.boltT <= 0) { V.boltT = 60; V.bolts = []; const nb = 3 + Math.round(2 * s.u); for (let b = 0; b < nb; b++) { let an = rnd(0, TAU); const pl = [[0, 0]]; let px = 0, py = 0; for (let i = 1; i <= 6; i++) { an += rnd(-0.55, 0.55); const l = rnd(46, 110) * cs / 6; px += Math.cos(an) * l; py += Math.sin(an) * l; pl.push([px, py]); } V.bolts.push({ pl, c: Math.random() < 0.5 ? lite(W.col, 0.5) : lite(Lo.col, 0.5) }); } }
+          for (const b of V.bolts) for (const [wd, col, al] of [[4, b.c, 0.2], [1.8, b.c, 0.7], [0.8, WHITE, 0.95]]) { g.strokeStyle = A(col, al); g.lineWidth = wd; g.lineJoin = 'round'; g.beginPath(); b.pl.forEach((p, i) => i ? g.lineTo(C.x + p[0], C.y + p[1]) : g.moveTo(C.x + p[0], C.y + p[1])); g.stroke(); } }
+        V.ringT -= dt; if (V.ringT <= 0) { V.ringT = kind === 'BB' ? 230 : 300; V.rings.push({ t: 0, c: Math.random() < 0.5 ? lite(W.col, 0.35) : lite(Lo.col, 0.35) }); }
+        for (let i = V.rings.length - 1; i >= 0; i--) { const r = V.rings[i]; r.t += dt; const v = r.t / 560; if (v >= 1) { V.rings.splice(i, 1); continue; } ringSoft(g, C.x, C.y, 14 + 100 * big * eo(v), 5 * (1 - v) + 1, r.c, (1 - v) * 0.8, 0.62); }
+        V.spT -= dt; if (V.spT <= 0) { V.spT = 36; for (let i = 0; i < 3; i++) { const a = rnd(0, TAU), v = rnd(0.12, 0.38); V.sp.push({ x: C.x, y: C.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.05, t: 0, life: rnd(380, 700), c: Math.random() < 0.5 ? lite(W.col, 0.4) : lite(Lo.col, 0.4) }); } if (V.sp.length > 90) V.sp.splice(0, V.sp.length - 90); }
+        for (let i = V.sp.length - 1; i >= 0; i--) { const p = V.sp[i]; p.t += dt; if (p.t >= p.life) { V.sp.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.0003 * dt; const v = p.t / p.life; streak(g, p.x, p.y, p.vx, p.vy, 16 * (1 - v) + 4, 2 * (1 - v) + 0.6, p.c, 1 - v); }
+        if (react) { V.steamT -= dt; if (V.steamT <= 0) { V.steamT = 110; V.sp.push({ x: C.x + rnd(-14, 14), y: C.y + rnd(-6, 8), vx: rnd(-0.03, 0.03), vy: rnd(-0.1, -0.04), t: 0, life: 900, steam: 1, c: [230, 236, 245] }); } }
+        for (const p of V.sp) if (p.steam) { const v = p.t / p.life; glow(g, p.x, p.y, 16 + 34 * v, [230, 236, 245], 0.22 * (1 - v)); }
+        g.restore();
+      } });
+    if (!addW) { if (addN) kill(addN); return false; }
+    projStruggles++;
+    let el = 0, last = performance.now(), shakeAcc = 0, done = false;
+    const finish = hitIt => {
+      if (done) return; done = true; projStruggles = Math.max(0, projStruggles - 1); kill(addW); if (addN) kill(addN);
+      if (!hitIt || !gameRunning || gameOver || wa.fainted || la.fainted || la.isEvolving) return;
+      const c2 = fxSpriteCenter(la), col = W.col;
+      try { window.spImpact(Wp.move.visual, c2.x, c2.y, Wp.move); } catch (e) {}
+      PAFX.ring(c2.x, c2.y + 14, { size: 220, color: lite(col, 0.3), flat: true }); PAFX.ring(c2.x, c2.y, { size: 150, color: WHITE, delay: 60 });
+      try { triggerCameraShake(8, 320 / gameSpeed); } catch (e) {}
+      logMessage('¡' + Wp.move.name + ' de ' + wa.name + ' se impone y arrolla a ' + Lp.move.name + ' de ' + la.name + '!', 'attack');
+      resolveSingleHit(Wp.move, wa, la, c2.x, c2.y, Wp.hitSound, Wp.color, Wp.spark, 'forcejeo ganado');
+      if (Wp.move.wave) { try { triggerSurfWave(Wp.move, wa, la, c2.x, c2.y); } catch (e) {} }
+    };
+    const step = now => {
+      if (done) return;
+      const dt = Math.max(0, Math.min(50, now - last)) * gameSpeed; last = Math.max(last, now);
+      if (gameOver || !gameRunning || wa.fainted || la.fainted) { finish(false); return; }
+      if (document.hidden) { requestAnimationFrame(step); return; }
+      el += dt; const u = clamp(el / DUR), w = fxSpriteCenter(wa), l = fxSpriteCenter(la), ddx = l.x - w.x, ddy = l.y - w.y, LL = Math.hypot(ddx, ddy) || 1, vx = ddx / LL, vy = ddy / LL;
+      const hold = t0 + (0.5 - t0) * 0.6 * Math.min(u, 0.78) + 0.07 * (1 - ratio) * Math.min(u, 0.78), shake = u < 0.78 ? 0.04 * (0.4 + u) * Math.sin(el * 0.06) + 0.018 * Math.sin(el * 0.17) : 0;
+      const tt = clamp(u < 0.78 ? hold + shake : hold + (1 - hold) * Math.pow((u - 0.78) / 0.22, 2.2), 0.08, 1), cx = w.x + vx * LL * tt, cy = w.y + vy * LL * tt;
+      if (u >= 0.78 && !V.popped && !(W.beam && Lo.beam)) { V.popped = true; const lp = { x: cx + vx * Lo.R * 0.8, y: cy + vy * Lo.R * 0.8 }; if (!Lo.beam) { try { window.spImpact(Lp.move.visual, lp.x, lp.y, Lp.move); } catch (e) {} } }
+      V.st = { w, l, cx, cy, ux: vx, uy: vy, u, thW: W.beam ? W.th * (0.9 + 0.5 * u + 0.1 * Math.sin(el * 0.05)) : 0, thL: Lo.beam ? Lo.th * Math.max(0.35, 1 - 0.55 * Math.pow(u, 1.5)) * (1 + 0.08 * Math.sin(el * 0.05 + 2)) : 0, cs: (1 + 0.5 * u) * (1.2 - 0.3 * Math.abs(tt - 0.5)) };
+      shakeAcc += dt; if (shakeAcc >= 240) { shakeAcc = 0; try { triggerCameraShake(2 + 3 * u, 150 / gameSpeed); } catch (e) {} }
+      if (u >= 1) { finish(true); return; }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    return true;
+  }
+
+  const _annul = window.projAnnul;
+  function tryStruggle(A_, B_, x, y) {
+    if (!(typeof projStruggles === 'number' && projStruggles < 3) || !A_.attacker || !B_.attacker || A_.attacker.fainted || B_.attacker.fainted || !A_.move || !B_.move) return false;
+    let ok = false; try { ok = struggle2(A_, B_, x, y); } catch (e) { console.error(e); ok = false; }
+    if (!ok) return false;
+    [A_, B_].forEach(P => { P.dead = true; if (P.grp) P.grp.dead = true; liveProj.delete(P); if (P.kind === 'beam') { P.mute = true; if (P.cancel) P.cancel(x, y); } else if (P.el) P.el.remove(); });
+    sndHitPlay(0.5); PAFX.flash(x, y, { size: 70, color: [255, 250, 220] });
+    logMessage('¡' + A_.move.name + ' de ' + A_.attacker.name + ' y ' + B_.move.name + ' de ' + B_.attacker.name + ' chocan y forcejean!', 'attack');
+    return true;
+  }
+  window.projAnnul = function (A_, B_, x, y) { if (!A_.dead && !B_.dead && tryStruggle(A_, B_, x, y)) return; return _annul.apply(this, arguments); };
+  window.projClash = function (A_, B_, x, y) { if (tryStruggle(A_, B_, x, y)) return; _annul(A_, B_, x, y); };
+  const _spk = window.spawnSparks; window.spawnSparks = function (x, y, c, n) { if (PAFX.live() > 26) return; return _spk.apply(this, arguments); };
+  window.__pafx3 = { skinDraw, beamDraw, slashFx, IMP, pburst, physFam, clsOf, struggle2, jawFx };
+})();
 
 </script>
 </body>

@@ -13639,7 +13639,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // mismo marco, así que la interfaz no cambia; los zooms de enfoque/ataque tampoco.
         // Modos de arena: Clásica 2,625x (antes 1,75x) y Raids 3x (el mundo es 3 veces más ancho y largo que el marco, que en Raids es apaisado).
         // Por eso ARENA_SCALE y BASE_ZOOM son variables: setArenaMode() las cambia antes de empezar la partida.
-        const ARENA_MODES = { classic: 2.23125, raids: 3, pvp: 1.9 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
+        const ARENA_MODES = { classic: 2.23125, raids: 3, pvp: 1.3 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
         let arenaMode = 'classic';
         let ARENA_SCALE = ARENA_MODES.classic;
         let BASE_ZOOM = 1 / ARENA_SCALE;
@@ -24018,6 +24018,14 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         const _steerOut = { x: 0, y: 0 };
         function pickWanderPoint(c) {
             if (isRaid() && raidState) { raidWanderPoint(c); return; } // Raid: el equipo rodea al ALFA y el ALFA patrulla el centro
+            if (pvpDuel) { // PVP / Liga: nada de pasear, se va directo a por el rival a la distancia de su ataque
+                let near = null, nd = Infinity;
+                for (const o of combatants) { if (o === c || o.fainted || o.isEvolving || o.isSpawning || !isHostile(c, o)) continue; const d = Math.hypot(o.x - c.x, o.y - c.y); if (d < nd) { nd = d; near = o; } }
+                if (near) {
+                    const rg = attackRange(movesData[c.attackKey]) || 60, stand = Math.max(28, Math.min(rg * 0.7, 150)), ang = Math.atan2(c.y - near.y, c.x - near.x);
+                    c.wpX = near.x + Math.cos(ang) * stand; c.wpY = near.y + Math.sin(ang) * stand; c.wpUntil = performance.now() + 400; c.wpRest = 0; return;
+                }
+            }
             const R = engageRadius();
             const WA = playArea(WANDER_EDGE_MARGIN); // los puntos de paseo caen siempre DENTRO del claro, nunca tras los árboles
             const others = combatants.filter(o => o !== c && !o.fainted && !o.isSpawning);
@@ -24199,7 +24207,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             pickMoveTarget(c); // mantiene c.moveTargetId (solo rivales dentro del radio de combate) para orientar al sprite
             const now = performance.now();
             const R = engageRadius();
-            const speed = ((moveSpd(c) / 35) + 0.4) * gameSpeed;
+            const speed = ((moveSpd(c) / 35) + 0.4) * gameSpeed * (pvpDuel ? 1.45 : 1);
 
             let sepX = 0, sepY = 0, crowd = 0;
             for (const o of combatants) {
@@ -24215,7 +24223,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
 
             // Lleva un rato sin nadie al alcance de su ataque: se encamina hacia el rival más cercano
             // (solo hasta entrar en rango, ahí el ataque vuelve a funcionar y deja de cazar).
-            if (c.noTargetSince && performance.now() - c.noTargetSince > 2500) {
+            if (c.noTargetSince && performance.now() - c.noTargetSince > (pvpDuel ? 400 : 2500)) {
                 let near = null, nd = Infinity;
                 for (const o of combatants) {
                     if (o === c || o.fainted || o.isEvolving || o.isSpawning || !isHostile(c, o)) continue;
@@ -24233,6 +24241,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             const wdx = c.wpX - c.x, wdy = c.wpY - c.y, wd = Math.hypot(wdx, wdy);
             if (wd < 24) {
                 // Llegó: descansa un momento y luego elige otro punto.
+                if (pvpDuel) { pickWanderPoint(c); c.vx = 0; c.vy = 0; c.strideM = 0; c.strideCrouch = false; return; }
                 if (!c.wpRest) c.wpRest = now + 500 + Math.random() * 1400;
                 else if (now > c.wpRest) pickWanderPoint(c);
                 c.vx = 0; c.vy = 0; c.strideM = 0; c.strideCrouch = false;
@@ -33686,8 +33695,9 @@ body.pvp-on #champion-bar > *:not(#pvp-me){display:none!important}
 @media (prefers-reduced-motion:reduce){#pvp-res .rs-big .ch{animation:none}#pvp-res .rs-ray,#pvp-res .rs-mvp-sp img{animation:none}}
 
 /* PVP / Liga: los pokémon son los protagonistas (sprites algo más grandes) */
-body.pvp-on .pokemon-wrapper .pokemon{scale:1.22;transform-origin:50% 88%}
-body.pvp-on .pokemon-wrapper .pokemon-hud{translate:0 -7px}
+/* PVP / Liga: sprites más grandes que en otros modos, conservando las proporciones (grandes se ven grandes, chicos chicos) */
+body.pvp-on .pokemon-wrapper .pokemon{scale:1.5;transform-origin:50% 88%}
+body.pvp-on .pokemon-wrapper .pokemon-hud{translate:0 -14px}
 
 /* ===== HUD de combate v3 · estilo "versus" de juego de lucha: marcador arriba (tú | reloj | rival), bandeja de plantel abajo ===== */
 #pvp-top{position:absolute;left:0;right:0;top:0;z-index:45;pointer-events:none}

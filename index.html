@@ -13639,7 +13639,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // mismo marco, así que la interfaz no cambia; los zooms de enfoque/ataque tampoco.
         // Modos de arena: Clásica 2,625x (antes 1,75x) y Raids 3x (el mundo es 3 veces más ancho y largo que el marco, que en Raids es apaisado).
         // Por eso ARENA_SCALE y BASE_ZOOM son variables: setArenaMode() las cambia antes de empezar la partida.
-        const ARENA_MODES = { classic: 2.23125, raids: 3, pvp: 2.6 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
+        const ARENA_MODES = { classic: 2.23125, raids: 3, pvp: 1.9 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
         let arenaMode = 'classic';
         let ARENA_SCALE = ARENA_MODES.classic;
         let BASE_ZOOM = 1 / ARENA_SCALE;
@@ -33633,6 +33633,62 @@ body.pvp-on #champion-bar > *:not(#pvp-me){display:none!important}
 #pvp-res .rs-vs{font-size:18px;color:#64748b;font-style:italic}
 #pvp-res .rs-btns{display:flex;flex-direction:column;gap:8px;width:100%}
 
+
+/* ===== Pantalla final del duelo (misma estética que el resumen de la arena) ===== */
+#pvp-res{display:block;overflow-y:auto;padding:0;background:radial-gradient(ellipse 80% 45% at 15% 0%,rgba(125,211,252,.26),transparent 70%),radial-gradient(ellipse 80% 45% at 95% 100%,rgba(253,224,71,.2),transparent 70%),rgba(6,10,26,.78);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3)}
+#pvp-res.lose{background:radial-gradient(ellipse 80% 45% at 15% 0%,rgba(125,211,252,.22),transparent 70%),radial-gradient(ellipse 80% 45% at 95% 100%,rgba(251,113,133,.16),transparent 70%),rgba(6,10,26,.8)}
+#pvp-res .rs{width:min(360px,100%);max-width:none;margin:0 auto;min-height:100%;box-sizing:border-box;padding:16px 16px 16px;background:none;border:0;box-shadow:none;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;container-type:inline-size}
+#pvp-res .rs-big{display:flex;justify-content:center;font-weight:900;font-style:italic;line-height:1.02;font-size:clamp(2.1rem,17cqw,3.6rem);letter-spacing:.02em;filter:drop-shadow(0 3px 0 rgba(113,53,12,.95)) drop-shadow(0 0 16px rgba(253,224,71,.5))}
+#pvp-res .rs-big .ch{display:inline-block;color:transparent;-webkit-text-fill-color:transparent;background:linear-gradient(100deg,#fff7c2 0%,#fde047 30%,#f59e0b 50%,#fde047 68%,#fff 84%,#fde047 100%);background-size:280% 100%;-webkit-background-clip:text;background-clip:text;animation:rsChIn .8s cubic-bezier(.2,1.5,.35,1) calc(var(--i) * 70ms) both,rsShine 2.8s linear calc(1100ms + var(--i) * 85ms) infinite}
+#pvp-res.lose .rs-big{filter:drop-shadow(0 3px 0 rgba(15,30,70,.95)) drop-shadow(0 0 16px rgba(125,211,252,.45))}
+#pvp-res.lose .rs-big .ch{background-image:linear-gradient(100deg,#f1f5f9 0%,#93c5fd 35%,#38bdf8 50%,#93c5fd 68%,#fff 84%,#93c5fd 100%)}
+@keyframes rsChIn{0%{opacity:0;transform:translateY(-.9em) scale(2.1) rotate(-10deg);filter:blur(10px)}55%{opacity:1;transform:translateY(.06em) scale(.94) rotate(2deg);filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes rsShine{0%{background-position:0% 0}55%,100%{background-position:100% 0}}
+#pvp-res .rs-rule{display:block;height:2px;width:0;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(253,224,71,.95),transparent);box-shadow:0 0 10px rgba(253,224,71,.7);animation:rsRule .7s ease-out .75s forwards}
+#pvp-res.lose .rs-rule{background:linear-gradient(90deg,transparent,rgba(125,211,252,.95),transparent);box-shadow:0 0 10px rgba(125,211,252,.7)}
+@keyframes rsRule{to{width:min(62%,220px)}}
+#pvp-res .rs-sub{font-size:12px;color:#e2e8f0;letter-spacing:.06em;text-shadow:0 2px 0 rgba(0,0,0,.8);opacity:0;animation:rsFade .6s ease-out 1s forwards}
+@keyframes rsFade{to{opacity:1}}
+#pvp-res .rs-row{opacity:0;animation:rsFade .6s ease-out 1.1s forwards;padding:8px 6px;border-radius:14px;background:rgba(2,6,23,.45);border:1px solid rgba(255,255,255,.1)}
+#pvp-res .rs-p.me .pv-av{border-color:#38bdf8}#pvp-res .rs-p.foe .pv-av{border-color:#fb7185}
+#pvp-res .rs-p.w .pv-av{border-color:#fde047;box-shadow:0 0 16px #fde047}
+#pvp-res .rs-mvp{position:relative;width:100%;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(113,63,18,.72),rgba(15,23,42,.9));border:1px solid rgba(253,224,71,.6);box-shadow:0 0 24px -6px rgba(253,224,71,.6);opacity:0;transform:scale(.85);animation:rsMvp .7s cubic-bezier(.2,1.5,.35,1) 1.2s forwards}
+@keyframes rsMvp{to{opacity:1;transform:none}}
+#pvp-res .rs-ray{position:absolute;left:50%;top:44px;width:260px;height:260px;margin:-130px 0 0 -130px;background:repeating-conic-gradient(from 0deg,rgba(253,224,71,.2) 0 10deg,transparent 10deg 20deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 0,transparent 68%);mask:radial-gradient(circle,#000 0,transparent 68%);animation:rsSpin 14s linear infinite;pointer-events:none}
+@keyframes rsSpin{to{transform:rotate(360deg)}}
+#pvp-res .rs-mvp-t{position:relative;font-size:12px;letter-spacing:.3em;color:#fde047;text-shadow:0 0 10px rgba(253,224,71,.7)}
+#pvp-res .rs-mvp-sp{position:relative;width:92px;height:76px;display:grid;place-items:center}
+#pvp-res .rs-mvp-sp img{max-width:100%;max-height:100%;image-rendering:pixelated;filter:drop-shadow(0 4px 0 rgba(0,0,0,.45));animation:rsBob 1.6s ease-in-out infinite}
+@keyframes rsBob{50%{transform:translateY(-4px)}}
+#pvp-res .rs-mvp-n{position:relative;font-size:17px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.8)}
+#pvp-res .rs-mvp-o{position:relative;font-size:10px;letter-spacing:.12em;color:#7dd3fc}#pvp-res .rs-mvp.foe .rs-mvp-o{color:#fda4af}
+#pvp-res .rs-mvp-s{position:relative;display:flex;gap:6px;width:100%;margin-top:6px}
+#pvp-res .rs-mvp-s span{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px;border-radius:9px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.1);font-size:8px;letter-spacing:.08em;color:#94a3b8}
+#pvp-res .rs-mvp-s b{font-size:14px;color:#fde047;letter-spacing:0}
+#pvp-res .rs-ttl{font-size:12px;letter-spacing:.2em;color:#fde047;text-shadow:0 0 10px rgba(253,224,71,.5);margin-top:4px}
+#pvp-res .rs-list{width:100%;display:flex;flex-direction:column;gap:6px}
+#pvp-res .rs-r{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:12px;background:rgba(15,23,42,.82);border:1px solid rgba(255,255,255,.12);border-left:3px solid #64748b;opacity:0;transform:translateX(-14px);transition:opacity .3s,transform .3s}
+#pvp-res .rs-r.me{border-left-color:#38bdf8}#pvp-res .rs-r.foe{border-left-color:#fb7185}
+#pvp-res .rs-r.in{opacity:1;transform:none;animation:rsGlow 1s ease-out}
+#pvp-res .rs-r.none.in{opacity:.5}
+@keyframes rsGlow{0%{box-shadow:0 0 0 0 rgba(253,224,71,0)}25%{box-shadow:0 0 18px 2px rgba(253,224,71,.65);border-color:#fde047}100%{box-shadow:0 0 0 0 rgba(253,224,71,0)}}
+#pvp-res .rs-sp{width:44px;height:44px;border-radius:10px;overflow:hidden;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;font-size:22px}
+#pvp-res .rs-sp img{max-width:100%;max-height:100%;image-rendering:pixelated}
+#pvp-res .rs-tx{min-width:0;text-align:left}
+#pvp-res .rs-tx small{display:block;font-size:9px;letter-spacing:.1em;color:#7dd3fc;margin-bottom:3px}
+#pvp-res .rs-tx b{display:block;font-size:13px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pvp-res .rs-v{font-size:15px;color:#fde047;text-shadow:0 0 8px rgba(253,224,71,.35);white-space:nowrap}
+#pvp-res .rs-btns{display:flex;flex-direction:column;gap:9px;width:100%;margin-top:6px;opacity:0;pointer-events:none;transition:opacity .4s}
+#pvp-res.fin .rs-btns{opacity:1;pointer-events:auto}
+#pvp-res .rs-btn{font:inherit;font-weight:700;font-size:13px;letter-spacing:.08em;padding:14px 18px;border-radius:999px;cursor:pointer;color:#e8f1ff;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 22px -10px rgba(0,0,0,.6);text-shadow:0 1px 2px rgba(0,0,0,.55);-webkit-tap-highlight-color:transparent}
+#pvp-res .rs-btn.go{color:#fff8d1;background:linear-gradient(180deg,rgba(253,224,71,.4),rgba(234,179,8,.16));border-color:rgba(253,224,71,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 22px -8px rgba(234,179,8,.7)}
+#pvp-res .rs-btn:active{transform:translateY(2px)}
+@media (prefers-reduced-motion:reduce){#pvp-res .rs-big .ch{animation:none}#pvp-res .rs-ray,#pvp-res .rs-mvp-sp img{animation:none}}
+
+/* PVP / Liga: los pokémon son los protagonistas (sprites algo más grandes) */
+body.pvp-on .pokemon-wrapper .pokemon{scale:1.22;transform-origin:50% 88%}
+body.pvp-on .pokemon-wrapper .pokemon-hud{translate:0 -7px}
+
 /* ===== HUD de combate v3 · estilo "versus" de juego de lucha: marcador arriba (tú | reloj | rival), bandeja de plantel abajo ===== */
 #pvp-top{position:absolute;left:0;right:0;top:0;z-index:45;pointer-events:none}
 #pvp-top .pv-x{pointer-events:auto}
@@ -34126,6 +34182,15 @@ window.PAPvp = (function () {
         const v = view(); render(v);
         const res = { ts: Date.now(), winnerAcc: winAcc, winnerName: P.names[winAcc] || '', how: how || 'ko', by: by || '', secs: Math.floor(matchElapsedMs / 1000), left: {}, names: Object.assign({}, P.names), avatars: Object.assign({}, P.avatars) };
         P.order.forEach(acc => { res.left[acc] = aliveCount(acc); });
+        try { // estadísticas por pokémon (las mismas que el resumen de la arena)
+            res.stats = [];
+            P.order.forEach(acc => P.teams[acc].slots.forEach(sl => {
+                const c = combatantsById[sl.id]; if (c) { try { aeTallySnap(c); } catch (e) {} }
+                const t = arenaTally[sl.id]; if (!t) return;
+                const sp = t.sprite || sl.sprite || '';
+                res.stats.push({ a: acc, n: String(t.name || sl.name || '').slice(0, 24), sp: sp.length < 500 ? sp : '', k: t.kos | 0, d: Math.round(t.dealt || 0), t: Math.round(t.taken || 0), m: Math.round(t.ms || 0) });
+            }));
+        } catch (e) { console.error(e); }
         P.res = res;
         mpHostEnd();
         const post = () => SaveSys.call('POST', '/api/room/result', { code: P.code, result: res });
@@ -34309,10 +34374,32 @@ window.PAPvp = (function () {
         if ($('pvp-res')) return;
         const win = res.winnerAcc === P.me, draw = !res.winnerAcc, el = document.createElement('div'); el.id = 'pvp-res'; el.className = draw ? '' : win ? 'win' : 'lose';
         const subs = { ko: win ? 'Debilitaste a los 6 pokémon rivales' : 'Tus 6 pokémon fueron debilitados', tiempo: 'Se acabó el tiempo', rendicion: res.by === P.me ? 'Te has rendido' : 'Tu rival se rindió', desconexion: 'Se perdió la conexión con el rival', cancelada: 'La partida terminó' };
-        const p = acc => '<div class="rs-p' + (acc === res.winnerAcc ? ' w' : '') + '"><div class="pv-av">' + avHtml(P.names[acc], P.avatars[acc] || (acc === P.me ? mpProfile().avatar : '')) + '</div><b>' + esc(P.names[acc] || '?') + '</b><small>' + (res.left && res.left[acc] != null ? 'Quedan ' + res.left[acc] : '') + '</small></div>';
-        el.innerHTML = '<div class="rs"><h2>' + (draw ? 'FIN' : win ? '¡VICTORIA!' : 'DERROTA') + '</h2><div class="rs-sub">' + esc(subs[res.how] || '') + '</div><div class="rs-row">' + p(P.me) + '<span class="rs-vs">VS</span>' + p(P.foe) + '</div><div class="rs-btns"><button type="button" class="pv-btn go" data-a="again">BUSCAR OTRA PARTIDA</button><button type="button" class="pv-btn" data-a="menu">MENÚ</button></div></div>';
+        const word = draw ? 'FIN' : win ? '¡VICTORIA!' : 'DERROTA';
+        let ci = 0; const big = Array.from(word).map(ch => '<span class="ch" style="--i:' + (ci++) + '">' + esc(ch) + '</span>').join('');
+        const p = acc => '<div class="rs-p' + (acc === res.winnerAcc ? ' w' : '') + (acc === P.me ? ' me' : ' foe') + '"><div class="pv-av">' + avHtml(P.names[acc], P.avatars[acc] || (acc === P.me ? mpProfile().avatar : '')) + '</div><b>' + esc(P.names[acc] || '?') + '</b><small>' + (res.left && res.left[acc] != null ? 'Quedan ' + res.left[acc] : '') + '</small></div>';
+        const st = Array.isArray(res.stats) ? res.stats : [];
+        const score = o => o.k * 400 + o.d + o.t * 0.4 + o.m / 1000;
+        const pool = st.filter(o => !res.winnerAcc || o.a === res.winnerAcc), mvp = (pool.length ? pool : st).slice().sort((x, y) => score(y) - score(x))[0];
+        const best = k => { const o = st.slice().sort((x, y) => y[k] - x[k])[0]; return o && o[k] > 0 ? o : null; };
+        const num = n => Math.round(n).toLocaleString('es-ES');
+        const img = o => o && o.sp ? '<img alt="" draggable="false" src="' + esc(o.sp) + '">' : '';
+        const rows = [
+            { l: 'MÁS KOs', o: best('k'), v: o => o.k, f: v => v + ' KO' },
+            { l: 'MÁS DAÑO HECHO', o: best('d'), v: o => o.d, f: v => num(v) },
+            { l: 'MÁS DAÑO RESISTIDO', o: best('t'), v: o => o.t, f: v => num(v) },
+            { l: 'DURACIÓN', o: null, v: () => res.secs | 0, f: v => Math.floor(v / 60) + ':' + String(v % 60).padStart(2, '0'), ic: '⏱', nm: 'DUELO COMPLETADO' }
+        ];
+        const rowH = rows.map(r => { const v = r.v(r.o || {}), none = !r.o && !r.ic; return '<div class="rs-r' + (none ? ' none' : '') + (r.o ? (r.o.a === P.me ? ' me' : ' foe') : '') + '"><div class="rs-sp">' + (r.ic || img(r.o)) + '</div><div class="rs-tx"><small>' + r.l + '</small><b>' + esc(none ? 'NADIE' : (r.nm || r.o.n)) + '</b></div><div class="rs-v"><span class="rs-n" data-to="' + (v || 0) + '" data-f="' + rows.indexOf(r) + '">' + r.f(0) + '</span></div></div>'; }).join('');
+        const mvpH = mvp ? '<div class="rs-mvp ' + (mvp.a === P.me ? 'me' : 'foe') + '"><i class="rs-ray"></i><div class="rs-mvp-t">★ MVP ★</div><div class="rs-mvp-sp">' + img(mvp) + '</div><div class="rs-mvp-n">' + esc(mvp.n) + '</div><div class="rs-mvp-o">' + esc(P.names[mvp.a] || '') + '</div><div class="rs-mvp-s"><span><b>' + mvp.k + '</b>KO</span><span><b>' + num(mvp.d) + '</b>DAÑO</span><span><b>' + num(mvp.t) + '</b>RESISTIDO</span></div></div>' : '';
+        el.innerHTML = '<div class="rs"><div class="rs-big" role="heading" aria-label="' + esc(word) + '">' + big + '</div><i class="rs-rule"></i><div class="rs-sub">' + esc(subs[res.how] || '') + '</div><div class="rs-row">' + p(P.me) + '<span class="rs-vs">VS</span>' + p(P.foe) + '</div>' + mvpH + (st.length ? '<div class="rs-ttl">RESUMEN DEL DUELO</div><div class="rs-list">' + rowH + '</div>' : '') + '<div class="rs-btns"><button type="button" class="rs-btn go" data-a="again">BUSCAR OTRA PARTIDA</button><button type="button" class="rs-btn alt" data-a="menu">MENÚ</button></div></div>';
         document.body.appendChild(el); sfx(win ? 'confirm' : 'pop');
-        el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; sfx('tick'); const again = b.dataset.a === 'again'; el.remove(); exitToMenu(again); });
+        const fmts = rows.map(r => r.f), ns = Array.from(el.querySelectorAll('.rs-n')), rs = Array.from(el.querySelectorAll('.rs-r')); let done = false; const timers = [];
+        const finish = () => { if (done) return; done = true; timers.forEach(clearTimeout); rs.forEach(r => r.classList.add('in')); ns.forEach(n => { n.textContent = fmts[+n.dataset.f](+n.dataset.to); }); el.classList.add('fin'); };
+        const count = n => { const to = +n.dataset.to, f = fmts[+n.dataset.f], t0 = performance.now(); if (!(to > 0)) { n.textContent = f(0); return; } const step = now => { if (done) return; const k = Math.min(1, (now - t0) / 700); n.textContent = f(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+        const t0 = mvp ? 1500 : 900;
+        rs.forEach((r, i) => timers.push(setTimeout(() => { if (done) return; r.classList.add('in'); sfx('pop'); const n = r.querySelector('.rs-n'); if (n) count(n); }, t0 + i * 650)));
+        timers.push(setTimeout(finish, t0 + rs.length * 650 + 500));
+        el.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) { finish(); return; } sfx('tick'); const again = b.dataset.a === 'again'; el.remove(); exitToMenu(again); });
     }
     function exitToMenu(again) {
         const host = P.host;

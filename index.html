@@ -17052,6 +17052,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         function aeFitImgs(root) { // centra cada sprite en su casilla (los GIF traen márgenes distintos)
             try { root.querySelectorAll('.ae-spr img').forEach(im => { if (typeof layoutSprite === 'function') layoutSprite(im, im.parentElement, im.src, 0.84); }); } catch (e) {}
         }
+        (function aeRefit() { const run = () => { const r = document.getElementById('arena-end'); if (r) aeFitImgs(r); }; try { const r0 = document.getElementById('arena-end'); if (r0) new MutationObserver(() => { clearTimeout(aeRefit._t); aeRefit._t = setTimeout(run, 60); }).observe(r0, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'src'] }); } catch (e) {} })();
         function aeSfx(n) { try { GameAudio.sfx(n); } catch (e) {} }
 
         // Se llama al declarar el ganador: prepara los datos del resumen y entrega las recompensas (se guardan al momento).
@@ -18475,7 +18476,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         function raidTopRender() {
             const box = document.getElementById('rb-top');
             if (!box) return;
-            const top = Object.keys(raidDamage).map(k => ({ id: k, d: raidDamage[k] })).sort((a, b) => b.d.dmg - a.d.dmg).slice(0, 6);
+            const top = Object.keys(raidDamage).map(k => ({ id: k, d: raidDamage[k] })).sort((a, b) => b.d.dmg - a.d.dmg).slice(0, 3);
             const key = top.map(t => t.id + ':' + Math.round(t.d.dmg)).join('|');
             if (key === raidTopKey) return;
             raidTopKey = key;
@@ -18483,10 +18484,11 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 let it = box.children[i], im, b;
                 if (!it) {
                     it = document.createElement('div'); it.className = 'rb-top-i';
-                    im = document.createElement('img'); im.alt = ''; b = document.createElement('b');
-                    it.append(im, b); box.appendChild(it);
-                } else { im = it.firstChild; b = it.lastChild; }
-                if (im.getAttribute('src') !== t.d.sprite) im.src = t.d.sprite;
+                    const sb = document.createElement('span'); sb.className = 'sp-box';
+                    im = document.createElement('img'); im.alt = ''; b = document.createElement('b'); sb.appendChild(im);
+                    it.append(sb, b); box.appendChild(it);
+                } else { im = it.firstChild.firstChild; b = it.lastChild; }
+                if (im.getAttribute('src') !== t.d.sprite) { im.src = t.d.sprite; try { layoutSprite(im, im.parentElement, im.src, 0.92); } catch (e) {} }
                 const txt = String(Math.round(t.d.dmg)); if (b.textContent !== txt) b.textContent = txt;
             });
             while (box.children.length > top.length) box.removeChild(box.lastChild);
@@ -25720,9 +25722,13 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                     .forEach(k => { img.style[k] = ''; });
                 return;
             }
+            if (img.src && fit.src !== img.src && !img._refitBusy) { // la imagen mostrada no es la medida (p. ej. miniatura .png en vez del .gif): se vuelve a medir
+                img._refitBusy = true; setTimeout(() => { img._refitBusy = false; }, 0); layoutSprite(img, fit.box, img.src, fit.f); return;
+            }
             const W = fit.box.clientWidth, H = fit.box.clientHeight;
             if (!W || !H) return;
-            const S = fit.f * Math.min(W / b.bw, H / b.bh); // px de pantalla por px del sprite
+            img.dataset.fit = '1';
+            const S = fit.f * Math.min(W / b.bw, H / b.bh) * (/\/328\.|trapinch/i.test(img.src) ? 0.62 : 1); // px de pantalla por px del sprite (Trapinch: sprite muy compacto, se reduce)
             const cx = b.bx + b.bw / 2, cy = b.by + b.bh / 2;
             Object.assign(img.style, {
                 position: 'absolute',
@@ -25821,7 +25827,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                     slot.sig = sig;
                     slot.el.classList.toggle('is-empty', !e);
                     if (!e) { slot.val.textContent = '-'; slot.el.title = ''; return; }
-                    if (slot.img._ts !== e.sprite) { slot.img._ts = e.sprite; slot.img.src = sprThumb(e.sprite); layoutSprite(slot.img, slot.img.parentElement, e.sprite, 0.94); }
+                    if (slot.img._ts !== e.sprite) { slot.img._ts = e.sprite; slot.img.src = sprThumb(e.sprite); layoutSprite(slot.img, slot.img.parentElement, slot.img.src, 0.94); }
                     slot.val.textContent = kind === 'time' ? formatArenaTime(e.v / 1000) : e.v + ' KO';
                     slot.el.title = dispName(e.name) + ' · ' + (kind === 'time' ? formatArenaTime(e.v / 1000) : e.v + ' KOs');
                 });
@@ -33727,7 +33733,17 @@ body.pvp-on #lt-chip{top:128px!important}
 .cm-bub .cm-btn svg{width:14px;height:14px}
 .cm-bub .cm-btn i{font-size:10px}
 /* Trapinch: su sprite es muy compacto y se veía enorme en las cajas */
-.mmt-cell img[src*="/328."],.mmt-cell img[src*="trapinch"],.bx-slot img[src*="/328."],.bx-slot img[src*="trapinch"]{transform:scale(.62);transform-origin:50% 60%}
+.mmt-cell img[src*="/328."],.mmt-cell img[src*="trapinch"]{transform:scale(.62);transform-origin:50% 60%}
+img[src*="/328."]:not([data-fit]):not(.pokemon > img),img[src*="trapinch"]:not([data-fit]):not(.pokemon > img){transform:scale(.62);transform-origin:50% 60%}
+#champion-bar #raid-boss-bar .rb-top{grid-template-rows:auto repeat(3,minmax(0,1fr)) !important;overflow:hidden}
+#champion-bar #raid-boss-bar .rb-top-i:nth-child(n+4){display:none !important}
+#champion-bar #raid-boss-bar .rb-top-i{height:100%;min-height:0;overflow:hidden}
+#champion-bar #raid-boss-bar .rb-top-i .sp-box{position:relative;display:block;flex:0 0 auto;height:92%;aspect-ratio:1/1;max-height:34px;overflow:visible}
+#champion-bar #raid-boss-bar .rb-top-i .sp-box img{max-width:none}
+#hud-pager .rec-slot img,#hud-pager .champ-sprite{max-width:none}
+#main-menu .mm-list{width:100% !important;left:0 !important;right:0 !important}
+button{text-align:center}
+#cfg-ver{line-height:1.2}
 /* fondo gris con diseño (rayas diagonales + brillo), en lugar del azul */
 #pvp-me{background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px),linear-gradient(180deg,#2c2e34,#18191d);border-image:linear-gradient(90deg,#94a3b8,#fde047,#fb7185) 1}
 #pvp-me .pv-ball{background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 7px),linear-gradient(180deg,#4a4d56,#2a2c32);border-bottom-color:#5b5f6a}
@@ -33751,7 +33767,7 @@ window.PAPvp = (function () {
     const esc = mpEsc, sfx = n => { try { GameAudio.sfx(n); } catch (e) {} };
     const baseOf = id => String(id).replace(/_\d+$/, '');
     const $ = id => document.getElementById(id);
-    const avHtml = (name, key) => { const src = /^data:image\//.test(key || '') ? key : mpAvSrc(key); return src ? '<img alt="" src="' + esc(src) + '" draggable="false">' : esc(String(name || '?').trim().charAt(0).toUpperCase()); };
+    const avHtml = (name, key) => { const src = /^(data:image\/|https:\/\/play\.pokemonshowdown\.com\/sprites\/trainers\/)/.test(key || '') ? key : mpAvSrc(key); return src ? '<img alt="" src="' + esc(src) + '" draggable="false" onerror="this.replaceWith(document.createTextNode(\'' + esc(String(name || '?').trim().charAt(0).toUpperCase()).replace(/'/g, '') + '\'))">' : esc(String(name || '?').trim().charAt(0).toUpperCase()); };
     const other = acc => P.order.find(a => a !== acc) || '';
 
     // ---------- equipo: los 6 del Salón de la Fama ----------
@@ -33767,15 +33783,37 @@ window.PAPvp = (function () {
         return out;
     }
 
+    // ---------- rival IA aleatorio (cuando no aparece otro jugador) ----------
+    const BOT_TRAINERS = [['acetrainer', 'Álvaro'], ['blackbelt', 'Kenji'], ['bugcatcher', 'Nico'], ['camper', 'Mateo'], ['fisherman', 'Gaspar'], ['gentleman', 'Sebastián'], ['hiker', 'Bruno'], ['lass', 'Lucía'], ['picnicker', 'Marta'], ['psychic', 'Elena'], ['sailor', 'Marino'], ['scientist', 'Dr. Ortega'], ['swimmer', 'Coral'], ['youngster', 'Pablo'], ['backpacker', 'Dani'], ['beauty', 'Valeria'], ['biker', 'Rocco'], ['rocker', 'Axel'], ['veteran', 'Coronel Vega'], ['juggler', 'Fabio'], ['teacher', 'Profa. Ruiz'], ['pokemaniac', 'Hugo']];
+    function botTeam() {
+        const pool = (typeof joinPool !== 'undefined' ? joinPool : []).filter(m => m && speciesMeta[m.id] && !/_\d+$/.test(m.id)), bag = pool.slice(), out = [];
+        for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+        for (const m of bag) {
+            if (out.length >= 6) break;
+            const chain = evolutionData[m.id] || [], stage = chain.length ? Math.floor(Math.random() * (chain.length + 1)) : 0;
+            let sprite = m.sprite || '', bi = null;
+            if (stage > 0) { let st = chain[stage - 1]; if (st && st.branches) { bi = Math.floor(Math.random() * st.branches.length); st = st.branches[bi]; } if (st && st.sprite) sprite = st.sprite; }
+            if (!sprite) continue;
+            const traits = { stage, shiny: Math.random() < 0.03 }; if (bi != null) traits.bi = bi;
+            out.push({ id: m.id, traits, sprite, name: dispName(m.name || m.id) });
+        }
+        return out;
+    }
+    function startRandomBot() {
+        if (P.on) return; closeFind();
+        const tr = BOT_TRAINERS[Math.floor(Math.random() * BOT_TRAINERS.length)], team = botTeam(); if (team.length < 6) { try { mpToast && mpToast('No se pudo crear un rival'); } catch (e) {} return; }
+        startBot({ name: tr[1], avatar: 'https://play.pokemonshowdown.com/sprites/trainers/' + tr[0] + '.png', team, power: 1, smart: true, say: null, onEnd: res => showResult(res) });
+    }
+
     // ---------- búsqueda de partida ----------
-    function closeFind() { P.searching = false; clearTimeout(P.tm.find); clearInterval(P.tm.fclock); const el = $('pvp-find'); if (el) el.remove(); }
+    function closeFind() { P.searching = false; clearTimeout(P.tm.find); clearTimeout(P.tm.bot); clearInterval(P.tm.fclock); const el = $('pvp-find'); if (el) el.remove(); }
     function open() {
         if ($('pvp-find') || P.on) return;
         window.PA_ARENA_SHOW = false; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
         const root = $('main-menu') || document.body, pf = mpProfile(), picks = myPicks();
         const el = document.createElement('div'); el.id = 'pvp-find';
         let team = ''; for (let i = 0; i < 6; i++) { const p = picks[i]; team += p ? '<span><img alt="" draggable="false" src="' + esc(p.sprite) + '"></span>' : '<span class="e"></span>'; }
-        const can = picks.length > 0 && SaveSys.canGlobal;
+        const can = picks.length > 0;
         el.innerHTML = '<div class="fd"><h2>PVP</h2><div class="fd-av">' + avHtml(pf.name, pf.avatar) + '</div><b>' + esc(pf.name || 'Entrenador') + '</b>'
             + '<div class="fd-team">' + team + '</div>'
             + (can ? '<div class="fd-ball"></div><div class="fd-st" id="fd-st">Buscando rival…</div><div class="fd-sub" id="fd-sub">0:00</div>'
@@ -33784,7 +33822,10 @@ window.PAPvp = (function () {
         root.appendChild(el); sfx('pop');
         $('fd-cancel').addEventListener('click', () => { sfx('close'); try { if (P.searching) SaveSys.call('POST', '/api/pvp/cancel', {}).catch(() => {}); } catch (e) {} closeFind(); });
         if (!can) return;
-        P.searching = true; const t0 = Date.now();
+        P.searching = true; const t0 = Date.now(), net = !!SaveSys.canGlobal, waitMs = 5000 + Math.random() * 6000;
+        const botNow = () => { if (!P.searching) return; try { if (net) SaveSys.call('POST', '/api/pvp/cancel', {}).catch(() => {}); } catch (e) {} startRandomBot(); };
+        if (!net) { P.tm.bot = setTimeout(botNow, 2500 + Math.random() * 2500); return; }
+        P.tm.bot = setTimeout(botNow, waitMs);
         P.tm.fclock = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000), n = $('fd-sub'); if (n && !n.classList.contains('err')) n.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }, 1000);
         let first = true, fails = 0;
         const tick = async () => {
@@ -33797,6 +33838,7 @@ window.PAPvp = (function () {
             } catch (e) {
                 fails++; const sub = $('fd-sub'); if (sub) { sub.classList.add('err'); sub.textContent = mpErr(e); }
                 if (e && e.status === 400) { P.searching = false; return; }
+                if (fails >= 2) { clearTimeout(P.tm.bot); botNow(); return; }
             }
             P.tm.find = setTimeout(tick, 1500);
         };
@@ -33873,8 +33915,11 @@ window.PAPvp = (function () {
     function launch(acc, i) {
         if (P.over || !gameRunning || gameOver) return false;
         const T = P.teams[acc], sl = T && T.slots[i]; if (!sl) return false;
-        if ((speciesLives[sl.id] || 0) <= 0 || combatantsById[sl.id] || fieldOf(acc).length >= 2) return false;
+        if ((speciesLives[sl.id] || 0) <= 0 || combatantsById[sl.id]) return false;
         const now = performance.now(); if (now - (P.cd[acc] || 0) < 900) return false; P.cd[acc] = now;
+        { const cur = fieldOf(acc); if (cur.length >= 1) { // 1 contra 1: lanzar a otro retira al que está en la arena (relevo)
+            const k = T.slots.findIndex(x => x.id === cur[0].id); if (k < 0 || cur[0].isSpawning || cur[0].isEvolving) return false;
+            if (!recall(acc, k, true)) return false; P.cd[acc] = now; } }
         const p = spawnPos(acc), c = addCombatant(sl.id, p.x, p.y);
         if (P.bot && acc === P.foe && P.botPower > 1) botEmpower(c, P.botPower);
         if (P.bot && acc === P.foe) c._botIn = performance.now();
@@ -33883,12 +33928,12 @@ window.PAPvp = (function () {
         try { directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, DIRECTOR_SPAWN_HOLD_MS, DIRECTOR_PRIORITY_SPAWN); } catch (e) {}
         return true;
     }
-    function recall(acc, i) {
+    function recall(acc, i, force) {
         if (P.over || !gameRunning || gameOver) return false;
         const T = P.teams[acc], sl = T && T.slots[i], c = sl && combatantsById[sl.id];
         if (!c || c.fainted || c.isSpawning || c.isEvolving || c.owner !== acc) return false;
-        if (fieldOf(acc).length <= 1) return false; // siempre debe quedar al menos 1 pokémon en la arena: no se puede retirar al último
-        const now = performance.now(); if (now - (P.cd[acc] || 0) < 900) return false; P.cd[acc] = now;
+        if (!force && fieldOf(acc).length <= 1) return false; // no se puede retirar al último sin relevo
+        const now = performance.now(); if (!force) { if (now - (P.cd[acc] || 0) < 900) return false; P.cd[acc] = now; }
         if (c.gmax) { try { gmaxEnd(c); } catch (e) {} }
         sl.ratio = Math.max(0.01, c.hp / Math.max(1, c.maxHp));
         retreatKeep[c.id] = { uid: c.uid, iv: c.iv, nature: c.nature, gender: c.gender, hf: c.hf, wf: c.wf, shiny: c.shiny, abilitySlot: c.abilitySlot, learnedMove: c.learnedMove || null, returnRatio: sl.ratio, burned: !!c.burn, poisoned: c.poison ? (c.poison.toxic ? 'toxic' : 'normal') : false, paralyzed: !!c.paralysis, frozen: !!c.freeze };
@@ -33967,7 +34012,7 @@ window.PAPvp = (function () {
         P.order.forEach(acc => { // sin pokémon en la arena durante 25 s: sale el siguiente solo (así nadie bloquea la partida)
             if (fieldOf(acc).length || !aliveCount(acc)) { P.emptySince[acc] = 0; return; }
             if (!P.emptySince[acc]) P.emptySince[acc] = matchElapsedMs;
-            else if (matchElapsedMs - P.emptySince[acc] > 8000) { // sin ningún pokémon en la arena durante 8 s (al empezar o tras quedarse sin ellos): sale solo el de más PS del equipo
+            else if (matchElapsedMs - P.emptySince[acc] > (P.teams[acc].slots.some(sl => (speciesLives[sl.id] || 0) <= 0 || sl.ratio < 1) ? 3000 : 8000)) { // sin ningún pokémon en la arena durante 8 s (al empezar o tras quedarse sin ellos): sale solo el de más PS del equipo
                 let i = -1, br = -1; P.teams[acc].slots.forEach((sl, k) => { if ((speciesLives[sl.id] || 0) > 0 && !combatantsById[sl.id] && sl.ratio > br) { br = sl.ratio; i = k; } });
                 if (i >= 0) { P.cd[acc] = 0; launch(acc, i); P.emptySince[acc] = 0; }
             }
@@ -34006,7 +34051,7 @@ window.PAPvp = (function () {
         return best;
     }
     function botSwitch(acc, now) { // retirar a un pokémon en apuros o en mala posición y relevarlo por otro mejor
-        if (now - P.botLastSw < 9000 || P.botSw >= 8 || fieldOf(acc).length < 2) return false;
+        if (now - P.botLastSw < 9000 || P.botSw >= 8 || fieldOf(acc).length < 1) return false;
         const foesC = fieldOf(P.me); if (!foesC.length) return false;
         const foes = foesC.map(aiInfoC), bench = aiBench(acc).filter(o => o.sl.ratio > 0.3 && !(o.sl._rc && now - o.sl._rc < 18000)); if (!bench.length) return false;
         const mine = fieldOf(acc).filter(c => !c.isSpawning && !c.isEvolving && !c.gmax && now - (c._botIn || now) > 4500); if (!mine.length) return false;
@@ -34017,7 +34062,7 @@ window.PAPvp = (function () {
         bench.forEach(o => { const v = aiScore(aiInfoSlot(o.sl), foes, o.sl.ratio); if (v > bv) { bv = v; bestC = o; } });
         if (!bestC || bv - cur < 1) return false;
         const idx = P.teams[acc].slots.findIndex(sl => sl.id === worst.c.id); if (idx < 0) return false;
-        P.cd[acc] = 0; if (!recall(acc, idx)) return false;
+        P.cd[acc] = 0; if (!recall(acc, idx, true)) return false;
         P.teams[acc].slots[idx]._rc = now; P.botLastSw = now; P.botSw++; P.botNext = now + 1100;
         const L = P.botLines && P.botLines.sw; if (L && L.length) botSay('sw' + P.botSw, L[(P.botSw - 1) % L.length]);
         return true;
@@ -34032,7 +34077,7 @@ window.PAPvp = (function () {
             }
         }
         if (P.botSmart && f && now >= (P.botNext || 0) && botSwitch(acc, now)) return;
-        if (f >= 2 || !aliveCount(acc) || now < (P.botNext || 0)) return;
+        if (f >= 1 || !aliveCount(acc) || now < (P.botNext || 0)) return;
         const i = P.botSmart ? botPick(acc, now) : P.teams[acc].slots.findIndex(sl => (speciesLives[sl.id] || 0) > 0 && !combatantsById[sl.id]); if (i < 0) return;
         P.cd[acc] = 0; if (launch(acc, i)) { P.botNext = now + (f ? (P.botFast ? 4500 : 7000) : (P.botFast ? 700 : 1200)); if (P.botLines && P.botLines.start) botSay('start', P.botLines.start); if (aliveCount(acc) === 1 && P.teams[acc].slots.length > 1) botSay('last', (P.botLines && P.botLines.last) || '¡Mi última brasa! ¡Todavía no has ganado!'); }
     }
@@ -34176,8 +34221,8 @@ window.PAPvp = (function () {
     function cards(acc, v, mineSide) {
         const T = P.teams[acc], arr = v.a[acc] || [], on = [];
         arr.forEach((d, i) => { if (d[0] === 1 && T.slots[i]) on.push(card(T.slots[i], d, i, mineSide)); });
-        while (on.length < 2) on.push('<div class="vr empty">' + (mineSide ? 'LIBRE' : 'VACÍO') + '</div>');
-        return '<div class="vr-list">' + on.slice(0, 2).join('') + '</div>';
+        while (on.length < 1) on.push('<div class="vr empty">' + (mineSide ? 'LIBRE' : 'VACÍO') + '</div>');
+        return '<div class="vr-list">' + on.slice(0, 1).join('') + '</div>';
     }
     function render(v, init) {
         if (!P.on || !v) return; P.view = v; P.viewAt = performance.now(); if (P.guest && !init) P.live = true;
@@ -34202,7 +34247,7 @@ window.PAPvp = (function () {
                 + (sel ? '<div class="cm-bub">' + bt('P', i) + bt('D', i) + '</div>' : '')
                 + '<img alt="" draggable="false" src="' + esc((d[0] === 1 && d[5]) || sl.sprite) + '"><span class="pv-bn">' + esc(sl.name) + '</span>'
                 + (d[0] !== 2 ? '<span class="pv-bhp"><i class="' + cls + '" style="width:' + hp + '%"></i></span>' : '')
-                + (d[0] === 1 ? '<span class="pv-rc" data-s="' + i + '" aria-label="Retirar">↩</span>' + gxBtn(d, i, true) : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</div>';
+                + (d[0] === 1 ? gxBtn(d, i, true) : '') + (d[0] === 2 ? '<u>✕</u>' : '') + '</div>';
         }).join('');
         const hmine = '<div class="pv-balls">' + balls + '</div>';
         if (mine._h !== hmine) { mine.innerHTML = hmine; mine._h = hmine; }
@@ -34246,11 +34291,10 @@ window.PAPvp = (function () {
         { const o0 = P.opt[i], c0 = o0 ? o0.to : d0[0]; if (c0 === 1 && !recallIt) { P.sel = (P.sel === i) ? -1 : i; sfx('tick'); render(P.view); return; } if (c0 === 0) P.sel = i; }
         const oo = P.opt[i], cur = oo ? oo.to : d0[0], d = [cur];
         const nf = P.teams[P.me].slots.filter((sl, k) => { const o = P.opt[k]; return o ? o.to === 1 : (P.view.a[P.me][k] || [])[0] === 1; }).length;
-        if (d[0] === 0 && nf >= 2) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); return; }
-        if (d[0] === 1 && nf <= 1) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); try { logMessage('Debes mantener al menos un pokémon en la arena', 'info'); } catch (e) {} return; }
+                if (d[0] === 1) { if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); } sfx('close'); try { logMessage('Debes mantener al menos un pokémon en la arena', 'info'); } catch (e) {} return; }
         sfx(d[0] === 0 ? 'pop' : 'tick');
         if (P.host) { if (d[0] === 0) launch(P.me, i); else recall(P.me, i); P.view = view(); render(P.view); setTimeout(pushNow, 80); }
-        else { P.opt[i] = { to: d[0] === 0 ? 1 : 0, t: performance.now(), r: d0[0] === 1 ? Math.round(100 * d0[1] / (d0[2] || 1)) : d0[1] }; sendCmd({ t: d[0] === 0 ? 'L' : 'R', s: i }); render(P.view); }
+        else { if (d[0] === 0) P.teams[P.me].slots.forEach((sl, k) => { if (k !== i && (P.opt[k] ? P.opt[k].to === 1 : (P.view.a[P.me][k] || [])[0] === 1)) P.opt[k] = { to: 0, t: performance.now(), r: (P.view.a[P.me][k] || [])[0] === 1 ? Math.round(100 * P.view.a[P.me][k][1] / (P.view.a[P.me][k][2] || 1)) : 100 }; }); P.opt[i] = { to: d[0] === 0 ? 1 : 0, t: performance.now(), r: d0[0] === 1 ? Math.round(100 * d0[1] / (d0[2] || 1)) : d0[1] }; sendCmd({ t: d[0] === 0 ? 'L' : 'R', s: i }); render(P.view); }
     }
     function surrender(btn) {
         if (P.over) return;
@@ -35931,11 +35975,15 @@ window.PARaidFx = (function () {
   function star(g, x, y, r, c, a, rot) { g.save(); g.translate(x, y); g.rotate(rot || 0); for (let k = 0; k < 2; k++) { g.rotate(k ? Math.PI / 4 : 0); const rr = k ? r * 0.62 : r, gr = g.createLinearGradient(-rr, 0, rr, 0); gr.addColorStop(0, A(c, 0)); gr.addColorStop(0.5, A([255, 255, 255], a)); gr.addColorStop(1, A(c, 0)); g.fillStyle = gr; g.beginPath(); g.moveTo(-rr, 0); g.quadraticCurveTo(0, -rr * 0.09, rr, 0); g.quadraticCurveTo(0, rr * 0.09, -rr, 0); g.fill(); g.rotate(Math.PI / 2); g.beginPath(); g.moveTo(-rr, 0); g.quadraticCurveTo(0, -rr * 0.09, rr, 0); g.quadraticCurveTo(0, rr * 0.09, -rr, 0); g.fill(); g.rotate(-Math.PI / 2); } g.restore(); }
 
   function lay() { return (typeof container !== 'undefined' && container) || document.getElementById('camera-layer'); }
+  // calidad adaptativa: si los fotogramas tardan, se recortan efectos y resolución (nivel 0 = completo, 1 = medio, 2 = mínimo)
+  let ema = 16.7, lvl = 0, lastRaw = 0; const CAP = [44, 24, 12];
+  function setLvl(n) { lvl = n; window.PA_FXL = [1, 0.62, 0.35][n]; window.PA_FXLVL = n; }
+  setLvl(0);
   function quality() { const q = window.PA_FXL; return q == null ? 1 : q; }
   function add(o) {
     const L = o.parent || lay(); if (!L) return null;
-    if (live.length >= 56) { const old = live.find(f => !f.keep); if (old) kill(old); else return null; }
-    const w = Math.ceil(o.w), h = Math.ceil(o.h || o.w), s = o.s || Math.min(2, Math.max(1, Math.sqrt(3.2e6 / (w * h))));
+    if (live.length >= CAP[lvl]) { const old = live.find(f => !f.keep); if (old) kill(old); else return null; }
+    const w = Math.ceil(o.w), h = Math.ceil(o.h || o.w), s = o.s ? (lvl ? Math.min(o.s, 0.7) : o.s) : (lvl ? 1 : Math.min(1.5, Math.max(1, Math.sqrt(3.2e6 / (w * h)))));
     const cv = document.createElement('canvas'); cv.width = Math.round(w * s); cv.height = Math.round(h * s);
     cv.style.cssText = o.css ? ('position:absolute;pointer-events:none;width:' + w + 'px;height:' + h + 'px;' + o.css + (o.normal ? '' : 'mix-blend-mode:screen;')) : ('position:absolute;pointer-events:none;left:' + Math.round(o.x - w / 2) + 'px;top:' + Math.round(o.y - h / 2) + 'px;width:' + w + 'px;height:' + h + 'px;z-index:' + (o.z || 26) + ';' + (o.normal ? '' : 'mix-blend-mode:screen;'));
     cv.style.opacity = o.normal ? '0.88' : '0.55';
@@ -35946,7 +35994,8 @@ window.PARaidFx = (function () {
   }
   function kill(f) { f.dead = true; const i = live.indexOf(f); if (i >= 0) live.splice(i, 1); if (f.cv && f.cv.parentNode) f.cv.parentNode.removeChild(f.cv); }
   function tick(ts) {
-    raf = 0; const gs = Math.max(1, window.gameSpeed || 1), dt = Math.max(0, Math.min(50, ts - last)) * gs; last = Math.max(last, ts);
+    raf = 0; if (lastRaw) { const rw = ts - lastRaw; if (rw > 0 && rw < 400) { ema = ema * 0.92 + rw * 0.08; const n = ema > 30 ? 2 : ema > 22 ? 1 : (ema < 18.5 ? 0 : lvl); if (n !== lvl) setLvl(n); } } lastRaw = ts;
+    const gs = Math.max(1, window.gameSpeed || 1), dt = Math.max(0, Math.min(50, ts - last)) * gs; last = Math.max(last, ts);
     for (let i = live.length - 1; i >= 0; i--) {
       const f = live[i]; if (f.dead) { kill(f); continue; }
       if (f.watch && (!f.watch.isConnected || !f.cv.isConnected)) { kill(f); continue; }
@@ -35956,7 +36005,7 @@ window.PARaidFx = (function () {
       f.g.clearRect(0, 0, f.w, f.h); f.g.globalCompositeOperation = f.normal ? 'source-over' : 'lighter';
       try { f.draw(f.g, u, dt, f); } catch (e) { kill(f); console.error(e); }
     }
-    if (live.length) raf = requestAnimationFrame(tick);
+    if (live.length) raf = requestAnimationFrame(tick); else lastRaw = 0;
   }
   const later = (ms, fn) => { if (ms > 0) setTimeout(fn, ms / Math.max(1, window.gameSpeed || 1)); else fn(); };
 
@@ -36217,7 +36266,7 @@ window.projStruggle = function (A, B, x, y) {
     const r = _fxBeam.apply(this, arguments); let B = null; for (const q of liveProj) if (!before.has(q) && q.kind === 'beam') B = q; if (!B) return r;
     B.style = vis; const th0 = TH[vis];
     const lay = PAFX.h.lay(), W = Math.max(320, (lay && lay.clientWidth) || 900), Hh = Math.max(320, (lay && lay.clientHeight) || 600);
-    const f = add({ x: W / 2, y: Hh / 2, w: W, h: Hh, s: Math.min(1.5, Math.sqrt(2.6e6 / (W * Hh))), dur: 9000, keep: true, z: 25, watch: B.el, normal: true,
+    const f = add({ x: W / 2, y: Hh / 2, w: W, h: Hh, s: Math.min(0.8, Math.sqrt(1.6e6 / (W * Hh))), dur: 9000, keep: true, z: 25, watch: B.el, normal: true,
       draw(g, u, dt, F) {
         g.globalCompositeOperation = 'lighter';
         const c = H.c; if (!c || B.mute || performance.now() - H.t > 160) { if (B.mute) kill(F); return; }
@@ -36600,7 +36649,7 @@ window.projStruggle = function (A, B, x, y) {
   }
   window.projAnnul = function (A_, B_, x, y) { if (!A_.dead && !B_.dead && tryStruggle(A_, B_, x, y)) return; return _annul.apply(this, arguments); };
   window.projClash = function (A_, B_, x, y) { if (tryStruggle(A_, B_, x, y)) return; _annul(A_, B_, x, y); };
-  const _spk = window.spawnSparks; window.spawnSparks = function (x, y, c, n) { if (PAFX.live() > 26) return; return _spk.apply(this, arguments); };
+  const _spk = window.spawnSparks; window.spawnSparks = function (x, y, c, n) { if (PAFX.live() > [18, 9, 4][window.PA_FXLVL || 0]) return; return _spk.apply(this, arguments); };
   window.__pafx3 = { skinDraw, beamDraw, slashFx, IMP, pburst, physFam, clsOf, struggle2, jawFx };
 })();
 

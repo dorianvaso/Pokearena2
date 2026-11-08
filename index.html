@@ -36154,6 +36154,46 @@ window.PAMis = (function () {
 .bt-toast{position:absolute;left:50%;top:14%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 22px;border-radius:14px;background:rgba(8,12,24,.9);border:1px solid #fbbf24;color:#e2e8f0;pointer-events:none;font-family:'PA Chakra S',system-ui,sans-serif;animation:btT 5.2s ease both}
 .bt-toast small{font-size:9px;letter-spacing:.2em;color:#94a3b8}.bt-toast b{font-size:26px}.bt-toast.up b{color:#86efac}.bt-toast.dn b{color:#f87171}.bt-toast span{font-size:11px;color:#cbd5e1}
 @keyframes btT{0%{opacity:0;transform:translate(-50%,-14px)}8%,86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+#countdown-overlay .bt-draw{pointer-events:auto}
+#countdown-overlay .bt-draw .cd-grid{gap:4px}
+#countdown-overlay .bt-slot{cursor:default}
+#countdown-overlay .bt-slot img{width:70%;height:70%;margin-top:-12%}
+#countdown-overlay .bt-slot .bt-od{position:absolute;left:0;right:0;bottom:2px;text-align:center;text-decoration:none;font-style:normal;font:800 .62rem/1 'PA Chakra S',system-ui,sans-serif;color:#fde68a;text-shadow:0 1px 0 #000,0 0 6px #000;font-variant-numeric:tabular-nums}
+#countdown-overlay .bt-slot .bt-n{position:absolute;top:1px;right:3px;font:800 .6rem/1 system-ui;font-style:normal;color:#86efac;text-shadow:0 1px 0 #000}
+#countdown-overlay .bt-draw.bt-mk .bt-slot{cursor:pointer;border-color:#fbbf24}
+#countdown-overlay .bt-slot.bt-hasbet{box-shadow:0 0 12px rgba(134,239,172,.8),inset 0 0 8px rgba(134,239,172,.4);border-color:#86efac !important}
+#countdown-overlay .bt-start{display:block;margin:10px auto 0;padding:8px 18px;border-radius:10px;border:0;background:#22c55e;color:#04210f;font:800 12px/1 'PA Chakra S',system-ui,sans-serif;letter-spacing:.06em;cursor:pointer}
+#bet-panel .bt-hint{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:0 8px}
+#bet-panel .bt-hint b{font-size:13px;color:#fbbf24;letter-spacing:.08em}#bet-panel .bt-hint span{font-size:10px;color:#cbd5e1}#bet-panel .bt-hint em{font-style:normal;font-size:9px;color:#94a3b8}
+.bt-cf{position:absolute;inset:0;z-index:90;display:grid;place-items:center;background:rgba(0,0,0,.55);pointer-events:auto;font-family:'PA Chakra S',system-ui,sans-serif}
+.bt-cf-card{width:min(86%,300px);box-sizing:border-box;padding:14px;border-radius:16px;background:#0b1220;border:1px solid rgba(251,191,36,.6);box-shadow:0 12px 40px rgba(0,0,0,.7);text-align:center;color:#e2e8f0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.bt-cf-card small{font-size:9px;letter-spacing:.2em;color:#94a3b8}.bt-cf-card img{width:64px;height:64px;object-fit:contain;image-rendering:pixelated}.bt-cf-card h3{margin:0;font-size:16px;color:#fff}
+.bt-cf-od{font-size:12px;color:#cbd5e1}.bt-cf-od b{color:#fde68a;font-size:16px}.bt-cf-amt{font-size:24px;font-weight:800;color:#fbbf24;font-variant-numeric:tabular-nums;min-height:1.2em}.bt-cf-win{font-size:11px;color:#86efac;min-height:1.3em}
+.bt-cf-ch{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}.bt-cf-ch button{padding:6px 9px;border-radius:8px;border:1px solid rgba(148,163,184,.3);background:rgba(255,255,255,.07);color:#e2e8f0;font:800 11px/1 inherit;font-family:inherit;cursor:pointer}.bt-cf-ch button:disabled{opacity:.35}
+.bt-cf-bt{display:flex;gap:8px;margin-top:4px;width:100%}.bt-cf-bt button{flex:1;padding:9px 0;border-radius:10px;border:0;font:800 12px/1 inherit;font-family:inherit;cursor:pointer}.bt-cf-bt .no{background:rgba(255,255,255,.1);color:#e2e8f0}.bt-cf-bt .yes{background:#22c55e;color:#04210f}.bt-cf-bt .yes:disabled{background:rgba(255,255,255,.1);color:#64748b}
+.bt-cf-sa{font-size:9px}
+@media (min-width:900px){
+#countdown-overlay .bt-draw{width:min(94%,900px)}
+#countdown-overlay .bt-draw .cd-grid{grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+#countdown-overlay .bt-draw .cd-draw-title{font-size:.9rem;letter-spacing:4px}
+#countdown-overlay .bt-draw .cd-draw-count{font-size:.65rem;margin:8px 0 14px}
+#countdown-overlay .bt-slot .bt-od{font-size:.95rem;bottom:4px}
+#countdown-overlay .bt-slot .bt-n{font-size:.85rem;top:3px;right:5px}
+#countdown-overlay .bt-start{font-size:15px;padding:11px 26px;margin-top:16px}
+#countdown-overlay .bt-draw.bt-mk .bt-slot:hover{transform:translateY(-2px);box-shadow:0 0 14px rgba(251,191,36,.7)}
+.bt-cf-card{width:380px;padding:22px;gap:8px}.bt-cf-card img{width:96px;height:96px}.bt-cf-card h3{font-size:22px}.bt-cf-card small{font-size:11px}
+.bt-cf-od{font-size:15px}.bt-cf-od b{font-size:22px}.bt-cf-amt{font-size:34px}.bt-cf-win{font-size:14px}
+.bt-cf-ch button{padding:9px 14px;font-size:14px}.bt-cf-bt button{padding:12px 0;font-size:15px}.bt-cf-sa{font-size:11px}
+#bet-panel{max-width:1000px;width:100%;margin:0 auto;gap:7px}
+#bet-panel .bt-head{font-size:13px}#bet-panel .bt-tab{font-size:12px;padding:6px 0}
+#bet-panel .bt-hint b{font-size:18px}#bet-panel .bt-hint span{font-size:13px}#bet-panel .bt-hint em{font-size:12px}
+#bet-panel .bt-yb b{font-size:28px}#bet-panel .bt-yb small{font-size:11px}#bet-panel .bt-yb em{font-size:16px}
+#bet-panel .bt-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start}
+#bet-panel .bt-row{padding:5px 10px}#bet-panel .bt-row img{width:34px;height:34px}
+#bet-panel .bt-lbl{font-size:13px}#bet-panel .bt-lbl small{font-size:11px}
+#bet-panel .bt-cash,#bet-panel .bt-dbl{font-size:12px;padding:7px 12px}#bet-panel .bt-wait{font-size:10px}#bet-panel .bt-res{font-size:13px}
+#bet-panel .bt-empty{font-size:13px;grid-column:1/-1}
+}
 </style>
 <style id="pa-missions-css">
 
@@ -37577,17 +37617,22 @@ window.projStruggle = function (A, B, x, y) {
 
     function beginWindow(ov, chosen, onDone) {
         if (S.bets.some(b => !b.done)) refundAll();
-        S = { phase: 'off', bets: [], odds: {}, base: {}, pool: chosen.slice(), boss: false, tab: 'win', sel: null, stake: 0, end: 0, res: null, seq: 0, msg: '', sig: '', sx: {} };
+        S = { phase: 'off', bets: [], odds: {}, base: {}, pool: chosen.slice(), boss: false, tab: null, sel: null, stake: 0, end: 0, res: null, seq: 0, msg: '', sig: '', sx: {} };
         if (!ok() || money() < MIN || !chosen.length) { render(true); return onDone(); }
         const c = compute(chosen); S.base = c.base; S.odds = c.odds; S.phase = 'open'; S.end = Date.now() + OPEN_S * 1000;
-        const ban = document.createElement('div'); ban.className = 'bt-ban';
-        ban.innerHTML = '<small>PREDICCIONES</small><b>APUESTAS ABIERTAS</b><div class="bt-ban-t">20</div><span>Desliza el HUD para apostar en el panel «APUESTAS»</span><button type="button">EMPEZAR YA</button>';
-        ov.appendChild(ban); const tEl = ban.querySelector('.bt-ban-t');
+        S.ov = ov; S.tab = null; ov.classList.add('drawing');
+        const panel = document.createElement('div'); panel.className = 'cd-draw bt-draw';
+        panel.innerHTML = '<div class="cd-draw-title">APUESTAS ABIERTAS</div><div class="cd-draw-count">COMIENZA EN <b id="bt-cd">' + OPEN_S + '</b> s</div><div class="cd-grid">' + chosen.map(m => { const ind = arenaRoster[m.id], bs = stageSpriteOf(m.id); const src = (ind && ind.shiny) ? shinyUrl(bs) : bs;
+            return '<div class="cd-slot locked bt-slot" data-id="' + esc(m.id) + '"><img alt="" draggable="false" src="' + esc(src) + '"><u class="bt-od"></u><i class="bt-n"></i></div>'; }).join('') + '</div><button type="button" class="bt-start">EMPEZAR YA</button>';
+        ov.appendChild(panel); S.panel = panel;
+        panel.querySelectorAll('.bt-slot img').forEach(im => { try { fitTileImg(im, 0.7); } catch (e) {} });
+        panel.querySelector('.cd-grid').addEventListener('click', e => { const sl = e.target.closest('.bt-slot'); if (sl && S.phase === 'open' && ['win', 'ko', 'time'].includes(S.tab)) openCf(sl.dataset.id); });
+        const tEl = panel.querySelector('#bt-cd');
         let done = false;
-        const fin = () => { if (done) return; done = true; clearInterval(iv); try { ban.remove(); } catch (e) {} if (S.phase === 'open') S.phase = 'fight'; try { hudSetPage(0); } catch (e) {} render(true); onDone(); };
+        const fin = () => { if (done) return; done = true; clearInterval(iv); closeCf(); try { panel.remove(); ov.classList.remove('drawing'); } catch (e) {} S.panel = null; if (S.phase === 'open') S.phase = 'fight'; try { hudSetPage(0); } catch (e) {} render(true); onDone(); };
         const iv = setInterval(() => { const l = Math.max(0, Math.ceil((S.end - Date.now()) / 1000)); tEl.textContent = l; if (l <= 0) fin(); }, 250);
         try { countdownTimers.push(iv); } catch (e) {}
-        ban.querySelector('button').addEventListener('click', () => { sfx('confirm'); fin(); });
+        panel.querySelector('.bt-start').addEventListener('click', () => { sfx('confirm'); fin(); });
         try { hudSetPage(2); } catch (e) {}
         render(true);
     }
@@ -37597,8 +37642,9 @@ window.projStruggle = function (A, B, x, y) {
         const p = $('bet-panel'); if (!p) return;
         const L = (S.phase === 'fight' && S.pool.length) ? live() : null;
         let tab = S.tab; if (S.phase !== 'open') tab = 'mis';
+        if (S.phase === 'open') paintGrid(tab);
         const live_ = L ? canLive(L) : false, mn = money();
-        const sig = JSON.stringify([S.phase, tab, S.sel, S.stake, S.bets.map(b => [b.id, b.done, b.state]), live_, S.msg, S.res, ok(), Math.floor(mn / 100)]);
+        const sig = JSON.stringify([S.phase, tab, S.bets.length, S.bets.map(b => [b.id, b.done, b.state]), live_, S.msg, S.res, ok(), Math.floor(mn / 100)]);
         if (!force && sig === S.sig) { updateNums(L); return; }
         S.sig = sig;
         const old = p.querySelector('.bet-scroll'); if (old) S.sx[old.dataset.m] = old.scrollLeft;
@@ -37627,16 +37673,11 @@ window.projStruggle = function (A, B, x, y) {
             h += '</div>';
         } else if (tab === 'boss') {
             const o = S.odds.boss;
-            h += '<div class="bt-body"><div class="bt-yn"><button type="button" class="bt-yb' + (S.sel === 'yes' ? ' sel' : '') + '" data-id="yes"><small>APARECE UN JEFE</small><b>SÍ</b><em>×' + o.yes.toFixed(1) + '</em></button><button type="button" class="bt-yb' + (S.sel === 'no' ? ' sel' : '') + '" data-id="no"><small>NO APARECE</small><b>NO</b><em>×' + o.no.toFixed(1) + '</em></button></div></div>';
+            h += '<div class="bt-body"><div class="bt-yn"><button type="button" class="bt-yb" data-id="yes"><small>APARECE UN JEFE</small><b>SÍ</b><em>×' + o.yes.toFixed(1) + '</em></button><button type="button" class="bt-yb" data-id="no"><small>NO APARECE</small><b>NO</b><em>×' + o.no.toFixed(1) + '</em></button></div></div>';
+        } else if (tab && S.phase === 'open') {
+            h += '<div class="bt-hint"><b>' + MKL[tab].toUpperCase() + '</b><span>' + ({ win: 'Gana el último en pie.', ko: 'El que más KO consigue.', time: 'El que dura más en la arena.' }[tab]) + '</span><em>Toca un sprite del cuadro para apostar</em></div>';
         } else {
-            const od = S.odds[tab] || {};
-            h += '<div class="bt-body"><div class="bet-scroll" data-m="' + tab + '">' + S.pool.map(m => '<button type="button" class="bt-ch' + (S.sel === m.id ? ' sel' : '') + '" data-id="' + esc(m.id) + '" title="' + esc(m.name) + '"><img alt="" draggable="false" src="' + spr(m.id) + '"><span>' + esc(m.name) + '</span><b>×' + (od[m.id] || 0).toFixed(1) + '</b></button>').join('') + '</div></div>';
-        }
-        if (S.phase === 'open' && tab !== 'mis') {
-            const od = tab === 'boss' ? (S.sel ? S.odds.boss[S.sel] : 0) : (S.sel ? S.odds[tab][S.sel] : 0);
-            const pk = !S.sel ? 'Elige una opción' : (tab === 'boss' ? (S.sel === 'yes' ? 'SÍ aparece' : 'NO aparece') : esc(nameOf(S.sel))) + ' · ×' + od.toFixed(1);
-            const can = S.sel && S.stake >= MIN && S.stake <= mn;
-            h += '<div class="bt-foot"><div class="bt-pick">' + pk + (S.sel && S.stake ? ' <i>→ ' + fm(Math.floor(S.stake * od)) + '</i>' : '') + '</div><div class="bt-stakes">' + CHIPS.map(v => '<button type="button" class="bt-sc" data-s="' + v + '"' + (S.stake + v > mn ? ' disabled' : '') + '>+' + (v >= 1000 ? v / 1000 + 'K' : v) + '</button>').join('') + '<button type="button" class="bt-sc" data-s="0">✕</button><span class="bt-amt">' + fm(S.stake) + '</span><button type="button" class="bt-go" ' + (can ? '' : 'disabled') + '>APOSTAR</button></div></div>';
+            h += '<div class="bt-hint"><b>ELIGE UN TIPO DE APUESTA</b><em>Las cuotas aparecerán bajo cada pokémon</em></div>';
         }
         p.innerHTML = h;
         const sc = p.querySelector('.bet-scroll'); if (sc && S.sx[sc.dataset.m]) sc.scrollLeft = S.sx[sc.dataset.m];
@@ -37647,12 +37688,36 @@ window.projStruggle = function (A, B, x, y) {
         if (L) p.querySelectorAll('[data-cash]').forEach(u => { const b = S.bets[+u.dataset.cash]; if (b && !b.done) u.textContent = fm(cashOf(b, L)); });
     }
 
+    function paintGrid(tab) {
+        if (!S.panel) return; const mk = ['win', 'ko', 'time'].includes(tab) ? tab : null;
+        S.panel.classList.toggle('bt-mk', !!mk);
+        S.panel.querySelectorAll('.bt-slot').forEach(sl => {
+            const id = sl.dataset.id, o = sl.querySelector('.bt-od'), n = sl.querySelector('.bt-n'), cnt = S.bets.filter(b => !b.done && b.m === mk && b.pick === id).length;
+            o.textContent = mk ? '×' + (S.odds[mk][id] || 0).toFixed(1) : ''; n.textContent = cnt ? '✓' + (cnt > 1 ? cnt : '') : ''; sl.classList.toggle('bt-hasbet', !!cnt);
+        });
+    }
+    function closeCf() { if (S.cf) { try { S.cf.remove(); } catch (e) {} S.cf = null; } }
+    function openCf(id) {
+        const tab = S.tab; if (!['win', 'ko', 'time', 'boss'].includes(tab) || S.phase !== 'open') return; closeCf(); sfx('tick');
+        const od = tab === 'boss' ? S.odds.boss[id] : S.odds[tab][id];
+        const el = document.createElement('div'); el.className = 'bt-cf'; S.cf = el; S.sel = id;
+        const draw = () => { const mn = money(), can = S.stake >= MIN && S.stake <= mn;
+            el.innerHTML = '<div class="bt-cf-card"><small>' + MKL[tab].toUpperCase() + '</small>' + (tab === 'boss' ? '<h3>' + (id === 'yes' ? 'SÍ aparece un jefe' : 'NO aparece un jefe') + '</h3>' : '<img alt="" src="' + spr(id) + '"><h3>' + esc(nameOf(id)) + '</h3>')
+                + '<div class="bt-cf-od">Cuota <b>×' + od.toFixed(1) + '</b></div><div class="bt-cf-amt">' + fm(S.stake) + '</div><div class="bt-cf-win">' + (S.stake ? 'Ganarías ' + fm(Math.floor(S.stake * od)) : 'Elige cuánto apostar') + '</div>'
+                + '<div class="bt-cf-ch">' + CHIPS.map(v => '<button type="button" data-s="' + v + '"' + (S.stake + v > mn ? ' disabled' : '') + '>+' + (v >= 1000 ? v / 1000 + 'K' : v) + '</button>').join('') + '<button type="button" data-s="0">✕</button></div>'
+                + '<div class="bt-cf-bt"><button type="button" class="no">CANCELAR</button><button type="button" class="yes"' + (can ? '' : ' disabled') + '>CONFIRMAR</button></div><small class="bt-cf-sa">Saldo: ' + fm(mn) + '</small></div>'; };
+        el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button');
+            if (!b) { if (e.target === el) closeCf(); return; } if (b.disabled) return;
+            if (b.dataset.s != null) { const v = +b.dataset.s; S.stake = v === 0 ? 0 : Math.min(MAXS, Math.min(money(), S.stake + v)); sfx('tick'); draw(); }
+            else if (b.classList.contains('no')) closeCf(); else if (b.classList.contains('yes')) { place(); closeCf(); } });
+        draw(); (S.ov || document.body).appendChild(el);
+    }
     function place() {
         const tab = S.tab; if (S.phase !== 'open' || !S.sel || tab === 'mis') return;
         const mn = money(); if (S.stake < MIN || S.stake > mn || S.stake > MAXS) return;
         let spent = false; try { spent = capMoneySpend(S.stake); } catch (e) {} if (!spent) return;
         const odds = tab === 'boss' ? S.odds.boss[S.sel] : S.odds[tab][S.sel];
-        S.bets.push({ id: ++S.seq, m: tab, pick: S.sel, stake: S.stake, odds, done: false }); S.stake = 0; S.sel = null; saveStake(); sfx('confirm'); render(true);
+        S.bets.push({ id: ++S.seq, m: tab, pick: S.sel, stake: S.stake, odds, done: false }); S.sel = null; saveStake(); sfx('confirm'); render(true);
     }
     function cash(i) {
         const b = S.bets[i]; if (!b || b.done) return; const L = live(); if (!canLive(L)) return;
@@ -37668,10 +37733,8 @@ window.projStruggle = function (A, B, x, y) {
 
     document.addEventListener('click', e => {
         const p = $('bet-panel'); if (!p || !p.contains(e.target)) return; const t = e.target.closest('button'); if (!t || t.disabled) return;
-        if (t.dataset.tab) { S.tab = t.dataset.tab; S.sel = null; sfx('tick'); render(true); }
-        else if (t.classList.contains('bt-ch') || t.classList.contains('bt-yb')) { S.sel = t.dataset.id; sfx('tick'); render(true); }
-        else if (t.dataset.s != null && t.classList.contains('bt-sc')) { const v = +t.dataset.s; S.stake = v === 0 ? 0 : Math.min(MAXS, Math.min(money(), S.stake + v)); sfx('tick'); render(true); }
-        else if (t.classList.contains('bt-go')) place();
+        if (t.dataset.tab) { S.tab = t.dataset.tab; sfx('tick'); render(true); }
+        else if (t.classList.contains('bt-yb') && S.phase === 'open') openCf(t.dataset.id);
         else if (t.classList.contains('bt-cash')) cash(+t.dataset.i);
         else if (t.classList.contains('bt-dbl')) dbl(+t.dataset.i);
     });

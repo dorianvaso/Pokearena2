@@ -35787,7 +35787,7 @@ window.PAMis = (function () {
     // ====================== MISIÓN 4 · ENCUENTRO SINGULAR (evento global de plumas) ======================
     const EV_MAX = 25, EV_END = Date.parse('2026-11-15T18:00:00Z'); // domingo 15-nov 12:00 (mediodía) hora de Costa Rica
     const evOver = () => (Date.now() + offset) >= EV_END;
-    let ev = null, evBusy = false, evMsg = '', evPick = null;
+    let evSig = '', ev = null, evBusy = false, evMsg = '', evPick = null;
     const FEATHERS = [{ id: 'plumahelada', n: 'Pluma Helada' }, { id: 'plumaelectrica', n: 'Pluma Eléctrica' }, { id: 'plumacaliente', n: 'Pluma Caliente' }];
     const EV_S1 = [{ k: 'bulbasaur', n: 'Bulbasaur', d: 1 }, { k: 'charmander', n: 'Charmander', d: 4 }, { k: 'squirtle', n: 'Squirtle', d: 7 }];
     const EV_GM = [{ k: 'butterfree', n: 'Butterfree', d: 12 }, { k: 'charizard', n: 'Charizard', d: 6 }, { k: 'meowth', n: 'Meowth', d: 52 }, { k: 'gengar', n: 'Gengar', d: 94 }];
@@ -35829,11 +35829,17 @@ window.PAMis = (function () {
     function draw3() {
         if (!panel) return;
         const total = (ev && ev.total) | 0, mine = (ev && ev.mine) | 0, got = (ev && ev.claimed) || [], over = evOver(), full = total >= EV_MAX || over, net = canNet(), left = EV_END - (Date.now() + offset);
+        const sig = JSON.stringify([view, grp, total, mine, got, (ev && ev.gclaimed) || [], over, evBusy, evMsg, evPick, FEATHERS.map(f => bagCount(f.id)), (ev && ev.board) || [], net, ev && ev.iTop]);
+        if (sig === evSig && panel.querySelector('.es-cd')) { // solo cambió el reloj: se actualiza el texto sin redibujar (evita parpadeos y saltos de tamaño)
+            const cb = panel.querySelector('.es-cd b'); if (cb) cb.textContent = over ? '—' : fmt(left);
+            try { updateList('3'); } catch (e) {} return;
+        }
+        evSig = sig;
         let h = shellHtml('3')
             + '<div class="ms-card"><small>PROFESOR OAK</small><h2>ENCUENTRO SINGULAR</h2>'
             + '<p>Las tres aves legendarias se dejan ver entre el hielo, el trueno y el fuego. Cada pluma que lleguemos a reunir acerca a Oak a la verdad. Todos los aspirantes suman al mismo estudio.</p>'
-            + '<div class="ms-cd ' + (over ? 'over' : '') + '"><small>' + (over ? 'ESTUDIO TERMINADO' : 'EL ESTUDIO TERMINA EN') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
-            + '<div class="ms-me"><span>PLUMAS DEL ESTUDIO</span><b>' + total + '<small class="ms-of">/' + EV_MAX + '</small></b></div>'
+            + '<div class="es-stats"><div class="es-cd"><small>' + (over ? 'ESTUDIO TERMINADO' : 'TERMINA EN') + '</small><b>' + (over ? '—' : fmt(left)) + '</b></div>'
+            + '<div class="es-pl"><small>PLUMAS DEL ESTUDIO</small><b>' + total + '<i>/' + EV_MAX + '</i></b></div></div>'
             + '<div class="es-bar"><i style="width:' + Math.min(100, total / EV_MAX * 100) + '%"></i>' + [1, 5, 10, 15, 20, 25].map(t => '<u style="left:' + (t / EV_MAX * 100) + '%" class="' + (total >= t ? 'on' : '') + '">' + t + '</u>').join('') + '</div>'
             + '<div class="ms-me" style="margin-top:8px"><span>TU APORTE</span><b style="font-size:24px">' + mine + '</b></div></div>';
         h += '<div class="ms-card"><small>ENTREGAR PLUMAS A OAK</small><div class="es-fe">'
@@ -35850,13 +35856,14 @@ window.PAMis = (function () {
         };
         let cols = '';
         for (let t = 1; t <= EV_MAX; t++) { const big = !!(EVR[t].choice || EVR[t].mew); cols += '<div class="fp-col' + (big ? ' big' : '') + (t <= total ? ' on' : '') + '">' + card(t, false) + '<span class="fp-n">' + t + '</span>' + card(t, true) + '</div>'; }
-        h += '<div class="ms-card fp"><small>RECOMPENSAS DEL ESTUDIO</small>'
+        const hFp = '<div class="ms-card fp"><small>RECOMPENSAS DEL ESTUDIO</small>'
             + '<div class="fp-sc"><div class="fp-lab"><span>GRATIS</span><span class="g">ORO</span></div><div class="fp-track">' + cols + '</div></div>'
             + '<p class="fp-note">' + (fin ? (iTop ? '<b>¡Eres el #1 del estudio!</b> La fila de ORO está abierta: puedes reclamar de nuevo todas las recompensas.' : 'El estudio ha terminado. La fila de ORO es solo para quien más plumas aportó.') : 'Fila de ORO: cuando termine el estudio (domingo 15 de noviembre, 12:00 del mediodía), quien haya aportado más plumas (#1) podrá reclamar de nuevo todas las recompensas.') + '</p></div>';
         if (evPick) { const r = EVR[evPick.tier];
             h += '<div class="ms-card es-ch"><small>' + (evPick.gold ? 'RECOMPENSA DE ORO · ' : '') + 'TRAMO ' + evPick.tier + ' · ELIGE UNO</small><div class="ms-pks">' + evOpts(r.choice).map(o => '<button type="button" class="ms-pk' + (evPick.k === o.k ? ' sel' : '') + '" data-k="' + o.k + '"><img alt="" draggable="false" src="' + (r.choice === 's1' ? BWU.replace('animated/', 'animated/shiny/') : BWU) + o.d + '.gif"><span>' + o.n + '</span></button>').join('') + '</div>'
                 + '<button type="button" class="ms-claim es-ok"' + (evPick.k && !evBusy ? '' : ' disabled') + '>' + (evBusy ? 'RECLAMANDO…' : 'CONFIRMAR') + '</button><button type="button" class="es-x">CANCELAR</button></div>'; }
         const top = (ev && ev.board) || [];
+        h = h.replace('<!--DET-->', '<!--DET-->' + hFp);
         h += '<div class="ms-card"><small>MÁS PLUMAS ENTREGADAS</small><div class="ms-bd">' + (top.length ? top.map((r, k) => '<div class="ms-r' + (r.acc === (ev && ev.me) ? ' me' : '') + (k === 0 ? ' first' : '') + '"><i>' + (k + 1) + '</i>' + (r.avatar && av(r.avatar) ? '<img alt="" draggable="false" src="' + av(r.avatar) + '">' : '<em></em>') + '<span>' + esc(r.name || 'Entrenador') + '</span><b>' + r.n + '</b></div>').join('') : '<div class="ms-empty">Nadie ha entregado plumas aún</div>') + '</div></div>';
         mount(h);
         { const sc = panel.querySelector('.fp-sc'); if (sc) { if (slPrev != null) sc.scrollLeft = slPrev; else { const c0 = sc.querySelector('.fp-col.on:last-child') || sc.querySelector('.fp-col.on:nth-child(' + Math.max(1, total) + ')'); if (total > 3) sc.scrollLeft = Math.max(0, (Math.min(total, EV_MAX) - 2) * 92); } } }
@@ -36092,6 +36099,15 @@ window.PAMis = (function () {
 })();
 </script>
 <style id="pa-missions-css">
+
+#ms-panel .es-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+#ms-panel .es-cd,#ms-panel .es-pl{display:flex;flex-direction:column;justify-content:center;gap:6px;height:86px;padding:0 14px;border-radius:12px;background:rgba(74,163,255,.1);border-left:3px solid rgba(160,200,255,.5);overflow:hidden}
+#ms-panel .es-cd small,#ms-panel .es-pl small{font-size:10px;letter-spacing:.14em;color:#7fb4ff;white-space:nowrap}
+#ms-panel .es-cd b,#ms-panel .es-pl b{display:block;white-space:nowrap;font-size:22px;line-height:1.1;color:#ffd24a;font-family:ui-monospace,Menlo,Consolas,"Courier New",monospace;font-variant-numeric:tabular-nums;letter-spacing:0}
+#ms-panel .es-pl b{color:#fff;font-size:30px}
+#ms-panel .es-pl b i{font-style:normal;font-size:14px;color:#8fb6e8;margin-left:2px}
+#ms-panel .fp-c.open{animation:none}
+@media (min-width:900px){#ms-panel .fp .fp-col{width:104px}#ms-panel .fp .fp-col.big{width:140px}#ms-panel .fp .fp-c{height:124px}#ms-panel .fp .fp-lab span{height:124px}#ms-panel .fp .fp-c .fp-ic img.fp-it{width:56px;height:56px}#ms-panel .fp .fp-q{font-size:13px}}
 
 #ms-panel .fp{padding:12px 8px 10px;background:radial-gradient(120% 90% at 50% 0%,rgba(40,120,40,.55),rgba(6,22,10,.9) 70%);border-color:rgba(123,226,90,.5)}
 #ms-panel .fp>small{padding-left:6px;color:#9be57a}

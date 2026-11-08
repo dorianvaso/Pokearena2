@@ -13743,7 +13743,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // mismo marco, así que la interfaz no cambia; los zooms de enfoque/ataque tampoco.
         // Modos de arena: Clásica 2,625x (antes 1,75x) y Raids 3x (el mundo es 3 veces más ancho y largo que el marco, que en Raids es apaisado).
         // Por eso ARENA_SCALE y BASE_ZOOM son variables: setArenaMode() las cambia antes de empezar la partida.
-        const ARENA_MODES = { classic: 2.23125, raids: 3, pvp: 1.3 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
+        const ARENA_MODES = { classic: 2.9675, raids: 3, pvp: 1.3 }; // pvp: coliseo (ver drawPvp) // Clásica: 2,625 reducida un 15 % (2,625 x 0,85 = 2,23125)
         let arenaMode = 'classic';
         let ARENA_SCALE = ARENA_MODES.classic;
         let BASE_ZOOM = 1 / ARENA_SCALE;
@@ -33800,7 +33800,7 @@ body.pvp-on #champion-bar > *:not(#pvp-me){display:none!important}
 
 /* PVP / Liga: los pokémon son los protagonistas (sprites algo más grandes) */
 /* PVP / Liga: sprites más grandes que en otros modos, conservando las proporciones (grandes se ven grandes, chicos chicos) */
-body.pvp-on .pokemon-wrapper .pokemon{scale:1.4;transform-origin:50% 88%}
+body.pvp-on .pokemon-wrapper .pokemon{scale:1.12;transform-origin:50% 88%}
 body.pvp-on .pokemon-wrapper .pokemon-hud{translate:0 -14px}
 
 /* ===== HUD de combate v3 · estilo "versus" de juego de lucha: marcador arriba (tú | reloj | rival), bandeja de plantel abajo ===== */
@@ -36394,6 +36394,30 @@ window.projStruggle = function (A, B, x, y) {
   const BC = { lightning: [250, 204, 21], flamethrower: [249, 115, 22], icebeam: [96, 200, 250], solarbeam: [163, 230, 53], twinbeam: [236, 72, 153] };
   const TH = { lightning: 9, flamethrower: 34, icebeam: 12, solarbeam: 32, twinbeam: 10 };
   function beamTip(g, x, y, c, r, a, T, ro) { glow(g, x, y, r * 1.8, c, 0.45 * a); glow(g, x, y, r * 0.9, lite(c, 0.5), 0.8 * a); glow(g, x, y, r * 0.42, WHITE, a); star(g, x, y, r * 1.5, lite(c, 0.6), 0.6 * a, T * 0.004 + (ro || 0)); }
+  // Rayo real: desplazamiento del punto medio (segmentos largos con grandes quiebres), núcleo blanco, halo amarillo y ramas que se afinan
+  function boltPts(x0, y0, x1, y1, seed, rough, depth) {
+    let pts = [[x0, y0], [x1, y1]], amp = Math.hypot(x1 - x0, y1 - y0) * rough;
+    for (let d = 0; d < depth; d++) {
+      const nx = [pts[0]];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, off = (hs(i + d * 131, seed * 7 + d) - 0.5) * 2 * amp;
+        nx.push([(a[0] + b[0]) / 2 - dy / l * off, (a[1] + b[1]) / 2 + dx / l * off], b);
+      }
+      pts = nx; amp *= 0.56;
+    }
+    return pts;
+  }
+  function strokeBolt(g, pts, w, col, al) { g.strokeStyle = A(col, al); g.lineWidth = w; g.lineJoin = 'round'; g.lineCap = 'round'; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); }
+  function drawBoltFull(g, pts, th, a, seed, nFork) {
+    strokeBolt(g, pts, th * 7, [110, 90, 255], 0.14 * a); strokeBolt(g, pts, th * 4.4, [255, 190, 40], 0.2 * a); strokeBolt(g, pts, th * 2.6, [255, 228, 100], 0.42 * a); strokeBolt(g, pts, th * 1.45, [255, 248, 190], 0.9 * a); strokeBolt(g, pts, th * 0.55, WHITE, a);
+    const n = pts.length;
+    for (let k = 0; k < nFork; k++) {
+      const i = Math.floor(n * (0.18 + 0.62 * hs(k, seed + 3))), p = pts[i], q = pts[Math.min(n - 1, i + 3)], base = Math.atan2(q[1] - p[1], q[0] - p[0]), side = hs(k, seed + 5) > 0.5 ? 1 : -1;
+      const an = base + side * (0.5 + hs(k, seed + 9) * 0.55), ln = Math.hypot(pts[n - 1][0] - pts[0][0], pts[n - 1][1] - pts[0][1]) * (0.12 + 0.16 * hs(k, seed + 11));
+      const fp = boltPts(p[0], p[1], p[0] + Math.cos(an) * ln, p[1] + Math.sin(an) * ln, seed + k * 5 + 1, 0.2, 4);
+      strokeBolt(g, fp, th * 1.5, [255, 215, 70], 0.3 * a); strokeBolt(g, fp, th * 0.7, [255, 248, 200], 0.85 * a); strokeBolt(g, fp, th * 0.28, WHITE, a);
+    }
+  }
   function beamDraw(g, vis, x0, y0, x1, y1, th, T, a, o) {
     o = o || {}; const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (!(L > 3) || !(a > 0)) return;
     const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, c = BC[vis] || [255, 255, 255];
@@ -36402,19 +36426,12 @@ window.projStruggle = function (A, B, x, y) {
     const line = (w, col, al, off) => path([P(0, off || 0), P(L, off || 0)], w, col, al);
     const env = t => Math.pow(Math.sin(Math.PI * clamp(t)), 0.55);
     if (vis === 'lightning') {
-      const seed = Math.floor(T / 48), N = Math.max(6, Math.ceil(L / 15));
-      const jag = (sd, amp) => { const pts = []; for (let i = 0; i <= N; i++) { const t = i / N; pts.push(P(L * t, (hs(i, sd) - 0.5) * 2 * amp * (i === 0 || i === N ? 0.25 : 1) * env(t))); } return pts; };
-      const m = jag(seed, th * 2.3), m2 = jag(seed + 7, th * 3.4), m3 = jag(seed + 13, th * 2.8);
-      path(m2, th * 0.5, c, 0.55); path(m3, th * 0.4, lite(c, 0.4), 0.45);
-      path(m, th * 3.4, c, 0.13); path(m, th * 1.9, c, 0.36); path(m, th * 1.0, lite(c, 0.55), 0.95); path(m, th * 0.4, WHITE, 1);
-      for (let k = 0; k < 3; k++) {
-        const idx = 1 + Math.floor(hs(k, seed + 3) * (N - 2)), side = hs(k, seed + 5) > 0.5 ? 1 : -1; let [px, py] = m[idx], an = Math.atan2(uy, ux) + side * (0.5 + hs(k, seed + 9) * 0.5); const pts = [[px, py]];
-        for (let s = 0; s < 3; s++) { const ln = 9 + hs(k * 3 + s, seed + 11) * 14; px += Math.cos(an) * ln; py += Math.sin(an) * ln; pts.push([px, py]); an += (hs(k * 3 + s, seed + 17) - 0.5) * 1.3; }
-        path(pts, th * 0.8, c, 0.7); path(pts, th * 0.28, WHITE, 0.95);
-      }
-      const nodes = 5; for (let k = 0; k < nodes; k++) { const t = ((T * 0.0009 * (1 + hs(k, 1) * 0.5) + k / nodes) % 1); const p = P(L * t, (hs(k, seed) - 0.5) * th * 2); glow(g, p[0], p[1], th * 1.4, [255, 250, 200], 0.55 * a); }
-      glow(g, x0, y0, th * 3.2, c, 0.7 * a); glow(g, x0, y0, th * 1.4, WHITE, 0.9 * a);
-      if (!o.noTip) beamTip(g, x1, y1, c, th * 2.6, a, T);
+      const seed = Math.floor(T / 70), fl = hs(Math.floor(T / 35), 4) > 0.3 ? 1 : 0.55, d = L > 220 ? 6 : 5;
+      const alt = boltPts(x0, y0, x1, y1, seed + 41, 0.2, d); strokeBolt(g, alt, th * 0.9, [255, 235, 120], 0.38 * a * fl);
+      const m = boltPts(x0, y0, x1, y1, seed, 0.17, d);
+      drawBoltFull(g, m, th, a * fl, seed, 4);
+      glow(g, x0, y0, th * 3.4, [255, 220, 90], 0.7 * a); glow(g, x0, y0, th * 1.5, WHITE, 0.95 * a);
+      if (!o.noTip) { glow(g, x1, y1, th * 3, [255, 225, 100], 0.6 * a * fl); glow(g, x1, y1, th * 1.3, WHITE, 0.9 * a * fl); }
     } else if (vis === 'flamethrower') {
       const n = Math.min(110, Math.round(L / 4) + 34), sp = T * 0.0011;
       line(th * 0.5, [255, 236, 150], 0.4);
@@ -36608,9 +36625,15 @@ window.projStruggle = function (A, B, x, y) {
       } });
   }
   function boltsFx(x, y, c, S) {
-    S = S || 70; add({ x, y, w: S * 3, h: S * 3, dur: 420, z: 27,
-      draw(g, u, dt, f) { const seed = Math.floor(f.t / 45), cx = f.w / 2, cy = f.h / 2, al = 1 - u; glow(g, cx, cy, S * 0.8 * (1 - u * 0.4), c, 0.55 * al); glow(g, cx, cy, S * 0.35, WHITE, 0.9 * al);
-        for (let b = 0; b < 7; b++) { let an = b / 7 * TAU + hs(b, 3) * 0.6, px = cx, py = cy; const pts = [[px, py]]; for (let s = 0; s < 5; s++) { an += (hs(b * 5 + s, seed) - 0.5) * 1.0; const l = S * (0.2 + 0.15 * hs(b, s)) * (0.5 + eo(u)); px += Math.cos(an) * l; py += Math.sin(an) * l; pts.push([px, py]); } g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = A(c, 0.5 * al); g.lineWidth = 4.4; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.strokeStyle = A(WHITE, al); g.lineWidth = 1.5; g.stroke(); } } });
+    S = S || 70; const th = Math.max(4.4, S * 0.085);
+    add({ x, y, w: S * 3.4, h: S * 6.4, dur: 440, z: 27,
+      draw(g, u, dt, f) {
+        const seed = Math.floor(f.t / 55), cx = f.w / 2, cy = f.h / 2, al = u < 0.12 ? 1 : Math.pow(1 - u, 0.9) * (hs(Math.floor(f.t / 40), 8) > 0.3 ? 1 : 0.5);
+        const sx = cx + (hs(seed, 2) - 0.5) * S * 1.1, pts = boltPts(sx, 0, cx, cy, seed, 0.12, 6);
+        glow(g, cx, cy, S * 0.95 * (1 - u * 0.35), [255, 210, 70], 0.5 * al); glow(g, cx, cy, S * 0.4, WHITE, 0.9 * al);
+        drawBoltFull(g, pts, th, al, seed, 3);
+        g.save(); g.translate(cx, cy + S * 0.05); g.scale(1, 0.38); g.strokeStyle = A([255, 235, 120], 0.7 * al); g.lineWidth = 3 * (1 - u) + 1; g.beginPath(); g.arc(0, 0, S * (0.25 + 0.75 * eo(u)), 0, TAU); g.stroke(); g.restore();
+      } });
   }
   function darkBurst(x, y, S) {
     S = S || 70; add({ x, y, w: S * 3, h: S * 3, dur: 640, z: 27, normal: true,
@@ -36629,7 +36652,7 @@ window.projStruggle = function (A, B, x, y) {
     shadow: (x, y) => { darkBurst(x, y, 70); },
     fairy: (x, y) => { PAFX.flash(x, y, { size: 80, color: [255, 205, 235] }); pburst(x, y, { R: 80, n: 11, kind: 'star', cols: ['#f9a8d4', '#fff', '#fbcfe8'], size: 3.2, grav: -0.12, life: 800 }); PAFX.ring(x, y, { size: 120, color: [255, 180, 225] }); },
     overdrive: (x, y) => { boltsFx(x, y, [250, 204, 21], 72); PAFX.ring(x, y + 10, { size: 120, color: [255, 240, 150], flat: true }); },
-    lightning: (x, y) => { boltsFx(x, y, [250, 204, 21], 84); PAFX.flash(x, y, { size: 84, color: [255, 250, 190] }); pburst(x, y, { R: 80, n: 10, kind: 'spark', cols: ['#fde047', '#fff'], grav: 0.3, life: 520 }); },
+    lightning: (x, y) => { boltsFx(x, y, [250, 204, 21], 84); PAFX.flash(x, y, { size: 84, color: [255, 250, 190] }); },
     sound: (x, y) => { [0, 90, 180].forEach((d, i) => PAFX.ring(x, y + 4, { size: 70 + i * 55, color: [232, 121, 249], delay: d })); },
     seeds: (x, y) => { pburst(x, y, { R: 70, n: 9, kind: 'leaf', cols: ['#84cc16', '#a3e635', '#65a30d'], normal: true, size: 3, grav: 0.8, life: 800 }); PAFX.smoke(x, y + 6, { size: 30, n: 3, color: [150, 190, 100] }); },
     vine: (x, y) => { pburst(x, y, { R: 86, n: 12, kind: 'leaf', cols: ['#4ade80', '#22c55e', '#86efac'], normal: true, size: 3.4, grav: 0.7, life: 860 }); PAFX.flash(x, y, { size: 50, color: [190, 255, 190] }); },

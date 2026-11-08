@@ -330,6 +330,49 @@ async function friendsApi(db, h, route, req, url) {
         await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', mid1, me, b.pick, now).run();
         return reply({ ok: true, pick: b.pick });
     }
+    // ===== Evento global "Encuentro singular": plumas entregadas entre TODOS los jugadores (1 a 25) y recompensas por tramos =====
+    const EV_ID = 'e1', EV_MAX = 25, EV_END = Date.parse('2026-11-15T18:00:00Z'); // termina el domingo 15-nov a las 12:00 (mediodía) de Costa Rica
+    const EV_PICKS = { 5: ['bulbasaur', 'charmander', 'squirtle'], 10: ['butterfree', 'charizard', 'meowth', 'gengar'], 20: ['chikorita', 'cyndaquil', 'totodile'] };
+    const evTotal = async () => { const r = await q('SELECT COALESCE(SUM(n), 0) AS t FROM mis_score WHERE mid = ?1', EV_ID).first(); return r ? (r.t | 0) : 0; };
+    if (route === '/api/f/estate' && req.method === 'GET') {
+        const total = Math.min(EV_MAX, await evTotal());
+        const mine = await q('SELECT n FROM mis_score WHERE mid = ?1 AND acc = ?2', EV_ID, me).first();
+        const { results } = await q("SELECT mid FROM mis_claim WHERE acc = ?1 AND mid LIKE 'e1:%'", me).all();
+        const { results: gres } = await q("SELECT mid FROM mis_claim WHERE acc = ?1 AND mid LIKE 'e1g:%'", me).all();
+        const { results: board } = await q('SELECT acc, n, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 10', EV_ID).all();
+        const tn = n => n >= 1 && n <= EV_MAX;
+        return reply({ now, me, total, mine: mine ? mine.n : 0, claimed: (results || []).map(r => parseInt(String(r.mid).slice(3), 10)).filter(tn),
+            gclaimed: (gres || []).map(r => parseInt(String(r.mid).slice(4), 10)).filter(tn), board: board || [], end: EV_END, iTop: now >= EV_END && !!(board && board[0] && board[0].acc === me) });
+    }
+    if (route === '/api/f/eadd' && req.method === 'POST') { // entrega UNA pluma (sube el total global; tope 25)
+        if (now >= EV_END) return reply({ closed: true });
+        const total = await evTotal();
+        if (total >= EV_MAX) return reply({ full: true, total: EV_MAX });
+        const name = String(b.name || '').replace(/[<>"&]/g, '').trim().slice(0, 24) || 'Entrenador';
+        const avatar = /^[a-z0-9_-]{1,12}$/i.test(b.avatar || '') ? b.avatar : '';
+        await q('INSERT INTO mis_score (mid, acc, n, ts, name, avatar) VALUES (?1, ?2, 1, ?3, ?4, ?5) ON CONFLICT(mid, acc) DO UPDATE SET n = n + 1, ts = ?3', EV_ID, me, now, name, avatar).run();
+        const mine = await q('SELECT n FROM mis_score WHERE mid = ?1 AND acc = ?2', EV_ID, me).first();
+        return reply({ ok: true, total: Math.min(EV_MAX, total + 1), mine: mine ? mine.n : 1 });
+    }
+    if (route === '/api/f/eclaim' && req.method === 'POST') { // reclama el tramo 'tier' (1-25) una sola vez por cuenta, si el total global ya lo alcanzó
+        const tier = b.tier | 0;
+        if (tier < 1 || tier > EV_MAX) return reply({ error: 'tramo no válido' }, 400);
+        const total = await evTotal();
+        if (total < tier) return reply({ error: 'aún no se ha alcanzado este tramo' }, 403);
+        const opts = EV_PICKS[tier];
+        if (opts && !opts.includes(b.pick)) return reply({ error: 'elección no válida' }, 400);
+        const gold = !!b.gold; // fila de ORO: al terminar el evento (25 plumas) el #1 en aportes puede reclamar de nuevo todas las recompensas
+        if (gold) {
+            if (now < EV_END) return reply({ error: 'el estudio aún no termina' }, 403);
+            const top = await q('SELECT acc FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 1', EV_ID).first();
+            if (!top || top.acc !== me) return reply({ error: 'no eres el #1' }, 403);
+        }
+        const pick = opts ? b.pick : 'reward', key = (gold ? 'e1g:' : EV_ID + ':') + tier;
+        const ex = await q('SELECT pick FROM mis_claim WHERE mid = ?1 AND acc = ?2', key, me).first();
+        if (ex) return reply({ ok: true, pick: ex.pick, already: true });
+        await q('INSERT INTO mis_claim (mid, acc, pick, ts) VALUES (?1, ?2, ?3, ?4)', key, me, pick, now).run();
+        return reply({ ok: true, pick });
+    }
     if (route === '/api/f/mboard' && req.method === 'GET') {
         const mq = url.searchParams.get('mid'), mid = mq === 'm2' ? 'm2' : mq === 'm3' ? 'm3' : 'm1';
         const { results } = await q('SELECT acc, n, ts, name, avatar FROM mis_score WHERE mid = ?1 AND n > 0 ORDER BY n DESC, ts ASC LIMIT 50', mid).all();

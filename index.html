@@ -17762,7 +17762,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             activeTimers.push(t);
         }
 
-        function bossStart(c) {
+        function bossStart(c, quiet) { // quiet = jefe de evento legendario: mismo combate, pero sin barra, aviso ni cambio de tamaño del HUD
             bossC = c; c.isBoss = true;
             c.isEvolving = true; // intocable y quieto mientras crece (nadie lo elige como objetivo)
             // Los demás dejan lo que hacían: los duelos se rompen y las embestidas contra un compañero se cancelan.
@@ -17780,7 +17780,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             let sw = bw * 0.75, sh = 12; try { const cs = getComputedStyle(w, '::before'); sw = parseFloat(cs.width) || sw; sh = parseFloat(cs.height) || sh; } catch (e) {}
             const K = BOSS_SCALE, px = v => Math.round(v) + 'px', set = (k, v) => w.style.setProperty(k, v);
             set('--bw0', px(bw)); set('--bh0', px(bh)); set('--bw1', px(bw * K)); set('--bh1', px(bh * K));
-            set('--bhb0', px(hb)); set('--bhb1', px(hb + bh * (K - 1))); set('--bhw0', px(hw)); set('--bhw1', px(Math.max(hw * K, 110)));
+            set('--bhb0', px(hb)); set('--bhb1', px(hb + bh * (K - 1))); set('--bhw0', px(hw)); set('--bhw1', quiet ? px(hw) : px(Math.max(hw * K, 110)));
             set('--bsw0', px(sw)); set('--bsh0', px(sh)); set('--bsw1', px(sw * K)); set('--bsh1', px(sh * K));
             c.bossH = bh * K; c.bossW = bw * K;
             // Estadísticas x5 y curación completa.
@@ -17796,9 +17796,9 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             const cx = c.x + 35, cy = c.y + 95 - bh * 1.5;
             bossRing(c, 0); bossRing(c, 450); bossRing(c, 900);
             for (let i = 0; i < 5; i++) { const t = setTimeout(() => { if (bossC !== c || c.fainted) return; try { spawnSparks(cx, cy, i % 2 ? '#fde047' : '#c084fc', 14); triggerCameraShake(5 + i, 380 / gameSpeed); } catch (e) {} }, (i * 420) / gameSpeed); activeTimers.push(t); }
-            bossBarShow(c);
-            bossBanner(c, '¡' + c.name.toUpperCase() + (c.shiny ? ' ✦' : '') + ' SE HA CONVERTIDO EN JEFE!', c.lifeKOs + ' KOs seguidos · todos contra él');
-            logMessage(`👑 ¡${c.name} encadena ${c.lifeKOs} KOs sin caer y se convierte en JEFE! Tamaño x${BOSS_SCALE}, estadísticas x${BOSS_STAT_MULT}. ¡Todos contra él!`, 'evolve');
+            if (!quiet) bossBarShow(c);
+            if (!quiet) bossBanner(c, '¡' + c.name.toUpperCase() + (c.shiny ? ' ✦' : '') + ' SE HA CONVERTIDO EN JEFE!', c.lifeKOs + ' KOs seguidos · todos contra él');
+            if (quiet) logMessage(`👑 ¡${c.name} aparece como JEFE! Tamaño x${BOSS_SCALE}, estadísticas x${BOSS_STAT_MULT}. ¡Todos contra él!`, 'evolve'); else logMessage(`👑 ¡${c.name} encadena ${c.lifeKOs} KOs sin caer y se convierte en JEFE! Tamaño x${BOSS_SCALE}, estadísticas x${BOSS_STAT_MULT}. ¡Todos contra él!`, 'evolve');
             try { playAttackCry(c); } catch (e) {}
             try { GameAudio.sfx('go'); } catch (e) {}
             try { directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, 2600, DIRECTOR_PRIORITY_SPAWN); } catch (e) {}
@@ -23397,7 +23397,15 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             try { GameAudio.sfx('pop'); } catch (e) {}
             setTimeout(() => {
                 if (!legendOkBase() || combatants.some(c => c.id === id)) return;
-                try { const c = spawnOneFromPool([speciesMeta[id]]); directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, DIRECTOR_SPAWN_HOLD_MS, DIRECTOR_PRIORITY_SPAWN); } catch (e) { console.error(e); }
+                try {
+                    const c = spawnOneFromPool([speciesMeta[id]]); directorFocus(c.id, DIRECTOR_SPAWN_ZOOM, DIRECTOR_SPAWN_HOLD_MS, DIRECTOR_PRIORITY_SPAWN);
+                    const toBoss = (n) => { // al terminar de salir de la ball, el ave legendaria se convierte en JEFE (sin cambiar el HUD)
+                        if (c.fainted || gameOver || bossC || !combatants.includes(c)) return;
+                        if (c.isSpawning || c.isEvolving) { if (n < 40) setTimeout(() => toBoss(n + 1), 300); return; }
+                        try { bossStart(c, true); } catch (e) { console.error(e); }
+                    };
+                    setTimeout(() => toBoss(0), 900);
+                } catch (e) { console.error(e); }
             }, 2600);
             return true;
         }

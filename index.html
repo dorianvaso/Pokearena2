@@ -8721,7 +8721,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         }
         // Miniaturas del HUD (récords, feed de combate): se usa el sprite ESTÁTICO Gen V (mismo estilo, sin animar). Cada GIF visible
         // se vuelve a decodificar y repintar en cada fotograma de su animación; a 17-32 px la animación casi no se aprecia.
-        function sprThumb(u) { const m = /^(.*\/black-white\/)animated\/((?:back\/)?(?:shiny\/)?\d+)\.gif$/.exec(String(u || '')); return m ? m[1] + m[2] + '.png' : u; }
+        function sprThumb(u) { return u; } // los HUD usan los sprites animados
         function unshinyUrl(u) { return u ? sprSet(u, isBackSpr(u), false) : u; }
         function migrateSpriteData(v) { // partidas guardadas: URLs de Showdown y los .png estáticos de la v0.47 -> animated Gen V
             try { const raw = JSON.stringify(v);
@@ -25791,6 +25791,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             probe.onload = () => {
                 const nw = probe.naturalWidth, nh = probe.naturalHeight;
                 let b = { nw, nh, bx: 0, by: 0, bw: nw, bh: nh };
+                if (/\/animated\//.test(src)) { finish(b); return; } // GIF animado: el lienzo ya abarca todos los fotogramas (el recuadro del 1.er fotograma recortaba los saltos)
                 try {
                     const cv = document.createElement('canvas');
                     cv.width = nw; cv.height = nh;

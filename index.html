@@ -8491,7 +8491,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
       </div></div><div class="hud-page" id="hud-page-cap"><div id="cap-panel">
         <div class="cap-head"><span class="cap-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 0 1 7.9 7H15a3 3 0 0 0-6 0H4.1A8 8 0 0 1 12 4zm0 16a8 8 0 0 1-7.9-7H9a3 3 0 0 0 6 0h4.9A8 8 0 0 1 12 20zm0-6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>CAPTURA</span><span id="cap-hint" class="cap-hint"></span></div>
         <div id="cap-balls" class="cap-balls"></div>
-      </div></div></div><div class="hud-dots"><i class="on"></i><i></i></div></div>
+      </div></div><div class="hud-page" id="hud-page-bet"><div id="bet-panel"></div></div></div><div class="hud-dots"><i class="on"></i><i></i><i></i></div></div>
     </section>
     </div>
     </div>
@@ -18654,6 +18654,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             const pager = document.getElementById('hud-pager'), track = document.getElementById('hud-track'); if (!pager || !track) return;
             const dots = pager.querySelectorAll('.hud-dots i');
             const setPage = (i) => {
+                i = Math.max(0, Math.min(2, i)); if (i === 2 && !(window.paBetOK && window.paBetOK())) i = (hudPage === 2 ? 0 : hudPage);
                 hudPage = i; track.style.transform = 'translateX(' + (-i * 100) + '%)';
                 dots.forEach((d, k) => d.classList.toggle('on', k === i));
                 if (i === 1) capRenderBalls();
@@ -18662,7 +18663,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             let sx = 0, sy = 0, dx = 0, dragging = false, tracking = false, pid = null, moved = false, ballRow = null, ballScroll0 = 0, ballScrolling = false;
             pager.addEventListener('pointerdown', e => {
                 ballRow = null;
-                const row = e.target.closest('#cap-balls');
+                const row = e.target.closest('#cap-balls,.bet-scroll');
                 if (row && row.scrollWidth > row.clientWidth + 2) { ballRow = row; ballScroll0 = row.scrollLeft; }
                 tracking = true; dragging = false; moved = false; sx = e.clientX; sy = e.clientY; dx = 0; pid = e.pointerId;
             });
@@ -18687,8 +18688,8 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 dx = mx;
                 const w = pager.clientWidth || 1;
                 let off = -hudPage * w + dx;
-                if (hudPage === 1 && dx < 0) off = -w + dx * 0.25; // hacia la izquierda en la 2ª página: el gesto también vuelve (con tope visual)
-                off = Math.max(-w, Math.min(0, off)); // sin pasarse de las 2 páginas
+                const maxP = (window.paBetOK && window.paBetOK()) ? 2 : 1;
+                off = Math.max(-maxP * w, Math.min(0, off)); // sin pasarse de las páginas disponibles
                 track.style.transform = 'translateX(' + off + 'px)';
             });
             const end = e => {
@@ -18697,7 +18698,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
                 if (dragging) {
                     track.classList.remove('drag');
                     const w = pager.clientWidth || 1;
-                    if (Math.abs(dx) > w * 0.15) setPage(hudPage === 0 ? 1 : 0); // 2 páginas: un deslizamiento lateral (a cualquier lado) cambia de HUD
+                    if (Math.abs(dx) > w * 0.15) { const maxP = (window.paBetOK && window.paBetOK()) ? 2 : 1; setPage(maxP === 1 ? (hudPage === 0 ? 1 : 0) : Math.max(0, Math.min(maxP, hudPage + (dx < 0 ? 1 : -1)))); } // con 2 páginas el gesto alterna; con 3, izquierda = siguiente y derecha = anterior
                     else setPage(hudPage);
                     dragging = false;
                 }
@@ -30134,7 +30135,7 @@ window.PAOak = (function () {
         try { toggleToolbar(true); } catch (e) {}
         await tutTalk('Arriba a la derecha tienes los controles: menú, pausa, velocidad ×2 y ×4, sonido y cámara automática.', { ring: tutSel('#icon-toolbar') });
         try { toggleToolbar(false); } catch (e) {}
-        await tutTalk('El HUD tiene dos páginas. Desliza el HUD hacia un lado, o toca el segundo punto, para abrir la página de CAPTURA.', { ring: tutSel('#hud-pager'), wait: () => hudPage === 1 });
+        await tutTalk('El HUD tiene varias páginas. Desliza el HUD hacia la izquierda, o toca el segundo punto, para abrir la página de CAPTURA.', { ring: tutSel('#hud-pager'), wait: () => hudPage === 1 });
 
         // 4) Captura
         await tutTalk('¡Esta es la página de CAPTURA! Aquí están tus POKÉ BALLS. Toca una para elegirla: la marcada es la que se lanza.', { ring: tutSel('#cap-balls') });
@@ -36098,6 +36099,62 @@ window.PAMis = (function () {
     return { open, onCapture, _ev: () => ev, _johto: JOHTO, _norm: norm, _ring: ringCall };
 })();
 </script>
+<style id="pa-bets-css">
+#bet-panel{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:4px;min-height:0;font-family:'PA Chakra S',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+#bet-panel button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#bet-panel .bt-head{display:flex;align-items:center;gap:8px;font-size:10px;flex:0 0 auto}
+#bet-panel .bt-title{font-weight:800;letter-spacing:.12em;color:#fbbf24}
+#bet-panel .bt-money{margin-left:auto;color:#86efac;font-variant-numeric:tabular-nums}
+#bet-panel .bt-st{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}
+#bet-panel .bt-st i{font-style:normal;color:#fbbf24;display:inline-block;min-width:2.2em;text-align:right}
+#bet-panel .bt-tabs{display:flex;gap:4px;flex:0 0 auto}
+#bet-panel .bt-tab{flex:1 1 0;min-width:0;padding:3px 0;font-size:9px;font-weight:800;letter-spacing:.04em;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.22);color:#cbd5e1;white-space:nowrap}
+#bet-panel .bt-tab.on{background:#fbbf24;border-color:#fbbf24;color:#1a1200}
+#bet-panel .bt-body{flex:1 1 auto;min-height:0;display:flex}
+#bet-panel .bet-scroll{flex:1 1 auto;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#bet-panel .bet-scroll::-webkit-scrollbar{display:none}
+#bet-panel .bt-ch{flex:0 0 auto;width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px 2px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.2);color:#e2e8f0;min-height:0}
+#bet-panel .bt-ch img{flex:1 1 auto;min-height:0;max-height:34px;width:34px;object-fit:contain;image-rendering:pixelated}
+#bet-panel .bt-ch span{font-size:7px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8;text-transform:uppercase}
+#bet-panel .bt-ch b{font-size:10px;color:#fde68a;font-variant-numeric:tabular-nums}
+#bet-panel .bt-ch.sel,#bet-panel .bt-yb.sel{border-color:#fbbf24;background:rgba(251,191,36,.18);box-shadow:0 0 0 1px #fbbf24 inset}
+#bet-panel .bt-yn{flex:1;display:flex;gap:8px}
+#bet-panel .bt-yb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.25);color:#e2e8f0;gap:0}
+#bet-panel .bt-yb small{font-size:8px;letter-spacing:.08em;color:#94a3b8}
+#bet-panel .bt-yb b{font-size:20px;line-height:1.1}
+#bet-panel .bt-yb em{font-style:normal;font-size:12px;color:#fde68a}
+#bet-panel .bt-foot{flex:0 0 auto;display:flex;flex-direction:column;gap:3px}
+#bet-panel .bt-pick{font-size:10px;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bet-panel .bt-pick i{font-style:normal;color:#86efac}
+#bet-panel .bt-stakes{display:flex;gap:4px;align-items:center}
+#bet-panel .bt-sc{flex:0 0 auto;min-width:34px;padding:4px 5px;font-size:10px;font-weight:800;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(148,163,184,.25);color:#e2e8f0}
+#bet-panel .bt-sc:disabled{opacity:.35}
+#bet-panel .bt-amt{flex:1 1 auto;min-width:0;text-align:center;font-size:11px;color:#fbbf24;font-variant-numeric:tabular-nums;white-space:nowrap}
+#bet-panel .bt-go{flex:0 0 auto;padding:5px 10px;font-size:10px;font-weight:800;letter-spacing:.05em;border-radius:8px;background:#22c55e;border:0;color:#04210f}
+#bet-panel .bt-go:disabled{background:rgba(255,255,255,.1);color:#64748b}
+#bet-panel .bt-list{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;scrollbar-width:none;touch-action:pan-y}
+#bet-panel .bt-row{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(148,163,184,.18)}
+#bet-panel .bt-row img{width:26px;height:26px;object-fit:contain;image-rendering:pixelated;flex:0 0 auto}
+#bet-panel .bt-lbl{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;font-size:10px;line-height:1.15}
+#bet-panel .bt-lbl b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f1f5f9}
+#bet-panel .bt-lbl small{color:#94a3b8;font-size:9px}
+#bet-panel .bt-cash,#bet-panel .bt-dbl{flex:0 0 auto;padding:4px 7px;font-size:9px;font-weight:800;border-radius:7px;border:0;white-space:nowrap}
+#bet-panel .bt-cash{background:#fbbf24;color:#1a1200}
+#bet-panel .bt-cash u{text-decoration:none;font-variant-numeric:tabular-nums}
+#bet-panel .bt-dbl{background:#a78bfa;color:#120a2e}
+#bet-panel .bt-wait{flex:0 1 auto;font-size:8px;color:#94a3b8;text-align:right;max-width:46%}
+#bet-panel .bt-res{font-size:10px;font-weight:800}#bet-panel .bt-res.win{color:#86efac}#bet-panel .bt-res.lose{color:#f87171}#bet-panel .bt-res.refund{color:#cbd5e1}
+#bet-panel .bt-empty{margin:auto;padding:0 10px;text-align:center;font-size:10px;color:#94a3b8}
+.bt-ban{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 20px;min-width:min(86%,320px);box-sizing:border-box;text-align:center;border-radius:16px;background:rgba(8,12,24,.88);border:1px solid rgba(251,191,36,.6);box-shadow:0 10px 40px rgba(0,0,0,.6);color:#e2e8f0;pointer-events:auto;font-family:'PA Chakra S',system-ui,sans-serif}
+.bt-ban small{font-size:10px;letter-spacing:.2em;color:#94a3b8}
+.bt-ban b{font-size:20px;letter-spacing:.06em;color:#fbbf24}
+.bt-ban-t{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;min-width:2ch}
+.bt-ban span{font-size:12px;color:#cbd5e1;max-width:260px}
+.bt-ban button{margin-top:4px;padding:8px 18px;border-radius:10px;border:0;background:#22c55e;color:#04210f;font:800 12px/1 inherit;font-family:inherit;letter-spacing:.06em;cursor:pointer}
+.bt-toast{position:absolute;left:50%;top:14%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 22px;border-radius:14px;background:rgba(8,12,24,.9);border:1px solid #fbbf24;color:#e2e8f0;pointer-events:none;font-family:'PA Chakra S',system-ui,sans-serif;animation:btT 5.2s ease both}
+.bt-toast small{font-size:9px;letter-spacing:.2em;color:#94a3b8}.bt-toast b{font-size:26px}.bt-toast.up b{color:#86efac}.bt-toast.dn b{color:#f87171}.bt-toast span{font-size:11px;color:#cbd5e1}
+@keyframes btT{0%{opacity:0;transform:translate(-50%,-14px)}8%,86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+</style>
 <style id="pa-missions-css">
 
 #ms-panel .es-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
@@ -37426,6 +37483,219 @@ window.projStruggle = function (A, B, x, y) {
   }
   t=setTimeout(strike,1800);
 })();
+</script>
+<script id="pa-bets">
+(function () {
+    const KEY = 'pokearena.bets', MIN = 100, MAXS = 1000000, EDGE = 0.9, CASHF = 0.95, OPEN_S = 20, CHIPS = [100, 500, 1000, 5000];
+    const MK = { win: 'GANADOR', ko: 'MÁS KO', time: 'TIEMPO', boss: 'JEFE' };
+    const MKL = { win: 'Ganador', ko: 'Más KO', time: 'Más tiempo', boss: 'Aparece un jefe' };
+    let S = { phase: 'off', bets: [], odds: {}, base: {}, pool: [], boss: false, tab: 'win', sel: null, stake: 0, end: 0, res: null, seq: 0, msg: '', sig: '', sx: {} };
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const money = () => { try { return capMoney(); } catch (e) { return 0; } };
+    const fm = n => { try { return fmtMoney(n); } catch (e) { return n + ' ₽'; } };
+    const sfx = k => { try { GameAudio.sfx(k); } catch (e) {} };
+    const ok = () => { try { return !isRaid() && !multiPlan && !pvpDuel && !(window.PA_TUT && window.PA_TUT.on); } catch (e) { return false; } };
+    window.paBetOK = ok;
+    const spr = id => { try { return String(stageSpriteOf(id) || baseSpriteOf(id) || '').replace('/animated/', '/').replace(/\.gif$/, '.png'); } catch (e) { return ''; } };
+    const nameOf = id => { const m = S.pool.find(x => x.id === id); return m ? (m.name || id) : id; };
+    const saveStake = () => { try { capSave(KEY, S.bets.filter(b => !b.done).reduce((a, b) => a + b.stake, 0)); } catch (e) {} };
+
+    function compute(pool) {
+        const raw = pool.map(m => {
+            const s = pokemonStats[m.id] || m.stats || {}, g = k => s[k] | 0;
+            const hp = g('hp'), a = g('attack'), d = g('defense'), sa = g('spAttack'), sd = g('spDefense'), sp = g('speed');
+            const bst = (hp + a + d + sa + sd + sp) || 300; let bb = 1; try { bb = Math.max(0.5, biomeBoost(m)); } catch (e) {}
+            return { id: m.id, win: Math.pow(bst / 100, 3) * Math.pow(bb, 0.8), ko: Math.pow((Math.max(a, sa) * 0.7 + Math.min(a, sa) * 0.3 + sp * 0.5) / 100, 3) * Math.pow(bb, 0.6), time: Math.pow((hp * 1.2 + d + sd + sp * 0.3) / 100, 3) * Math.pow(bb, 0.6) };
+        });
+        const base = {}, odds = {};
+        ['win', 'ko', 'time'].forEach(k => {
+            const t = raw.reduce((x, r) => x + r[k], 0) || 1; base[k] = {}; odds[k] = {};
+            raw.forEach(r => { base[k][r.id] = r[k]; odds[k][r.id] = Math.round(Math.max(1.2, Math.min(75, EDGE / (r[k] / t))) * 10) / 10; });
+        });
+        odds.boss = { yes: 2.6, no: 1.4 };
+        return { base, odds };
+    }
+
+    function live() { // probabilidad actual de cada opción (coincide con la de las cuotas al inicio)
+        const ids = S.pool.map(m => m.id), alive = new Set(aliveSpeciesIds()), out = { win: {}, ko: {}, time: {}, boss: { yes: 0, no: 1 }, prog: 0, nA: alive.size };
+        let sumL = 0; ids.forEach(id => { if (alive.has(id)) sumL += speciesLives[id] || 0; });
+        const inf = {};
+        ids.forEach(id => {
+            const c = combatantsById[id], t = arenaTally[id] || {};
+            inf[id] = { alive: alive.has(id), lives: speciesLives[id] || 0, hpf: (c && !c.fainted && c.maxHp > 0) ? Math.max(0.08, Math.min(1, c.hp / c.maxHp)) : 1,
+                kos: Math.max(c ? (c.arenaKOs | 0) : 0, t.kos | 0), ms: Math.max(c ? (c.arenaMs | 0) : 0, t.ms | 0) / 1000 };
+        });
+        const norm = o => { const t = ids.reduce((a, id) => a + o[id], 0); ids.forEach(id => { o[id] = t > 0 ? o[id] / t : 0; }); };
+        ids.forEach(id => { const i = inf[id]; out.win[id] = i.alive ? S.base.win[id] * (0.4 + 0.6 * i.hpf) * (0.6 + 0.4 * i.lives / 3) : 0; }); norm(out.win);
+        const shr = k => { const s = {}; let t = 0; ids.forEach(id => { const i = inf[id]; s[id] = i.alive ? Math.pow(S.base[k][id], 0.25) * (0.5 + 0.5 * i.hpf) : 0; t += s[id]; }); ids.forEach(id => { s[id] = t > 0 ? s[id] / t : 0; }); return s; };
+        const R = Math.max(0, sumL - 1), sk = shr('ko'), st = shr('time');
+        ids.forEach(id => { out.ko[id] = Math.pow(inf[id].kos + R * sk[id] + 1e-6, 4); }); norm(out.ko);
+        ids.forEach(id => { const i = inf[id]; out.time[id] = Math.pow(i.ms + (i.alive ? 40 * i.lives * st[id] * out.nA : 0) + 1e-6, 4); }); norm(out.time);
+        out.prog = ids.length ? 1 - sumL / (3 * ids.length) : 0;
+        let mx = 0; try { combatants.forEach(c => { if (c && !c.fainted && !c.isBoss) mx = Math.max(mx, c.lifeKOs | 0); }); } catch (e) {}
+        const py = S.boss ? 0.97 : Math.max(0.01, 0.35 * Math.pow(Math.max(0, 1 - out.prog), 1.3) + Math.min(0.4, mx / 5 * 0.4) * (1 - out.prog));
+        out.boss.yes = Math.min(0.97, py); out.boss.no = 1 - out.boss.yes;
+        return out;
+    }
+    const pOf = (b, L) => b.m === 'boss' ? L.boss[b.pick] : ((L[b.m] || {})[b.pick] || 0);
+    const cashOf = (b, L) => Math.floor(Math.min(b.stake * b.odds, b.stake * b.odds * pOf(b, L) * CASHF));
+    const canLive = L => S.phase === 'fight' && !gameOver && L.prog >= 0.4 && L.nA >= 2;
+
+    function pickLabel(b) { return b.m === 'boss' ? (b.pick === 'yes' ? 'SÍ aparece' : 'NO aparece') : nameOf(b.pick); }
+
+    function refundAll(msg) {
+        const t = S.bets.filter(b => !b.done).reduce((a, b) => a + b.stake, 0);
+        if (t > 0) { try { capMoneyAdd(t); } catch (e) {} try { logMessage('💰 Apuestas devueltas: ' + fm(t), 'info'); } catch (e) {} }
+        S.bets.forEach(b => { if (!b.done) { b.done = true; b.state = 'refund'; b.pay = b.stake; } });
+        S.phase = 'off'; S.msg = msg || 'APUESTAS DEVUELTAS'; saveStake(); render(true);
+    }
+
+    function settle(w) {
+        const tl = Object.keys(arenaTally).map(k => arenaTally[k]);
+        const top = key => { const mx = tl.reduce((a, t) => Math.max(a, t[key] || 0), 0); return mx > 0 ? tl.filter(t => (t[key] || 0) === mx).map(t => t.id) : []; };
+        const winId = (w && !w.isBoss && !w.isAlpha) ? w.id : null, koIds = top('kos'), tmIds = top('ms');
+        let total = 0, stake = 0, paid = 0;
+        S.bets.forEach(b => {
+            if (b.done) return;
+            const win = b.m === 'win' ? b.pick === winId : b.m === 'ko' ? koIds.includes(b.pick) : b.m === 'time' ? tmIds.includes(b.pick) : (b.pick === 'yes') === !!S.boss;
+            b.done = true; b.state = win ? 'win' : 'lose'; b.pay = win ? Math.floor(b.stake * b.odds) : 0; paid += b.pay;
+        });
+        S.bets.forEach(b => { if (b.state !== 'refund') { stake += b.stake; total += b.pay || 0; } });
+        S.phase = 'done'; if (!stake) { render(true); return; }
+        if (paid > 0) { try { capMoneyAdd(paid); } catch (e) {} }
+        S.res = { total, stake, net: total - stake }; saveStake();
+        S.msg = (S.res.net >= 0 ? '+' : '') + fm(S.res.net);
+        try { logMessage('💰 Apuestas: ' + (total > 0 ? 'cobras ' + fm(total) : 'sin premio') + ' (apostado ' + fm(stake) + ')', 'info'); } catch (e) {}
+        toast(S.res); sfx(total > stake ? 'confirm' : 'tick'); render(true);
+    }
+    function toast(r) {
+        const host = $('game-container'); if (!host) return; const t = document.createElement('div'); t.className = 'bt-toast ' + (r.net >= 0 ? 'up' : 'dn');
+        t.innerHTML = '<small>APUESTAS</small><b>' + (r.net >= 0 ? '+' : '−') + fm(Math.abs(r.net)) + '</b><span>' + (r.total > 0 ? 'Cobras ' + fm(r.total) : 'Esta vez no hubo premio') + '</span>';
+        host.appendChild(t); setTimeout(() => { try { t.remove(); } catch (e) {} }, 5200);
+    }
+
+    function beginWindow(ov, chosen, onDone) {
+        if (S.bets.some(b => !b.done)) refundAll();
+        S = { phase: 'off', bets: [], odds: {}, base: {}, pool: chosen.slice(), boss: false, tab: 'win', sel: null, stake: 0, end: 0, res: null, seq: 0, msg: '', sig: '', sx: {} };
+        if (!ok() || money() < MIN || !chosen.length) { render(true); return onDone(); }
+        const c = compute(chosen); S.base = c.base; S.odds = c.odds; S.phase = 'open'; S.end = Date.now() + OPEN_S * 1000;
+        const ban = document.createElement('div'); ban.className = 'bt-ban';
+        ban.innerHTML = '<small>PREDICCIONES</small><b>APUESTAS ABIERTAS</b><div class="bt-ban-t">20</div><span>Desliza el HUD para apostar en el panel «APUESTAS»</span><button type="button">EMPEZAR YA</button>';
+        ov.appendChild(ban); const tEl = ban.querySelector('.bt-ban-t');
+        let done = false;
+        const fin = () => { if (done) return; done = true; clearInterval(iv); try { ban.remove(); } catch (e) {} if (S.phase === 'open') S.phase = 'fight'; try { hudSetPage(0); } catch (e) {} render(true); onDone(); };
+        const iv = setInterval(() => { const l = Math.max(0, Math.ceil((S.end - Date.now()) / 1000)); tEl.textContent = l; if (l <= 0) fin(); }, 250);
+        try { countdownTimers.push(iv); } catch (e) {}
+        ban.querySelector('button').addEventListener('click', () => { sfx('confirm'); fin(); });
+        try { hudSetPage(2); } catch (e) {}
+        render(true);
+    }
+
+    // ---------- HUD ----------
+    function render(force) {
+        const p = $('bet-panel'); if (!p) return;
+        const L = (S.phase === 'fight' && S.pool.length) ? live() : null;
+        let tab = S.tab; if (S.phase !== 'open') tab = 'mis';
+        const live_ = L ? canLive(L) : false, mn = money();
+        const sig = JSON.stringify([S.phase, tab, S.sel, S.stake, S.bets.map(b => [b.id, b.done, b.state]), live_, S.msg, S.res, ok(), Math.floor(mn / 100)]);
+        if (!force && sig === S.sig) { updateNums(L); return; }
+        S.sig = sig;
+        const old = p.querySelector('.bet-scroll'); if (old) S.sx[old.dataset.m] = old.scrollLeft;
+        let st = '';
+        if (S.phase === 'open') st = 'ABIERTAS <i id="bt-t">' + Math.max(0, Math.ceil((S.end - Date.now()) / 1000)) + 's</i>';
+        else if (S.phase === 'fight') st = 'EN VIVO';
+        else if (S.phase === 'done') st = esc(S.msg || 'FINAL'); else st = esc(S.msg || 'CERRADAS');
+        let h = '<div class="bt-head"><span class="bt-title">APUESTAS</span><span class="bt-money">' + fm(mn) + '</span><span class="bt-st">' + st + '</span></div>';
+        if (S.phase === 'open') {
+            h += '<div class="bt-tabs">' + ['win', 'ko', 'time', 'boss'].map(k => '<button type="button" class="bt-tab' + (tab === k ? ' on' : '') + '" data-tab="' + k + '">' + MK[k] + '</button>').join('') + '<button type="button" class="bt-tab' + (tab === 'mis' ? ' on' : '') + '" data-tab="mis">MIS' + (S.bets.length ? ' ' + S.bets.length : '') + '</button></div>';
+        }
+        if (!S.pool.length && S.phase === 'off') {
+            h += '<div class="bt-empty">Las apuestas se abren tras el sorteo de especies de cada arena.</div>';
+        } else if (tab === 'mis' || S.phase !== 'open') {
+            h += '<div class="bt-list">';
+            if (!S.bets.length) h += '<div class="bt-empty">' + (S.phase === 'open' ? 'Aún no apostaste.' : S.phase === 'off' ? 'Esta arena no tiene apuestas (sin saldo suficiente o modo no disponible).' : 'No apostaste en esta partida.') + '</div>';
+            S.bets.forEach((b, i) => {
+                const lab = MKL[b.m] + ' · ' + esc(pickLabel(b));
+                let act = '';
+                if (b.done) act = '<span class="bt-res ' + b.state + '">' + (b.state === 'win' ? '+' + fm(b.pay) : b.state === 'refund' ? 'DEVUELTA' : 'PERDIDA') + '</span>';
+                else if (S.phase === 'fight' && L && pOf(b, L) <= 0.005) act = '<span class="bt-res lose">SIN OPCIONES</span>';
+                else if (S.phase === 'fight') act = live_ ? '<button type="button" class="bt-cash" data-i="' + i + '">COBRAR <u data-cash="' + i + '">' + fm(cashOf(b, L)) + '</u></button><button type="button" class="bt-dbl" data-i="' + i + '">DOBLAR</button>' : '<span class="bt-wait">Cobrar y doblar: a mitad de la pelea</span>';
+                else act = '<span class="bt-wait">Posible: ' + fm(Math.floor(b.stake * b.odds)) + '</span>';
+                h += '<div class="bt-row"><img alt="" src="' + (b.m === 'boss' ? '' : spr(b.pick)) + '"' + (b.m === 'boss' ? ' style="visibility:hidden"' : '') + '><span class="bt-lbl"><b>' + lab + '</b><small>' + fm(b.stake) + ' × ' + b.odds.toFixed(b.live ? 2 : 1) + (b.live ? ' · doblada' : '') + '</small></span>' + act + '</div>';
+            });
+            h += '</div>';
+        } else if (tab === 'boss') {
+            const o = S.odds.boss;
+            h += '<div class="bt-body"><div class="bt-yn"><button type="button" class="bt-yb' + (S.sel === 'yes' ? ' sel' : '') + '" data-id="yes"><small>APARECE UN JEFE</small><b>SÍ</b><em>×' + o.yes.toFixed(1) + '</em></button><button type="button" class="bt-yb' + (S.sel === 'no' ? ' sel' : '') + '" data-id="no"><small>NO APARECE</small><b>NO</b><em>×' + o.no.toFixed(1) + '</em></button></div></div>';
+        } else {
+            const od = S.odds[tab] || {};
+            h += '<div class="bt-body"><div class="bet-scroll" data-m="' + tab + '">' + S.pool.map(m => '<button type="button" class="bt-ch' + (S.sel === m.id ? ' sel' : '') + '" data-id="' + esc(m.id) + '" title="' + esc(m.name) + '"><img alt="" draggable="false" src="' + spr(m.id) + '"><span>' + esc(m.name) + '</span><b>×' + (od[m.id] || 0).toFixed(1) + '</b></button>').join('') + '</div></div>';
+        }
+        if (S.phase === 'open' && tab !== 'mis') {
+            const od = tab === 'boss' ? (S.sel ? S.odds.boss[S.sel] : 0) : (S.sel ? S.odds[tab][S.sel] : 0);
+            const pk = !S.sel ? 'Elige una opción' : (tab === 'boss' ? (S.sel === 'yes' ? 'SÍ aparece' : 'NO aparece') : esc(nameOf(S.sel))) + ' · ×' + od.toFixed(1);
+            const can = S.sel && S.stake >= MIN && S.stake <= mn;
+            h += '<div class="bt-foot"><div class="bt-pick">' + pk + (S.sel && S.stake ? ' <i>→ ' + fm(Math.floor(S.stake * od)) + '</i>' : '') + '</div><div class="bt-stakes">' + CHIPS.map(v => '<button type="button" class="bt-sc" data-s="' + v + '"' + (S.stake + v > mn ? ' disabled' : '') + '>+' + (v >= 1000 ? v / 1000 + 'K' : v) + '</button>').join('') + '<button type="button" class="bt-sc" data-s="0">✕</button><span class="bt-amt">' + fm(S.stake) + '</span><button type="button" class="bt-go" ' + (can ? '' : 'disabled') + '>APOSTAR</button></div></div>';
+        }
+        p.innerHTML = h;
+        const sc = p.querySelector('.bet-scroll'); if (sc && S.sx[sc.dataset.m]) sc.scrollLeft = S.sx[sc.dataset.m];
+    }
+    function updateNums(L) {
+        const p = $('bet-panel'); if (!p) return;
+        if (S.phase === 'open') { const t = $('bt-t'); if (t) t.textContent = Math.max(0, Math.ceil((S.end - Date.now()) / 1000)) + 's'; }
+        if (L) p.querySelectorAll('[data-cash]').forEach(u => { const b = S.bets[+u.dataset.cash]; if (b && !b.done) u.textContent = fm(cashOf(b, L)); });
+    }
+
+    function place() {
+        const tab = S.tab; if (S.phase !== 'open' || !S.sel || tab === 'mis') return;
+        const mn = money(); if (S.stake < MIN || S.stake > mn || S.stake > MAXS) return;
+        let spent = false; try { spent = capMoneySpend(S.stake); } catch (e) {} if (!spent) return;
+        const odds = tab === 'boss' ? S.odds.boss[S.sel] : S.odds[tab][S.sel];
+        S.bets.push({ id: ++S.seq, m: tab, pick: S.sel, stake: S.stake, odds, done: false }); S.stake = 0; S.sel = null; saveStake(); sfx('confirm'); render(true);
+    }
+    function cash(i) {
+        const b = S.bets[i]; if (!b || b.done) return; const L = live(); if (!canLive(L)) return;
+        const v = cashOf(b, L); try { capMoneyAdd(v); } catch (e) {} b.done = true; b.state = v >= b.stake ? 'win' : 'lose'; b.pay = v; b.cashed = true; saveStake();
+        try { logMessage('💰 Cobras ' + fm(v) + ' (' + MKL[b.m] + ' · ' + pickLabel(b) + ')', 'info'); } catch (e) {} sfx('confirm'); render(true);
+    }
+    function dbl(i) {
+        const b = S.bets[i]; if (!b || b.done) return; const L = live(); if (!canLive(L)) return; const p = pOf(b, L); if (p <= 0.005) return;
+        let spent = false; try { spent = capMoneySpend(b.stake); } catch (e) {} if (!spent) { S.msg = 'SIN SALDO'; render(true); return; }
+        const odds = Math.round(Math.max(1.05, Math.min(99, EDGE / p)) * 100) / 100;
+        S.bets.push({ id: ++S.seq, m: b.m, pick: b.pick, stake: b.stake, odds, done: false, live: true }); saveStake(); sfx('confirm'); render(true);
+    }
+
+    document.addEventListener('click', e => {
+        const p = $('bet-panel'); if (!p || !p.contains(e.target)) return; const t = e.target.closest('button'); if (!t || t.disabled) return;
+        if (t.dataset.tab) { S.tab = t.dataset.tab; S.sel = null; sfx('tick'); render(true); }
+        else if (t.classList.contains('bt-ch') || t.classList.contains('bt-yb')) { S.sel = t.dataset.id; sfx('tick'); render(true); }
+        else if (t.dataset.s != null && t.classList.contains('bt-sc')) { const v = +t.dataset.s; S.stake = v === 0 ? 0 : Math.min(MAXS, Math.min(money(), S.stake + v)); sfx('tick'); render(true); }
+        else if (t.classList.contains('bt-go')) place();
+        else if (t.classList.contains('bt-cash')) cash(+t.dataset.i);
+        else if (t.classList.contains('bt-dbl')) dbl(+t.dataset.i);
+    });
+
+    // ---------- enganches con la partida ----------
+    const _rsd = runSpeciesDraw;
+    runSpeciesDraw = function (ov, chosen, onDone) { return _rsd.call(this, ov, chosen, function () { try { beginWindow(ov, chosen, onDone); } catch (e) { console.error('bets', e); onDone(); } }); };
+    const _dw = declareWinner;
+    declareWinner = function (w) { const was = gameOver; const r = _dw.apply(this, arguments); try { if (!was && gameOver && S.phase === 'fight') settle(w); } catch (e) { console.error('bets', e); } return r; };
+    const _bs = bossStart;
+    bossStart = function () { const r = _bs.apply(this, arguments); try { if (bossC && S.phase === 'fight') S.boss = true; } catch (e) {} return r; };
+
+    setInterval(() => {
+        try {
+            const dots = document.querySelectorAll('#hud-pager .hud-dots i'); if (dots[2]) dots[2].style.display = ok() ? '' : 'none';
+            if ((S.phase === 'open' && !countingDown) || (S.phase === 'fight' && !gameRunning && !gameOver && !countingDown)) { refundAll('PARTIDA CANCELADA: APUESTAS DEVUELTAS'); return; }
+            if (typeof hudPage !== 'undefined' && hudPage === 2) render(false);
+        } catch (e) {}
+    }, 400);
+    try { SaveSys.ready.then(() => { const pnd = Number(capLoad(KEY, 0)) || 0; if (pnd > 0) { capMoneyAdd(pnd); capSave(KEY, 0); } render(true); }); } catch (e) {}
+    document.addEventListener('DOMContentLoaded', () => render(true));
+    window.PABets = { get state() { return S; }, live, compute };
+})();
+
 </script>
 </body>
 </html>

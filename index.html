@@ -17387,6 +17387,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             let money = AE_MONEY_BASE + Math.round(secs / 60 * AE_MONEY_PER_MIN) + (w.arenaKOs || 0) * AE_MONEY_PER_KO;
             if (raidWin) money *= AE_RAID_MULT;
             money *= 1.5; // recompensa de dinero x1.5
+            if (window.PA_CROWN_ID && w.id === window.PA_CROWN_ID && !raidWin) money *= 3; // carta Coronación: si el jefe coronado gana, paga x3
             money = Math.max(10, Math.round(money / 10) * 10);
             let item = aeRollItem();
             if (LEGEND[w.id]) { try { const pl = SHOP_ITEMS.find(x => x.id === LEGEND[w.id].feather); if (pl && bagCount(pl.id) < BAG_MAX) item = { id: pl.id, name: pl.name, img: pl.img || '', qty: 1 }; } catch (e) {} } // si un legendario gana: su pluma
@@ -36194,6 +36195,62 @@ window.PAMis = (function () {
 #bet-panel .bt-cash,#bet-panel .bt-dbl{font-size:12px;padding:7px 12px}#bet-panel .bt-wait{font-size:10px}#bet-panel .bt-res{font-size:13px}
 #bet-panel .bt-empty{font-size:13px;grid-column:1/-1}
 }
+.bt-cf-lb{font-size:9px;letter-spacing:.2em;color:#94a3b8;margin-top:2px}.bt-cf-in{width:70%;box-sizing:border-box;text-align:center;font:800 24px/1.2 'PA Chakra S',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#fbbf24;background:rgba(255,255,255,.07);border:1px solid rgba(251,191,36,.5);border-radius:10px;padding:5px 8px;outline:none}.bt-cf-in:focus{border-color:#fbbf24;box-shadow:0 0 0 2px rgba(251,191,36,.25)}.bt-cf-win.bad{color:#f87171}
+</style>
+<style id="pa-cards-css">
+.pc-offer{position:absolute;left:0;right:0;bottom:0;z-index:55;padding:18px 8px 6px;box-sizing:border-box;pointer-events:none;font-family:'PA Chakra S',system-ui,sans-serif;background:linear-gradient(to top,rgba(2,6,16,.92) 0%,rgba(2,6,16,.7) 55%,transparent 100%);animation:pcIn .35s ease-out both;transition:opacity .35s}
+.pc-offer>*{pointer-events:auto}
+.pc-offer.pc-done{opacity:0}
+.pc-top{display:flex;align-items:center;justify-content:center;gap:8px;max-width:340px;margin:0 auto 4px;font-size:8.5px;letter-spacing:.22em;color:#e2e8f0;text-shadow:0 1px 0 #000}
+.pc-top b{font-weight:800;color:#fde68a}.pc-tl{min-width:2.4em;text-align:left;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.pc-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden;margin:0 auto 6px;max-width:340px;box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+.pc-bar i{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,#22d3ee,#a78bfa,#fbbf24);transition:width .25s linear}
+.pc-row{display:flex;gap:6px;justify-content:center;max-width:340px;margin:0 auto;perspective:900px}
+.pc-card{flex:1 1 0;min-width:0;display:flex;padding:0;border:0;background:none;cursor:pointer;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;opacity:0;animation:pcDeal .5s cubic-bezier(.2,.9,.3,1.15) both;animation-delay:calc(var(--i) * 110ms);transition:transform .15s,filter .15s}
+.pc-card:hover{transform:translateY(-6px) scale(1.03);filter:brightness(1.12)}
+.pc-card:active{transform:scale(.97)}
+.pc-frame{display:flex;flex:1;padding:2.5px;border-radius:11px;background:linear-gradient(160deg,var(--f1),var(--f2));box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 18px -4px rgba(var(--cr),.85);position:relative;overflow:hidden}
+.pc-card.r-c{--f1:#cbd5e1;--f2:#64748b}.pc-card.r-r{--f1:#c4b5fd;--f2:#6d28d9}.pc-card.r-e{--f1:#fde68a;--f2:#d97706}
+.pc-in{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 4px 6px;border-radius:9px;background:linear-gradient(175deg,#141b2e 0%,#0a0f1d 70%);position:relative}
+.pc-rar{display:flex;align-items:center;gap:5px;font-size:7px;font-weight:800;letter-spacing:.18em;color:var(--f1);align-self:stretch;justify-content:center}
+.pc-rar em{width:7px;height:7px;transform:rotate(45deg);background:linear-gradient(135deg,var(--f1),var(--f2));box-shadow:0 0 6px var(--f1);flex:0 0 auto}
+.pc-art{position:relative;width:100%;aspect-ratio:1.55/1;border-radius:8px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 42%,rgba(var(--cr),.55) 0%,rgba(var(--cr),.16) 55%,rgba(0,0,0,.35) 100%),repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 6px,transparent 6px 12px);border:1px solid rgba(var(--cr),.45);box-shadow:inset 0 0 18px rgba(0,0,0,.55)}
+.pc-art svg{width:44%;height:auto;max-height:84%;fill:none;stroke:rgb(var(--cr));stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 7px rgba(var(--cr),.95)) drop-shadow(0 2px 0 rgba(0,0,0,.7));animation:pcFloat 2.8s ease-in-out infinite}
+.pc-art svg .f{fill:rgba(var(--cr),.28)}.pc-art svg .d{fill:rgb(var(--cr));stroke:none}
+.pc-p{position:absolute;width:4px;height:4px;border-radius:50%;background:rgb(var(--cr));opacity:0;box-shadow:0 0 6px rgb(var(--cr));animation:pcSpark 2.6s ease-in infinite}
+.pc-p.p1{left:18%;bottom:14%}.pc-p.p2{left:70%;bottom:20%;animation-delay:.9s}.pc-p.p3{left:44%;bottom:8%;animation-delay:1.7s}
+.pc-card b{font-size:10.5px;line-height:1.1;color:#fff;letter-spacing:.02em;text-shadow:0 2px 0 rgba(0,0,0,.8);text-align:center}
+.pc-card small{font-size:7.8px;line-height:1.25;color:#aeb9cc;text-align:center;min-height:2.5em;display:block}
+.pc-go{margin-top:auto;padding:2px 10px;border-radius:999px;font-size:7.5px;font-weight:800;letter-spacing:.14em;color:#0a0f1d;background:linear-gradient(180deg,var(--f1),var(--f2));box-shadow:0 2px 0 rgba(0,0,0,.5)}
+.pc-card.r-r .pc-frame{animation:pcGlowR 2.4s ease-in-out infinite}
+.pc-card.r-e .pc-frame{animation:pcGlowE 1.8s ease-in-out infinite}
+.pc-card.r-e .pc-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-120%);animation:pcFoil 2.8s ease-in-out infinite;pointer-events:none}
+.pc-card.r-e .pc-in{background:linear-gradient(175deg,#2a1c07 0%,#0f0a04 72%)}
+.pc-card.pc-sel{animation:pcPick .42s ease-out forwards}
+.pc-offer.pc-done .pc-card:not(.pc-sel){opacity:0;transform:translateY(20px);transition:all .3s}
+#pc-act{position:absolute;left:50%;top:44px;transform:translateX(-50%);z-index:54;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;font-family:'PA Chakra S',system-ui,sans-serif}
+.pc-chip{display:flex;gap:9px;align-items:center;padding:4px 12px;border-radius:999px;background:linear-gradient(90deg,rgba(8,12,24,.92),rgba(30,20,6,.92));border:1px solid rgba(251,191,36,.7);box-shadow:0 2px 10px rgba(0,0,0,.5),0 0 10px -2px rgba(251,191,36,.5);font-size:10px;color:#e2e8f0;white-space:nowrap}
+.pc-chip b{letter-spacing:.08em;color:#fde68a}.pc-chip u{text-decoration:none;font-variant-numeric:tabular-nums;color:#fff;min-width:2.2em;text-align:right}
+.pc-ban{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:70;padding:9px 18px;border-radius:12px;background:rgba(8,12,24,.92);border:1px solid #fbbf24;box-shadow:0 0 16px rgba(251,191,36,.45);color:#fde68a;font:800 13px/1.2 'PA Chakra S',system-ui,sans-serif;pointer-events:none;text-align:center;animation:btT 2.6s ease both}
+.pokemon-wrapper.pc-mark .pokemon{filter:drop-shadow(0 0 6px #fbbf24) drop-shadow(0 0 2px #fbbf24)}
+.pokemon-wrapper.pc-mark::after{content:"🏹";position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:16px;z-index:5;pointer-events:none}
+.pokemon-wrapper.pc-rebel .pokemon{filter:drop-shadow(0 0 7px #ef4444) drop-shadow(0 0 2px #ef4444)}
+@keyframes pcIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes pcDeal{0%{opacity:0;transform:translateY(60px) rotate(calc((var(--i) - 1) * 9deg)) scale(.8)}100%{opacity:1;transform:none}}
+@keyframes pcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pcSpark{0%{opacity:0;transform:translateY(0)}20%{opacity:.95}100%{opacity:0;transform:translateY(-46px)}}
+@keyframes pcGlowR{0%,100%{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 14px -4px rgba(var(--cr),.7)}50%{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 24px 0 rgba(167,139,250,.85)}}
+@keyframes pcGlowE{0%,100%{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 18px -2px rgba(251,191,36,.7)}50%{box-shadow:0 8px 22px rgba(0,0,0,.6),0 0 32px 2px rgba(251,191,36,1)}}
+@keyframes pcFoil{0%{transform:translateX(-120%)}60%,100%{transform:translateX(120%)}}
+@keyframes pcPick{0%{transform:scale(1)}40%{transform:scale(1.12);filter:brightness(1.5)}100%{transform:scale(1.2) translateY(-30px);opacity:0}}
+@media (min-width:900px){.pc-row,.pc-bar,.pc-top{max-width:480px}.pc-offer{padding-top:22px}.pc-in{padding:6px 6px 8px;gap:4px}.pc-card b{font-size:13px}.pc-card small{font-size:10px}.pc-rar{font-size:8.5px}.pc-go{font-size:9px;padding:3px 14px}.pc-top{font-size:10px}.pc-chip{font-size:12px;padding:4px 14px}.pc-ban{font-size:16px}#pc-act{top:52px}}
+.pc-feather{position:absolute;left:0;top:0;width:84px;height:84px;z-index:30;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;animation:pcFeIn .5s cubic-bezier(.2,.9,.3,1.3) both}
+.pc-fe-in{position:absolute;inset:-8px;display:grid;place-items:center;animation:pcFeBob 1.6s ease-in-out infinite}
+.pc-feather img{width:80px;height:80px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 8px #fde68a) drop-shadow(0 0 3px #fff);position:relative;z-index:2}
+.pc-feather i{position:absolute;inset:2px;border-radius:50%;background:radial-gradient(circle,rgba(253,230,138,.55),rgba(253,230,138,0) 68%);animation:pcFePulse 1.2s ease-in-out infinite}
+.pc-feather.pc-fe-out{animation:pcFeOut .5s ease-in forwards}.pc-feather.pc-fe-got{animation:pcFeGot .45s ease-out forwards}
+@keyframes pcFeIn{from{opacity:0;scale:.2}to{opacity:1;scale:1}}@keyframes pcFeBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes pcFePulse{0%,100%{opacity:.55;transform:scale(.85)}50%{opacity:1;transform:scale(1.25)}}@keyframes pcFeOut{to{opacity:0;scale:.4}}@keyframes pcFeGot{to{opacity:0;scale:1.8;translate:0 -30px}}
 </style>
 <style id="pa-missions-css">
 
@@ -37526,7 +37583,7 @@ window.projStruggle = function (A, B, x, y) {
 </script>
 <script id="pa-bets">
 (function () {
-    const KEY = 'pokearena.bets', MIN = 100, MAXS = 1000000, EDGE = 0.9, CASHF = 0.95, OPEN_S = 20, CHIPS = [100, 500, 1000, 5000];
+    const KEY = 'pokearena.bets', MIN = 100, MAXS = 1000000, EDGE = 0.9, CASHF = 0.95, OPEN_S = 40, CHIPS = [100, 500, 1000, 5000];
     const MK = { win: 'GANADOR', ko: 'MÁS KO', time: 'TIEMPO', boss: 'JEFE' };
     const MKL = { win: 'Ganador', ko: 'Más KO', time: 'Más tiempo', boss: 'Aparece un jefe' };
     let S = { phase: 'off', bets: [], odds: {}, base: {}, pool: [], boss: false, tab: 'win', sel: null, stake: 0, end: 0, res: null, seq: 0, msg: '', sig: '', sx: {} };
@@ -37703,9 +37760,14 @@ window.projStruggle = function (A, B, x, y) {
         const el = document.createElement('div'); el.className = 'bt-cf'; S.cf = el; S.sel = id;
         const draw = () => { const mn = money(), can = S.stake >= MIN && S.stake <= mn;
             el.innerHTML = '<div class="bt-cf-card"><small>' + MKL[tab].toUpperCase() + '</small>' + (tab === 'boss' ? '<h3>' + (id === 'yes' ? 'SÍ aparece un jefe' : 'NO aparece un jefe') + '</h3>' : '<img alt="" src="' + spr(id) + '"><h3>' + esc(nameOf(id)) + '</h3>')
-                + '<div class="bt-cf-od">Cuota <b>×' + od.toFixed(1) + '</b></div><div class="bt-cf-amt">' + fm(S.stake) + '</div><div class="bt-cf-win">' + (S.stake ? 'Ganarías ' + fm(Math.floor(S.stake * od)) : 'Elige cuánto apostar') + '</div>'
+                + '<div class="bt-cf-od">Cuota <b>×' + od.toFixed(1) + '</b></div><label class="bt-cf-lb">MONTO</label><input class="bt-cf-in" type="text" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="0" value="' + (S.stake || '') + '"><div class="bt-cf-win"></div>'
                 + '<div class="bt-cf-ch">' + CHIPS.map(v => '<button type="button" data-s="' + v + '"' + (S.stake + v > mn ? ' disabled' : '') + '>+' + (v >= 1000 ? v / 1000 + 'K' : v) + '</button>').join('') + '<button type="button" data-s="0">✕</button></div>'
-                + '<div class="bt-cf-bt"><button type="button" class="no">CANCELAR</button><button type="button" class="yes"' + (can ? '' : ' disabled') + '>CONFIRMAR</button></div><small class="bt-cf-sa">Saldo: ' + fm(mn) + '</small></div>'; };
+                + '<div class="bt-cf-bt"><button type="button" class="no">CANCELAR</button><button type="button" class="yes"' + (can ? '' : ' disabled') + '>CONFIRMAR</button></div><small class="bt-cf-sa">Saldo: ' + fm(mn) + ' · mínimo ' + fm(MIN) + '</small></div>';
+            const inp = el.querySelector('.bt-cf-in'), upd = () => { const m2 = money(), v = S.stake, okv = v >= MIN && v <= m2, w = el.querySelector('.bt-cf-win'), y = el.querySelector('.yes');
+                w.textContent = v > m2 ? 'No tienes tanto saldo' : v > 0 && v < MIN ? 'Mínimo ' + fm(MIN) : v ? 'Ganarías ' + fm(Math.floor(v * od)) : 'Escribe o elige un monto'; w.classList.toggle('bad', v > m2 || (v > 0 && v < MIN)); if (y) y.disabled = !okv; };
+            inp.addEventListener('input', () => { const d = inp.value.replace(/\D/g, '').slice(0, 7); inp.value = d; S.stake = Math.min(MAXS, parseInt(d || '0', 10) || 0); upd(); });
+            inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { const y = el.querySelector('.yes'); if (y && !y.disabled) { place(); closeCf(); } } });
+            inp.addEventListener('keyup', e => e.stopPropagation()); upd(); };
         el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('button');
             if (!b) { if (e.target === el) closeCf(); return; } if (b.disabled) return;
             if (b.dataset.s != null) { const v = +b.dataset.s; S.stake = v === 0 ? 0 : Math.min(MAXS, Math.min(money(), S.stake + v)); sfx('tick'); draw(); }
@@ -37757,6 +37819,173 @@ window.projStruggle = function (A, B, x, y) {
     try { SaveSys.ready.then(() => { const pnd = Number(capLoad(KEY, 0)) || 0; if (pnd > 0) { capMoneyAdd(pnd); capSave(KEY, 0); } render(true); }); } catch (e) {}
     document.addEventListener('DOMContentLoaded', () => render(true));
     window.PABets = { get state() { return S; }, live, compute };
+})();
+
+</script>
+<script id="pa-cards">
+(function () {
+    const EVERY = 50000, PICK_MS = 12000;
+    const RAR = { c: { n: 'COMÚN', w: 55 }, r: { n: 'RARA', w: 30 }, e: { n: 'ÉPICA', w: 15 } };
+    let A = [], offer = null, nextAt = EVERY, lastM = 0, flags = { hunt: 0, ice: 0, rebel: null, shinyNext: false, bio: null, markMode: 0 }, flash = [], marks = [], seen = 0;
+    const $ = id => document.getElementById(id);
+    const log = (t, k) => { try { logMessage(t, k || 'info'); } catch (e) {} };
+    const sfx = k => { try { GameAudio.sfx(k); } catch (e) {} };
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const ok = () => { try { return !isRaid() && !multiPlan && !pvpDuel && !(window.PA_TUT && window.PA_TUT.on) && gameRunning && !gameOver && !isPaused; } catch (e) { return false; } };
+    const live = () => combatants.filter(c => c && !c.fainted && !c.isBoss && !c.isAlpha && !c.captured && c.wrapper);
+    const popup = (c, t) => { try { spawnPoisonPopup(c, t, false); } catch (e) {} };
+    const bst = m => { const s = pokemonStats[m.id] || m.stats || {}; return (s.hp | 0) + (s.attack | 0) + (s.defense | 0) + (s.spAttack | 0) + (s.spDefense | 0) + (s.speed | 0); };
+    const avail = () => { const act = new Set(combatants.map(c => c.id)); return arenaPool.filter(w => !act.has(w.id) && (speciesLives[w.id] || 0) > 0); };
+    const crownable = () => live().filter(c => !bossC && !c.isSpawning && !c.isEvolving && !c.isCharging && !c.duel && !c.isChasing && !c.isPhantom && !c.isUnderground && !c.isAirborne && !c.digPhase && !c.flyPhase && !c.retreated && !c.gmax);
+    const addTimed = (id, name, ms) => { A = A.filter(a => a.id !== id); A.push({ id, name, left: ms, max: ms }); };
+
+    const CARDS = [
+        { id: 'toxic', n: 'Nube Tóxica', r: 'r', s: 'Envenena a todos 15 s', cr: '163,230,53', svg: '<path class="f" d="M18 40a9 9 0 0 1 1-17 12 12 0 0 1 23-3 10 10 0 0 1 4 20z"/><path d="M24 48v6M34 46v8M44 48v6"/><circle cx="27" cy="31" r="2" class="d"/><circle cx="37" cy="31" r="2" class="d"/>', d: 'Todos los pokémon quedan gravemente envenenados durante 15 s.', can: () => live().length >= 2,
+          run() { let k = 0; live().forEach(c => { try { if (hasStatusProblem(c) || isPoisonImmune(c) || c.isEvolving) return; c.poison = { tickMs: 0, toxic: true, stage: 0, card: 15000 }; c.wrapper.classList.add('is-poisoned'); updatePoisonBadge(c); popup(c, '¡Intoxicado!'); registerStatusAfflicted(c); k++; } catch (e) {} });
+            addTimed('toxic', 'NUBE TÓXICA', 15000); log('☣️ ¡Nube Tóxica! ' + k + ' pokémon gravemente envenenados.', 'hit'); } },
+        { id: 'hunt', n: 'Ventana de Caza', r: 'c', s: 'Captura ×3 durante 10 s', cr: '248,113,113', svg: '<circle cx="32" cy="32" r="16"/><circle cx="32" cy="32" r="5" class="d"/><path d="M32 8v12M32 44v12M8 32h12M44 32h12"/>', d: 'Durante 10 s, la probabilidad de captura se triplica.', can: () => true,
+          run() { flags.hunt = 10000; addTimed('hunt', 'VENTANA DE CAZA ×3', 10000); log('🎯 ¡Ventana de Caza! La captura es ×3 durante 10 s.', 'info'); } },
+        { id: 'ice', n: 'Era de Hielo', r: 'e', s: 'Congela a todos 4 s · Balls 100 %', cr: '103,232,249', svg: '<path d="M32 7v50M10 19.5l44 25M10 44.5l44-25"/><path d="M25 13l7 6 7-6M25 51l7-6 7 6M9 28l9 1-2-9M55 36l-9-1 2 9M9 36l9-1-2 9M55 28l-9 1 2-9"/>', d: 'Congela a todos 4 s y las Balls no fallan. Los de tipo Hielo siguen atacando.', can: () => live().length >= 2,
+          run() { let k = 0; live().forEach(c => { try { if (c.stats.type === 'ice' || c.stats.type2 === 'ice' || c.isEvolving || c.isSpawning || c.isCapturing) return;
+              if (c.poison) clearPoison(c); if (c.burn) { try { clearBurn(c); } catch (e) {} } if (c.sleep) { try { clearSleep(c); } catch (e) {} }
+              if (c.isChasing) { c.isChasing = false; c.chaseTargetId = null; } c.freeze = { tickMs: 0, ticks: 0, hold: 4000 }; c.wrapper.classList.add('is-frozen'); updateFreezeBadge(c); spawnFreezePopup(c, '¡Congelado!'); k++; } catch (e) {} });
+            flags.ice = 4000; addTimed('ice', 'ERA DE HIELO · BALLS 100%', 4000); log('❄️ ¡Era de Hielo! ' + k + ' pokémon congelados y las Balls no fallan.', 'hit'); } },
+        { id: 'crown', n: 'Coronación', r: 'r', s: 'Jefe al azar · IVs altos · gana ×3', cr: '251,191,36', svg: '<path class="f" d="M11 47L8 21l15 12 9-17 9 17 15-12-3 26z"/><path d="M13 53h38"/><circle cx="32" cy="14" r="2.5" class="d"/>', d: 'Un pokémon al azar se convierte en jefe. Capturado, conserva IVs altos. Si gana la arena, paga ×3.', can: () => crownable().length >= 1,
+          run() { const l = crownable(); const c = l[Math.floor(Math.random() * l.length)]; if (!c) return; try { c.iv = Object.fromEntries(STAT_KEYS.map(k => [k, 27 + Math.floor(Math.random() * 5)])); } catch (e) {}
+            c.crowned = true; window.PA_CROWN_ID = c.id; bossStart(c); log('👑 ¡Coronación! ' + c.name + ' es ahora el jefe. Si gana la arena, la recompensa se triplica.', 'evolve'); } },
+        { id: 'mark', n: 'Marca del Cazador', r: 'c', s: 'Marca uno: se captura al caer', cr: '251,146,60', svg: '<circle cx="29" cy="35" r="16"/><circle cx="29" cy="35" r="6" class="d"/><path d="M29 35L55 9M55 9v12M55 9H43"/>', d: 'Marcas a un pokémon. Cuando caiga debilitado, se intenta capturar solo, con bonus.', can: () => live().length >= 2,
+          run() { flags.markMode = PICK_MS; addTimed('mark', 'TOCA UN POKÉMON PARA MARCARLO', PICK_MS); banner('Toca un pokémon del campo para marcarlo'); } },
+        { id: 'biome', n: 'Cambio de Bioma', r: 'r', s: 'Cambia el bioma · entran otros', cr: '52,211,153', svg: '<circle class="f" cx="32" cy="32" r="22"/><path d="M10 32h44M32 10c-10 10-10 34 0 44M32 10c10 10 10 34 0 44"/>', d: 'El bioma cambia en mitad de la pelea. Otros tipos se hacen fuertes y entran otros pokémon.', can: () => true,
+          run() { const ks = Object.keys(BIOMES).filter(k => k !== window.PA_BIOME), b = ks[Math.floor(Math.random() * ks.length)]; window.PA_BIOME = b; window.PA_ARENA_SHOW = true; try { if (window.PA_redrawArena) window.PA_redrawArena(); } catch (e) {}
+            flags.bio = b; log('🌍 ¡Cambio de Bioma! Ahora es ' + BIOMES[b].name + ': sus tipos ganan +30 % de daño.', 'evolve');
+            const av = avail().map(m => ({ m, k: Math.pow(Math.random(), 1 / Math.max(0.2, biomeBoost(m))) })).sort((x, y) => y.k - x.k).slice(0, 3).map(o => o.m);
+            av.forEach(m => { try { spawnOneFromPool([m]); } catch (e) {} }); } },
+        { id: 'rebel', n: 'Rebelión', r: 'r', s: '12 s: todos contra el líder de KOs', cr: '239,68,68', svg: '<path class="f" d="M32 6c3 11 15 16 15 31a15 15 0 0 1-30 0c0-8 4-11 7-17 2 5 4 6 6 6-2-8-1-14 2-20z"/><path d="M32 52c-5 0-8-3-8-8 0-4 3-6 4-9 2 3 5 4 5 8 1-2 2-3 3-5 2 3 4 6 4 9 0 3-3 5-8 5z" class="d"/>', d: 'Durante 12 s, todos atacan al pokémon con más KOs.', can: () => live().length >= 3,
+          run() { const l = live().slice().sort((a, b) => (b.arenaKOs | 0) - (a.arenaKOs | 0)); const lead = l[0]; if (!lead) return; flags.rebel = lead; lead.wrapper.classList.add('pc-rebel');
+            addTimed('rebel', 'REBELIÓN contra ' + (lead.dexName || lead.name).toUpperCase(), 12000); log('🔥 ¡Rebelión! Todos van contra ' + lead.name + ' (' + (lead.arenaKOs | 0) + ' KO).', 'hit'); } },
+        { id: 'stamp', n: 'Estampida', r: 'c', s: 'Entran 6 débiles en fila', cr: '245,158,11', svg: '<path d="M9 16l14 16L9 48M24 16l14 16-14 16M39 16l14 16-14 16"/>', d: 'Entran 6 pokémon débiles a la vez, en fila desde un borde del mapa.', can: () => avail().length >= 3,
+          run() { const l = avail().sort((a, b) => bst(a) - bst(b)).slice(0, 6), n = l.length, w = window.PA_WALL, edge = Math.floor(Math.random() * 4);
+            const x0 = w ? w.l - 35 : 0, x1 = w ? x0 + (bounds.width - w.l - w.r) : bounds.width - bounds.size, y0 = w ? w.t - 76 : 0, y1 = w ? y0 + (bounds.height - w.t - w.b) : bounds.height - bounds.size;
+            l.forEach((m, i) => { const t = (i + 0.5) / n; const x = edge === 0 ? x0 : edge === 1 ? x1 : x0 + (x1 - x0) * t, y = edge === 2 ? y0 : edge === 3 ? y1 : y0 + (y1 - y0) * t; try { addCombatant(m.id, x, y); } catch (e) {} });
+            log('🐎 ¡Estampida! Entran ' + n + ' pokémon débiles en fila.', 'spawn'); } },
+        { id: 'shiny', n: 'Destello Shiny', r: 'e', s: 'Próximo en entrar: shiny (huye en 15 s)', cr: '240,171,252', svg: '<path class="f" d="M30 5c2 15 6 19 21 21-15 2-19 6-21 21-2-15-6-19-21-21 15-2 19-6 21-21z"/><path d="M50 42c.8 4 2 5.500 6 6.500-4 .8-5.200 2-6 6-.8-4-2-5.200-6-6 4-1 5.200-2.500 6-6.500z" class="d"/>', d: 'El próximo pokémon que entre es shiny, pero huye a los 15 s si nadie lo atrapa.', can: () => avail().length >= 1 && !flags.shinyNext,
+          run() { flags.shinyNext = true; addTimed('shiny', 'DESTELLO SHINY: ESPERANDO ENTRADA', 8000); log('✨ ¡Destello Shiny! El próximo pokémon que entre será shiny.', 'evolve'); } }
+    ];
+
+    // ---------- UI ----------
+    function host() { return $('game-container'); }
+    function banner(t) { const h = host(); if (!h) return; const b = document.createElement('div'); b.className = 'pc-ban'; b.textContent = t; h.appendChild(b); setTimeout(() => { try { b.remove(); } catch (e) {} }, 2600); }
+    function hideOffer() { if (offer && offer.el) { try { offer.el.remove(); } catch (e) {} } offer = null; }
+    function showOffer() {
+        const pool = CARDS.filter(c => { try { return c.can(); } catch (e) { return false; } }), pick = [];
+        while (pick.length < 3 && pool.length) { const tot = pool.reduce((a, c) => a + RAR[c.r].w, 0); let r = Math.random() * tot, k = 0; for (; k < pool.length; k++) { r -= RAR[pool[k].r].w; if (r <= 0) break; } pick.push(pool.splice(Math.min(k, pool.length - 1), 1)[0]); }
+        if (pick.length < 1) return false; const h = host(); if (!h) return false;
+        const el = document.createElement('div'); el.className = 'pc-offer';
+        el.innerHTML = '<div class="pc-top"><b>ELIGE UNA CARTA</b><span class="pc-tl"></span></div><div class="pc-bar"><i></i></div><div class="pc-row">' + pick.map((c, i) => '<button type="button" class="pc-card r-' + c.r + '" data-id="' + c.id + '" style="--cr:' + c.cr + ';--i:' + i + '"><span class="pc-frame"><span class="pc-in"><span class="pc-rar"><em></em>' + RAR[c.r].n + '</span><span class="pc-art"><svg viewBox="0 0 64 64" aria-hidden="true">' + c.svg + '</svg><i class="pc-p p1"></i><i class="pc-p p2"></i><i class="pc-p p3"></i></span><b>' + esc(c.n) + '</b><small>' + esc(c.s) + '</small><span class="pc-go">ELEGIR</span></span></span></button>').join('') + '</div>';
+        h.appendChild(el); offer = { el, left: PICK_MS, pick };
+        el.addEventListener('click', e => { const b = e.target.closest('.pc-card'); if (!b || !offer) return; e.stopPropagation(); const c = CARDS.find(x => x.id === b.dataset.id); const oe = offer.el; oe.classList.add('pc-done'); b.classList.add('pc-sel'); offer = null; setTimeout(() => { try { oe.remove(); } catch (er) {} }, 420); nextAt = matchElapsedMs + EVERY; sfx('confirm'); try { if (c) c.run(); } catch (er) { console.error('card', er); } renderAct(); });
+        sfx('pop'); return true;
+    }
+    function renderAct() {
+        const h = host(); if (!h) return; let el = $('pc-act'); if (!el) { el = document.createElement('div'); el.id = 'pc-act'; h.appendChild(el); }
+        el.innerHTML = A.map(a => '<span class="pc-chip"><b>' + esc(a.name) + '</b><u>' + Math.ceil(a.left / 1000) + 's</u></span>').join('');
+    }
+
+    // ---------- efectos ----------
+    function endEffect(id) {
+        if (id === 'toxic') live().forEach(c => { if (c.poison && c.poison.card != null) clearPoison(c); });
+        if (id === 'ice') { combatants.forEach(c => { if (c && c.freeze && c.freeze.hold != null) { try { clearFreeze(c); } catch (e) {} } }); flags.ice = 0; }
+        if (id === 'hunt') flags.hunt = 0;
+        if (id === 'rebel') { if (flags.rebel && flags.rebel.wrapper) flags.rebel.wrapper.classList.remove('pc-rebel'); flags.rebel = null; }
+        if (id === 'mark') flags.markMode = 0;
+    }
+    function resetAll() { A.forEach(a => endEffect(a.id)); A = []; flash = []; marks.forEach(c => { try { c.wrapper.classList.remove('pc-mark'); } catch (e) {} }); marks = []; hideOffer(); flags = { hunt: 0, ice: 0, rebel: null, shinyNext: false, bio: null, markMode: 0 }; nextAt = EVERY; window.PA_CROWN_ID = null; const a = $('pc-act'); if (a) a.innerHTML = ''; }
+    function fleeNow(c) {
+        if (!c || c.fainted || c.captured) return; log('💨 ¡' + c.name + ' shiny huyó de la arena!', 'info');
+        try { popup(c, '¡Huyó!'); } catch (e) {}
+        c.captured = true; c.isCapturing = false; c.isSpawning = false; try { capCancelAnims(c); } catch (e) {} c.hp = 0; speciesLives[c.id] = 1; try { checkFaint(c, null); } catch (e) { console.error(e); }
+        try { c.wrapper.style.display = 'none'; } catch (e) {}
+    }
+    function huntCapture(c) {
+        const base = capCalc(c, 'pokeball').p, p = Math.min(0.95, Math.max(0.15, base * 3 + 0.1)); const sprite = c.currentFrontSrc || (c.imgEl ? c.imgEl.src : ''), name = (c.shiny ? '✦ ' : '') + (c.dexName || c.name);
+        if (Math.random() < p) {
+            let reg = null; try { reg = registerCapture(name, sprite, 'arena', { uid: c.uid || null, iv: c.iv, nature: c.nature, ability: c.ability, learnedMove: c.learnedMove || null, ...bodyOf(c) }); } catch (e) { console.error(e); }
+            log('🏹 ¡La Marca del Cazador captura a ' + c.name + '! (' + Math.round(p * 100) + '%)' + (reg && reg.isNew ? ' (nuevo en la Pokédex)' : ''), 'evolve'); try { capNotify(c, sprite, !!(reg && reg.isNew)); } catch (e) {}
+            if (LEGEND[c.id]) { try { bagAdd(LEGEND[c.id].feather, 1); } catch (e) {} } banner('🏹 ¡Capturado: ' + (c.dexName || c.name) + '!'); sfx('confirm');
+        } else { log('🏹 ' + c.name + ' se zafó de la Marca del Cazador (' + Math.round(p * 100) + '%).', 'info'); banner('🏹 Se escapó'); }
+    }
+
+    // ---------- enganches ----------
+    const _cc = capCalc;
+    capCalc = function (c, b) { const r = _cc.apply(this, arguments); try { if (r.ball === Infinity) return r; if (flags.ice > 0) return Object.assign({}, r, { p: 1, a: 255 }); if (flags.hunt > 0) { const a = Math.min(255, r.a * 3); return Object.assign({}, r, { a, p: Math.max(0, Math.min(1, a / 255)) }); } } catch (e) {} return r; };
+    const _up = updatePoison;
+    updatePoison = function (c, dt) { if (c.poison && c.poison.card != null && !c.fainted) { c.poison.card -= dt; if (c.poison.card <= 0) { clearPoison(c); return; } } return _up.apply(this, arguments); };
+    const _uf = updateFreeze;
+    updateFreeze = function (c, dt) { if (c.freeze && c.freeze.hold != null && !c.fainted) { c.freeze.hold -= dt; if (c.freeze.hold <= 0) clearFreeze(c); return; } return _uf.apply(this, arguments); };
+    const _prt = pickRandomTarget;
+    pickRandomTarget = function (c, maxRange) { try { const L = flags.rebel; if (L && L !== c && !L.fainted && !L.isEvolving && !L.isSpawning && !L.duel && isHostile(c, L) && Math.hypot(L.x - c.x, L.y - c.y) <= (maxRange == null ? Infinity : maxRange)) return L; } catch (e) {} return _prt.apply(this, arguments); };
+    const _cd = computeDamage;
+    computeDamage = function (move, a) { const r = _cd.apply(this, arguments); try { if (flags.bio && a && r && r.damage > 1) { const t = (BIOMES[flags.bio] || {}).types || {}; if (t[a.type] || t[a.type2]) r.damage = Math.max(1, Math.round(r.damage * 1.3)); } } catch (e) {} return r; };
+    const _ac = addCombatant;
+    addCombatant = function (id, x, y) {
+        let mk = false; try { if (flags.shinyNext && ok() && !isRaid()) { const ros = arenaRoster[id]; if (ros) { ros.shiny = true; ros.announced = false; mk = true; flags.shinyNext = false; } } } catch (e) {}
+        const c = _ac.apply(this, arguments);
+        if (mk && c) { flash.push({ c, left: 15000 }); addTimed('shiny', 'SHINY HUYE EN', 15000); log('✨ ¡' + c.name + ' shiny! Captúralo antes de que huya (15 s).', 'evolve'); }
+        return c;
+    };
+    // tocar un pokémon para marcarlo
+    document.addEventListener('click', e => {
+        if (!(flags.markMode > 0) || !ok()) return; const w = e.target.closest && e.target.closest('.pokemon-wrapper'); if (!w) return; const c = combatants.find(x => x.wrapper === w && !x.fainted && !x.isBoss && !x.isAlpha); if (!c) return;
+        e.stopPropagation(); e.preventDefault(); let own = false; try { own = c.id === capOwnId(); } catch (er) {} if (own) { banner('No puedes marcar a tu propio pokémon'); return; }
+        flags.markMode = 0; A = A.filter(a => a.id !== 'mark'); marks.push(c); c.wrapper.classList.add('pc-mark'); addTimed('markon', 'MARCADO: ' + (c.dexName || c.name).toUpperCase(), 120000); log('🏹 Marcas a ' + c.name + '. Si cae, se intentará capturar.', 'info'); sfx('confirm'); renderAct();
+    }, true);
+
+    // ---------- reloj ----------
+    setInterval(() => {
+        try {
+            if (typeof matchElapsedMs === 'number') { if (matchElapsedMs < lastM - 1500 || (!gameRunning && (A.length || offer))) { resetAll(); } lastM = matchElapsedMs; }
+            if (!ok()) { if (!gameRunning || gameOver) { if (offer) hideOffer(); } return; }
+            const dt = 250 * (typeof gameSpeed === 'number' ? gameSpeed : 1);
+            if (offer) { offer.left -= 250; const b = offer.el.querySelector('.pc-bar i'); if (b) b.style.width = Math.max(0, offer.left / PICK_MS * 100) + '%'; const tl = offer.el.querySelector('.pc-tl'); if (tl) tl.textContent = Math.ceil(Math.max(0, offer.left) / 1000) + 's'; if (offer.left <= 0) { hideOffer(); nextAt = matchElapsedMs + EVERY; } }
+            else if (matchElapsedMs >= nextAt) { if (!showOffer()) nextAt = matchElapsedMs + 10000; }
+            if (flags.hunt > 0) flags.hunt -= dt; if (flags.ice > 0) flags.ice -= dt; if (flags.markMode > 0) flags.markMode -= 250;
+            for (let i = A.length - 1; i >= 0; i--) { const a = A[i]; if (a.id === 'shiny' && a.name.startsWith('DESTELLO')) { a.left -= 250; if (a.left <= 0) A.splice(i, 1); continue; } a.left -= dt; if (a.left <= 0) { A.splice(i, 1); endEffect(a.id === 'markon' ? 'x' : a.id); } }
+            if (flags.markMode <= 0 && !A.some(a => a.id === 'mark')) flags.markMode = 0;
+            for (let i = flash.length - 1; i >= 0; i--) { const f = flash[i]; if (f.c.captured || f.c.fainted) { flash.splice(i, 1); A = A.filter(a => a.id !== 'shiny'); continue; } f.left -= dt; if (f.left <= 0) { flash.splice(i, 1); A = A.filter(a => a.id !== 'shiny'); fleeNow(f.c); } else { const a = A.find(x => x.id === 'shiny'); if (a) a.left = f.left; } }
+            for (let i = marks.length - 1; i >= 0; i--) { const c = marks[i]; if (c.captured) { marks.splice(i, 1); A = A.filter(a => a.id !== 'markon'); continue; } if (c.fainted) { marks.splice(i, 1); A = A.filter(a => a.id !== 'markon'); try { c.wrapper.classList.remove('pc-mark'); } catch (e) {} huntCapture(c); } }
+            if (flags.rebel && (flags.rebel.fainted)) { endEffect('rebel'); A = A.filter(a => a.id !== 'rebel'); }
+            renderAct();
+        } catch (e) { console.error('cards', e); }
+    }, 250);
+
+    // ---------- plumas legendarias que caen en la arena durante el evento ----------
+    let fe = null, drops = [];
+    const _ls = legendStart;
+    legendStart = function (id) { const r = _ls.apply(this, arguments); try { if (r && LEGEND[id]) fe = { id, t: 0, next: 5500, n: 0 }; } catch (e) {} return r; };
+    function dropFeather(L) {
+        const cam = $('camera-layer'); if (!cam) return; const it = SHOP_ITEMS.find(x => x.id === L.feather); if (!it) return;
+        const w = window.PA_WALL || { l: 35, r: 35, t: 76, b: 76 };
+        const x = (w.l - 35) + 40 + Math.random() * Math.max(10, bounds.width - w.l - w.r - 80), y = (w.t - 76) + 40 + Math.random() * Math.max(10, bounds.height - w.t - w.b - 80);
+        const el = document.createElement('div'); el.className = 'pc-feather'; el.style.translate = x + 'px ' + y + 'px'; el.title = L.featherName;
+        el.innerHTML = '<span class="pc-fe-in"><img alt="" draggable="false" src="' + it.img + '"><i></i></span>';
+        const kill = () => { try { el.remove(); } catch (e) {} drops = drops.filter(d => d !== el); };
+        const take = e => { e.stopPropagation(); e.preventDefault(); if (el.dataset.t) return; el.dataset.t = 1; try { bagAdd(L.feather, 1); } catch (er) {}
+            log('🪶 ¡Recoges una ' + L.featherName + '! Va a tu bolsa.', 'evolve'); try { spawnSparks(x + 28, y + 28, '#fde68a', 14); } catch (er) {} sfx('confirm'); banner('🪶 +1 ' + L.featherName); el.classList.add('pc-fe-got'); setTimeout(kill, 450); };
+        el.addEventListener('pointerdown', e => e.stopPropagation()); el.addEventListener('click', take); el.addEventListener('touchend', take, { passive: false });
+        cam.appendChild(el); drops.push(el); setTimeout(() => { if (!el.dataset.t) { el.classList.add('pc-fe-out'); setTimeout(kill, 500); } }, 14000);
+        log('🪶 ¡Una ' + L.featherName + ' cae en la arena! Tócala para recogerla.', 'spawn');
+    }
+    setInterval(() => {
+        try {
+            if (!fe) { if (drops.length && !ok()) { drops.forEach(d => d.remove()); drops = []; } return; }
+            if (!gameRunning || gameOver || isPaused) { if (gameOver || !gameRunning) { drops.forEach(d => d.remove()); drops = []; fe = null; } return; }
+            const L = LEGEND[fe.id]; fe.t += 250 * (typeof gameSpeed === 'number' ? gameSpeed : 1);
+            const here = combatants.some(c => c && c.id === fe.id && !c.fainted && !c.captured);
+            if (fe.t > 90000 || (fe.t > 9000 && !here)) { fe = null; return; }
+            if (fe.t >= fe.next && fe.n < 5 && drops.length < 2) { dropFeather(L); fe.n++; fe.next = fe.t + 7000 + Math.random() * 5000; }
+        } catch (e) { console.error('feather', e); }
+    }, 250);
+    window.PACards = { CARDS, get fe() { return fe; }, dropFeather: id => dropFeather(LEGEND[id]), get drops() { return drops; }, get flags() { return flags; }, force: id => { const c = CARDS.find(x => x.id === id); if (c) c.run(); renderAct(); }, offer: () => showOffer(), get active() { return A; } };
 })();
 
 </script>

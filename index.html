@@ -218,6 +218,7 @@ html.pq2 .pokemon-wrapper.is-burned .pokemon img{filter:none !important}
             z-index: 5;
             display: none;
             cursor: pointer;
+            scale: 1.1; transform-origin: 50% 100%; /* sprites de la arena +10 % (los pies siguen en el suelo) */
             left: 0; top: 0; /* la posición va en 'translate' (ver placeWrapper): no fuerza diseño en cada paso */
         }
 
@@ -14966,11 +14967,28 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         }
         // Reproduce un sprite (tira horizontal de fotogramas) en (x, y) de la capa de cámara.
         // o: size (px), rot (grados), flip (-1 invierte en X), filter, fps, once, ms (vida si hace bucle), anchor ('b' = el punto es la base), z, op, delay (ms), scale, parent
+        const FX_GLOBAL = 0.78;
+        // Factor de tamaño de un efecto según el pokémon más cercano al punto (x, y): pequeño -> efecto menor, grande -> mayor.
+        function fxSizeFactor(x, y) {
+            let best = null, bd = 1e9, now = performance.now();
+            try {
+                for (const c of combatants) {
+                    if (!c || c.fainted || !c.pokemonEl) continue;
+                    if (!c._fxT || now - c._fxT > 1500) { c._fxT = now; c._fxH = (elH(c.pokemonEl) || 41) * 1.1; }
+                    const h = c._fxH, cy = c.y + 95 - h / 2, d = Math.hypot(x - (c.x + 35), y - cy);
+                    if (d < Math.max(55, h * 0.95) && d < bd) { bd = d; best = c; }
+                }
+            } catch (e) {}
+            if (!best) return FX_GLOBAL;
+            return FX_GLOBAL * Math.max(0.6, Math.min(1.45, Math.pow(best._fxH / 45, 0.6)));
+        }
         function spfx(name, x, y, o) {
             o = o || {};
             const D = SPFX_DATA[name]; if (!D || !container || spLive > 90) return null;
             const n = D[0], gs = Math.max(1, gameSpeed || 1), fps = (o.fps || D[2]) * gs * (o.fpsMul || 1);
-            const loop = !!D[3] && !o.once, dur = n / fps * 1000, s = o.size || 32;
+            let s = o.size || 32;
+            if (s < 150) s *= o.parent ? FX_GLOBAL : fxSizeFactor(x, y); // efectos pequeños/medios: más discretos y ajustados al tamaño del pokémon cercano
+            const loop = !!D[3] && !o.once, dur = n / fps * 1000;
             const el = document.createElement('div'); el.className = 'spfx';
             const st = el.style;
             st.left = x + 'px'; st.top = y + 'px'; st.width = s + 'px'; st.height = s + 'px';
@@ -22408,8 +22426,8 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // El wrapper mide 70x95 y el sprite está apoyado abajo (bottom:0), así que
         // el centro REAL del sprite es (x+35, y+95-alto/2), no (x+35, y+35).
         function fxSpriteCenter(c) {
-            const w = (c.pokemonEl && elW(c.pokemonEl)) || 50;
-            const h = (c.pokemonEl && elH(c.pokemonEl)) || 50;
+            const w = ((c.pokemonEl && elW(c.pokemonEl)) || 50) * 1.1; // el wrapper se dibuja a escala 1,1
+            const h = ((c.pokemonEl && elH(c.pokemonEl)) || 50) * 1.1;
             return { x: c.x + 35, y: c.y + 95 - h / 2, rx: w / 2, ry: h / 2 };
         }
 
@@ -37018,7 +37036,7 @@ window.PARaidFx = (function () {
 
   // ---- IMPACTO ----
   function hit(x, y, o) {
-    o = o || {}; const q = quality(); if (q <= 0) return; const S = clamp(o.size || 70, 30, 220), c = rgb(o.color, [255, 190, 90]), c2 = o.color2 ? rgb(o.color2) : lite(c, 0.55), crit = !!o.crit;
+    o = o || {}; const q = quality(); if (q <= 0) return; const S = clamp(o.size || 70, 16, 220), c = rgb(o.color, [255, 190, 90]), c2 = o.color2 ? rgb(o.color2) : lite(c, 0.55), crit = !!o.crit;
     const go = () => add({ x, y, w: S * 2.6, dur: crit ? 560 : 420, z: 27,
       init(f) { f.sp = mkSparks(Math.round((crit ? 16 : 10) * (0.6 + 0.4 * q)), S * 1.15); f.rs = []; const n = crit ? 9 : 6; for (let i = 0; i < n; i++) f.rs.push({ a: rnd(0, TAU), l: rnd(0.55, 1) * S * (crit ? 1.05 : 0.85), w: rnd(0.05, 0.1) * S }); f.rot = rnd(0, TAU); },
       draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, e = eo(u);
@@ -37034,13 +37052,13 @@ window.PARaidFx = (function () {
   function flash(x, y, o) { o = o || {}; const S = o.size || 80, c = rgb(o.color, [255, 240, 190]); add({ x, y, w: S * 2.4, dur: o.ms || 260, z: 27, draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, a = 1 - u; glow(g, cx, cy, S * (0.5 + 0.5 * eo(u)), c, a); glow(g, cx, cy, S * 0.3, [255, 255, 255], a); star(g, cx, cy, S * 0.95 * (0.5 + 0.5 * eo(u)), c, a, 0.3); } }); }
   // ---- ONDA DE CHOQUE ----
   function ring(x, y, o) {
-    o = o || {}; const S = clamp(o.size || 100, 40, 520), c = rgb(o.color, [200, 235, 255]), flat = !!o.flat, go = () => add({ x, y, w: S * 1.25, h: S * (flat ? 0.78 : 1.25), dur: o.ms || 560, z: flat ? 6 : 26,
+    o = o || {}; const S = clamp(o.size || 100, 22, 520), c = rgb(o.color, [200, 235, 255]), flat = !!o.flat, go = () => add({ x, y, w: S * 1.25, h: S * (flat ? 0.78 : 1.25), dur: o.ms || 560, z: flat ? 6 : 26,
       draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, sq = flat ? 0.45 : 1, e = eo(u); ringSoft(g, cx, cy, S * 0.5 * Math.pow(u, 0.7), S * 0.06 * (1 - u) + 2, c, (1 - u) * 0.9, sq); ringSoft(g, cx, cy, S * 0.5 * Math.pow(clamp(u * 1.2 - 0.05), 0.7), S * 0.035 * (1 - u) + 1, lite(c, 0.7), (1 - u) * 0.7, sq); if (u < 0.25) glow(g, cx, cy, S * 0.32 * (1 - u / 0.25), lite(c, 0.5), (1 - u / 0.25) * 0.6); } });
     if (o.delay) later(o.delay, go); else go();
   }
   // ---- EXPLOSIÓN ----
   function explosion(x, y, o) {
-    o = o || {}; const S = clamp(o.size || 80, 40, 260), c = rgb(o.color, [255, 120, 40]), go = () => add({ x, y, w: S * 3, dur: 700, z: 27,
+    o = o || {}; const S = clamp(o.size || 80, 22, 260), c = rgb(o.color, [255, 120, 40]), go = () => add({ x, y, w: S * 3, dur: 700, z: 27,
       init(f) { f.lb = []; for (let i = 0; i < 7; i++) f.lb.push({ a: rnd(0, TAU), d: rnd(0.1, 0.42) * S, r: rnd(0.28, 0.5) * S, ph: rnd(0, TAU) }); f.sp = mkSparks(14, S * 1.3); f.rot = rnd(0, TAU); },
       draw(g, u, dt, f) { const cx = f.w / 2, cy = f.h / 2, e = eo(u), fade = 1 - ei(u);
         for (const l of f.lb) { const d = l.d * e * 1.4, r = l.r * (0.5 + 0.8 * e) * (1 - u * 0.4) * (1 + 0.08 * Math.sin(f.t * 0.03 + l.ph)), x0 = cx + Math.cos(l.a) * d, y0 = cy + Math.sin(l.a) * d * 0.9; glow(g, x0, y0, r * 1.3, dark(c, 0.15), fade * 0.7); glow(g, x0, y0, r * 0.85, lite(c, 0.35), fade * 0.8); glow(g, x0, y0, r * 0.45, [255, 244, 190], fade * 0.8); }
@@ -37051,13 +37069,13 @@ window.PARaidFx = (function () {
   }
   // ---- HUMO / POLVO (mezcla normal) ----
   function smoke(x, y, o) {
-    o = o || {}; const S = clamp(o.size || 50, 20, 160), n = Math.max(2, Math.round((o.n || 5) * (0.6 + 0.4 * quality()))), c = rgb(o.color, [214, 204, 188]);
+    o = o || {}; const S = clamp(o.size || 50, 12, 160), n = Math.max(2, Math.round((o.n || 5) * (0.6 + 0.4 * quality()))), c = rgb(o.color, [214, 204, 188]);
     add({ x, y, w: S * 3.2, h: S * 2.4, dur: 760, z: 8, normal: true,
       init(f) { f.p = []; for (let i = 0; i < n; i++) f.p.push({ dx: rnd(-1, 1) * S * 0.7, dy: rnd(-0.1, 0.2) * S, r: rnd(0.22, 0.4) * S, rise: rnd(0.2, 0.6) * S, dly: rnd(0, 0.2), sp: rnd(0.8, 1.4) }); },
       draw(g, u, dt, f) { for (const p of f.p) { const v = clamp((u - p.dly) / (1 - p.dly)); if (v <= 0) continue; const e = eo(v), r = p.r * (0.5 + 1.1 * e), px = f.w / 2 + p.dx * e * p.sp, py = f.h * 0.62 + p.dy - p.rise * e, a = (1 - v) * 0.5, gr = g.createRadialGradient(px, py, 0, px, py, r); gr.addColorStop(0, A(lite(c, 0.25), a)); gr.addColorStop(0.55, A(c, a * 0.7)); gr.addColorStop(1, A(dark(c, 0.25), 0)); g.fillStyle = gr; g.beginPath(); g.arc(px, py, r, 0, TAU); g.fill(); } } });
   }
   // ---- CHISPAS SUELTAS ----
-  function sparks(x, y, color, n) { const c = rgb(color, [255, 210, 120]), S = 44 + Math.min(40, (n || 8) * 3); add({ x, y, w: S * 3, dur: 420, z: 27, init(f) { f.sp = mkSparks(clamp(Math.round((n || 8) * (0.6 + 0.4 * quality())), 3, 16), S); }, draw(g, u, dt, f) { drawSparks(g, f.sp, u, c, f.w / 2, f.h / 2, S); glow(g, f.w / 2, f.h / 2, S * 0.3 * (1 - u), lite(c, 0.4), (1 - u) * 0.7); } }); }
+  function sparks(x, y, color, n) { const c = rgb(color, [255, 210, 120]), S = (44 + Math.min(40, (n || 8) * 3)) * (typeof fxSizeFactor === 'function' ? fxSizeFactor(x, y) : 1); add({ x, y, w: S * 3, dur: 420, z: 27, init(f) { f.sp = mkSparks(clamp(Math.round((n || 8) * (0.6 + 0.4 * quality())), 3, 16), S); }, draw(g, u, dt, f) { drawSparks(g, f.sp, u, c, f.w / 2, f.h / 2, S); glow(g, f.w / 2, f.h / 2, S * 0.3 * (1 - u), lite(c, 0.4), (1 - u) * 0.7); } }); }
 
   // ==================== FORCEJEO DE RAYOS ====================
   function struggle(wa, la, W, Lo) {
@@ -37100,6 +37118,14 @@ window.PARaidFx = (function () {
     return V;
   }
 
+  // Tamaño de los efectos: más pequeños en general y proporcionales al pokémon más cercano (ver fxSizeFactor). Solo se escala la llamada de
+  // nivel superior (_fz) para que los efectos que se componen de otros no se reduzcan dos veces.
+  let _fz = 0;
+  function fzWrap(fn) { return function (x, y, o) {
+    if (_fz || typeof fxSizeFactor !== 'function' || !o || typeof o !== 'object') return fn.apply(this, arguments);
+    _fz++; try { const k = fxSizeFactor(x, y), o2 = Object.assign({}, o); if (o2.size) o2.size *= k; return fn.call(this, x, y, o2); } finally { _fz--; }
+  }; }
+  hit = fzWrap(hit); flash = fzWrap(flash); ring = fzWrap(ring); explosion = fzWrap(explosion); smoke = fzWrap(smoke);
   window.PAFX = { hit, flash, ring, explosion, smoke, sparks, struggle, rgb, filterColor, hsl, live: () => live.length, h: { glow, ringSoft, ray, streak, star, A, rgb, lite, dark, hsl, rnd, clamp, eo, ei, add, kill, later, TAU, mkSparks, drawSparks, filterColor, lay } };
 
   // ===== Enrutado: los efectos genéricos del juego pasan al motor nuevo =====
@@ -37682,6 +37708,9 @@ window.projStruggle = function (A, B, x, y) {
   }
   window.projAnnul = function (A_, B_, x, y) { if (!A_.dead && !B_.dead && tryStruggle(A_, B_, x, y)) return; return _annul.apply(this, arguments); };
   window.projClash = function (A_, B_, x, y) { if (tryStruggle(A_, B_, x, y)) return; _annul(A_, B_, x, y); };
+  { const _spp = window.spPhysHit; window.spPhysHit = function (x, y, o) {
+      try { if (typeof fxSizeFactor === 'function') { const k = fxSizeFactor(x, y); o = Object.assign({}, o || {}); o.scale = (o.scale || 1) * k; } } catch (e) {}
+      return _spp.call(this, x, y, o); }; }
   const _spk = window.spawnSparks; window.spawnSparks = function (x, y, c, n) { if (PAFX.live() > [18, 9, 4][window.PA_FXLVL || 0]) return; return _spk.apply(this, arguments); };
   window.__pafx3 = { skinDraw, beamDraw, slashFx, IMP, pburst, physFam, clsOf, struggle2, jawFx };
 })();
@@ -37998,31 +38027,33 @@ window.projStruggle = function (A, B, x, y) {
 @keyframes paIdle {
   0%, 38%, 100% { translate: 0 0; scale: 1 1; }
   19% { translate: 0 0; scale: 1.025 .965; }
-  46% { translate: 0 -9%; scale: .965 1.055; }
+  46% { translate: 0 var(--pa-hop, -9%); scale: .965 1.055; }
   55% { translate: 0 0; scale: 1.07 .92; }
   62% { translate: 0 0; scale: .99 1.015; }
   70% { translate: 0 0; scale: 1 1; }
 }
-.pokemon img.pa-static-idle { transform-origin: 50% 100%; animation: paIdle var(--pa-d, 2.6s) ease-in-out var(--pa-dl, 0s) infinite; will-change: translate, scale; }
-.pokemon-wrapper.fainted .pokemon img.pa-static-idle, .pokemon img.pa-static-idle.pa-still { animation: none; }
+img.pa-static-idle { transform-origin: 50% 100%; animation: paIdle var(--pa-d, 2.6s) ease-in-out var(--pa-dl, 0s) infinite; }
+.pokemon-wrapper.fainted .pokemon img.pa-static-idle, img.pa-static-idle.pa-still { animation: none; }
 </style>
 <script>
 (function () {
   // Un sprite es "estático" si es un PNG de PokeAPI (Gen V estático o render de HOME): los GIF son animados de verdad.
-  const isStaticPoke = u => /githubusercontent\.com\/PokeAPI\/sprites\/.*\.(png|webp)(\?|$)/i.test(u || '') && !/\.gif(\?|$)/i.test(u || '');
+  const isStaticPoke = u => /PokeAPI\/sprites\/.*\/pokemon\/.*\.(png|webp)(\?|$)/i.test(u || '') && !/\.gif(\?|$)/i.test(u || '');
   function mark(im) {
-    if (!im || im.tagName !== 'IMG' || !im.closest || !im.closest('.pokemon-wrapper .pokemon')) return;
+    if (!im || im.tagName !== 'IMG') return;
     if (isStaticPoke(im.currentSrc || im.src)) {
       if (!im.classList.contains('pa-static-idle')) {
         im.style.setProperty('--pa-d', (2.2 + Math.random() * 1.4).toFixed(2) + 's');
         im.style.setProperty('--pa-dl', (-Math.random() * 3).toFixed(2) + 's');
         im.classList.add('pa-static-idle');
       }
-    } else im.classList.remove('pa-static-idle');
+      im.style.setProperty('--pa-hop', im.style.position === 'absolute' ? '-3.5%' : '-9%'); // sprites encuadrados (lienzo mayor que el dibujo): salto menor
+    } else if (im.classList.contains('pa-static-idle')) im.classList.remove('pa-static-idle');
   }
   document.addEventListener('load', e => { try { mark(e.target); } catch (x) {} }, true);
-  window.paMarkStaticIdle = () => document.querySelectorAll('.pokemon-wrapper .pokemon img').forEach(mark);
-  setTimeout(window.paMarkStaticIdle, 1500);
+  window.paMarkStaticIdle = () => document.querySelectorAll('img[src*="PokeAPI/sprites"], img.pa-static-idle').forEach(mark);
+  setInterval(window.paMarkStaticIdle, 2000); // red de seguridad: imágenes ya cargadas / cambios de src sin 'load'
+  setTimeout(window.paMarkStaticIdle, 800);
 })();
 </script>
 </body>

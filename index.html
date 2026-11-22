@@ -33846,7 +33846,7 @@ window.PAProfile = (function () {
     function goMenu() {
         if (!home || homeUp) return; homeUp = true; sfx('pop');
         home.classList.add('up'); home.setAttribute('inert', '');
-        setTimeout(() => { if (homeUp && home) home.hidden = true; }, 520);
+        setTimeout(() => { if (homeUp && home) home.hidden = true; }, 760);
         try { const h = document.getElementById('mm-prof'); if (h) h.classList.add('on'); } catch (e) {}
     }
     function showHome(first) {
@@ -33875,7 +33875,7 @@ window.PAProfile = (function () {
                 mm.addEventListener('pointerup', e => { if (my != null && e.clientY - my > 70) showHome(false); my = null; });
             }
         }
-        homeUp = false; home.hidden = false; home.removeAttribute('inert'); home.classList.remove('up');
+        homeUp = false; const wasHidden = home.hidden; home.hidden = false; home.removeAttribute('inert'); if (wasHidden && !first) { home.classList.add('up'); void home.offsetWidth; } home.classList.remove('up');
         const hb = document.getElementById('mm-prof'); if (hb) hb.classList.remove('on');
         if (first) { home.classList.remove('in'); void home.offsetWidth; home.classList.add('in'); }
         renderHome(); requestAnimationFrame(() => { try { layoutStage(home.querySelector('#hm-stage')); } catch (e) {} });
@@ -38716,6 +38716,26 @@ img.pa-static-idle { transform-origin: 50% 100%; animation: paIdle var(--pa-d, 2
     new MutationObserver(ms => { ms.forEach(m => { if (m.type === 'attributes') tag(m.target); else m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.tagName === 'IMG') tag(n); else scan(n); } }); }); })
         .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
 })();
+</script>
+<style id="pa-psy2">
+/* El perfil y el menú comparten fondo: el menú está "debajo" y el perfil se desliza hacia arriba sobre él */
+#home-screen { background:transparent !important; transition:none !important; transform:none !important; }
+#home-screen .hm-bg { display:none !important; }
+#home-screen::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:rgba(14,6,36,.34); -webkit-backdrop-filter:blur(15px) saturate(1.2); backdrop-filter:blur(15px) saturate(1.2); opacity:1; transition:opacity .7s ease; }
+#home-screen > * { transition:transform .72s cubic-bezier(.65,0,.2,1), opacity .5s ease; will-change:transform; }
+#home-screen.up { transform:none !important; }
+#home-screen.up::before { opacity:0; }
+#home-screen.up > * { transform:translateY(-105vh); opacity:.0; }
+#home-screen.up > .hm-stagewrap { transform:translateY(-70vh); }
+#home-screen.up > .hm-top { transform:translateY(-40vh); }
+#home-screen.in::before { animation:none; }
+/* contenido del menú: sube desde abajo mientras el perfil se va */
+#main-menu > .mm-res, #main-menu > .mm-head, #main-menu > #mm-tabs, #main-menu > #mm-info, #main-menu > .mm-dots, #main-menu > .mm-art, #main-menu > .mm-shade, #main-menu > .mm-credit { transition:transform .72s cubic-bezier(.2,.7,.2,1), opacity .6s ease !important; }
+body.hm-on :is(#main-menu > .mm-res, #main-menu > .mm-head, #main-menu > #mm-tabs, #main-menu > #mm-info, #main-menu > .mm-dots, #main-menu > .mm-art, #main-menu > .mm-shade, #main-menu > .mm-credit) { transform:translateY(16vh) !important; opacity:0 !important; transition:none !important; }
+</style>
+<script>
+(function(){ const h=()=>document.getElementById('home-screen'); const f=()=>{ const e=h(); document.body.classList.toggle('hm-on', !!(e && !e.hidden && !e.classList.contains('up'))); };
+ new MutationObserver(f).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','hidden'],childList:true}); f(); })();
 </script>
 </body>
 </html>

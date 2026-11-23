@@ -17109,6 +17109,14 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
               normalName: 'Meganium', normalSrc: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/154.gif', megaFx: 'grass' }
         ];
         RAID_ALPHAS.forEach(a => { speciesMeta[a.id] = a; });
+        // Una sola mega por Raid: la Raid "actual" queda fijada (y se guarda) hasta que se juega; el menú muestra su arte y el equipo se clasifica contra ella.
+        const RAID_ALPHA_KEY = 'pokearena.raidAlpha';
+        function raidCurrentAlpha() {
+            let id = null; try { id = localStorage.getItem(RAID_ALPHA_KEY); } catch (e) {}
+            let m = RAID_ALPHAS.find(a => a.id === id);
+            if (!m) { m = RAID_ALPHAS[Math.floor(Math.random() * RAID_ALPHAS.length)]; try { localStorage.setItem(RAID_ALPHA_KEY, m.id); } catch (e) {} }
+            return m;
+        }
         let raidPendingAlpha = null; // ALFA elegido al abrir la selección de equipo (para clasificar al equipo contra él)
         const RAID_MAX_CHALLENGERS = 20; // máximo de pokémon del equipo a la vez
         let raidTeam = null;     // equipo elegido de la Caja: { idLínea: { stage, bi, shiny, iv, nature, gender, hf, wf, ability, learnedMove } }
@@ -18377,8 +18385,8 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
 
         function raidBegin(cx, cy) {
             raidStartMs = matchElapsedMs; raidClockShown = -1; { const rbb = document.getElementById('raid-boss-bar'); if (rbb) rbb.classList.add('raidmode'); }
-            const meta = raidPendingAlpha || RAID_ALPHAS[Math.floor(Math.random() * RAID_ALPHAS.length)]; // el ALFA ya anunciado en la selección de equipo
-            raidPendingAlpha = null;
+            const meta = raidPendingAlpha || raidCurrentAlpha(); // el ALFA ya anunciado en la selección de equipo
+            raidPendingAlpha = null; try { localStorage.removeItem(RAID_ALPHA_KEY); } catch (e) {} // esta Raid ya se juega: la siguiente sorteará otra mega
             raidState = { alphaId: meta.id, name: meta.name };
             const alpha = addCombatant(meta.id, Math.round(cx), Math.round(cy));
             alpha.wpX = alpha.x; alpha.wpY = alpha.y; alpha.wpUntil = performance.now() + 4000;
@@ -28081,7 +28089,7 @@ function openRaidTeam() {
     GameAudio.sfx('confirm');
     setTeamUI('raid'); classicPick = null;
     const box = capLoad(CAP_BOX_KEY, []), look = raidFormLookup();
-    raidPendingAlpha = RAID_ALPHAS[Math.floor(Math.random() * RAID_ALPHAS.length)];
+    raidPendingAlpha = raidCurrentAlpha();
     const alphaStats = pokemonStats[raidPendingAlpha.id];
     if (!pcInfoMap) pcInfoMap = pcBuildInfo();
     raidCellMap = {}; raidScoreMap = {};
@@ -38811,6 +38819,25 @@ window.PAMegaAI = (function () {
     } catch (e) {}
   }, 1500);
   return { move: move, BEH: BEH };
+})();
+</script>
+<script id="pa-raidcard">
+(function () {
+  var PAL = { megaferaligatr: ['#06224f', '#38bdf8'], megaraichuy: ['#3a2a04', '#facc15'], megaraichux: ['#3a2a04', '#fde047'], megastaraptor: ['#16202e', '#7dd3fc'], megasteelix: ['#1a1816', '#94a3b8'], megameganium: ['#052e16', '#f9a8d4'], megahawlucha: ['#3b0a0a', '#fb7185'] };
+  function src(id) { var m = window.MEGA_SP && window.MEGA_SP[id]; return m ? m.f : (id === 'megahawlucha' ? window.MHL_F : ''); }
+  function apply() {
+    try {
+      var row = document.querySelector('.mm-row[data-id="raids"]'); if (!row) return;
+      var pic = row.querySelector('.mc-pic'), a = raidCurrentAlpha(); if (!pic || pic.dataset.al === a.id) return;
+      pic.dataset.al = a.id;
+      var d = row.querySelector('.mc-desc'); if (d) d.textContent = a.name.toUpperCase();
+      if (a.id === 'megaalakazam') { pic.style.backgroundImage = MM_RAIDS_ART; pic.style.backgroundSize = ''; pic.style.backgroundRepeat = ''; pic.style.backgroundPosition = '50% 50%'; pic.style.imageRendering = ''; return; }
+      var u = src(a.id), p = PAL[a.id] || ['#111827', '#a595b6'];
+      pic.style.backgroundImage = (u ? 'url(' + u + '), ' : '') + 'radial-gradient(ellipse at 50% 70%, ' + p[1] + ' 0, ' + p[0] + ' 72%)';
+      pic.style.backgroundSize = (u ? 'auto 84%, ' : '') + 'cover'; pic.style.backgroundRepeat = 'no-repeat'; pic.style.backgroundPosition = (u ? '50% 92%, ' : '') + '50% 50%'; pic.style.imageRendering = 'pixelated';
+    } catch (e) {}
+  }
+  apply(); setInterval(apply, 700);
 })();
 </script>
 </body>

@@ -16515,7 +16515,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         // Cada LÍNEA evolutiva (id de la especie base: vulpix -> Ninetales, etc.) tiene
         // LIVES_PER_SPECIES vidas, sea cual sea su etapa al debilitarse. Al llegar a 0 la
         // línea queda ELIMINADA y no vuelve a aparecer. Gana la última línea en pie.
-        const LIVES_PER_SPECIES = 2;
+        let LIVES_PER_SPECIES = 2; // 2 en la arena clásica; 3 en las Raids (ver resetLives)
         let speciesLives = {};
         let gameOver = false;
         let matchElapsedMs = 0;
@@ -16530,6 +16530,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
         }
 
         function resetLives() {
+            LIVES_PER_SPECIES = (typeof isRaid === 'function' && isRaid()) ? 3 : 2;
             try { bossReset(); } catch (e) {}
             speciesLives = {};
             retreatKeep = {};
@@ -23313,7 +23314,7 @@ h1, h2, h3, .mm-pop-t, .nd-t { text-wrap: balance; }
             return t;
         }
         function applyBodySize(wrapper, name, hf) {
-            const d = BODY_DATA[name]; if (!wrapper || !d) return;
+            const d = BODY_DATA[name]; if (!wrapper || !d || wrapper.classList.contains('size-alpha')) return; // el ALFA conserva su tamaño propio
             const bv = bodyValues(name, hf, 0); if (!bv) return;
             SIZE_KEYS.forEach(k => wrapper.classList.remove('size-' + k));
             wrapper.classList.add('size-' + bv.size);
@@ -28019,6 +28020,25 @@ function startClassicWithPick() { // botón del selector en modo clásico: confi
 // Raids: primero se elige el equipo (hasta 20 pokémon de la Caja, uno por especie) y luego empieza la partida.
 const mmTeamEl = document.getElementById('mm-team'), mmtGrid = document.getElementById('mmt-grid'), mmtGo = document.getElementById('mmt-go'), mmtCount = document.getElementById('mmt-count');
 let raidTeamSel = {}; // índices de la Caja elegidos (se pueden repetir especies)
+// Mega capturada en el equipo: NO es el ALFA. Se crea un gemelo (id "<mega>_t") con tamaño normal, sin bonus de ALFA y con las estadísticas oficiales de la Caja/PC.
+function raidEnsureTwin(id) {
+    const m = speciesMeta[id]; if (!m || !m.alpha) return id;
+    const T = id + '_t';
+    if (raidAliasMade[T] && document.getElementById(T + '-wrapper') && speciesMeta[T]) return T;
+    const bw = document.getElementById(id + '-wrapper'); if (!bw) return id;
+    let info = null; try { if (!pcInfoMap) pcInfoMap = pcBuildInfo(); info = pcInfoMap[m.name]; } catch (e) {}
+    if (!info || !info.stats) return id;
+    const old = document.getElementById(T + '-wrapper'); if (old) old.remove();
+    const cl = bw.cloneNode(true);
+    [cl].concat(Array.from(cl.querySelectorAll('[id]'))).forEach(el => { if (el.id === id) el.id = T; else if (el.id.indexOf(id + '-') === 0) el.id = T + el.id.slice(id.length); });
+    cl.className = 'pokemon-wrapper size-md'; cl.style.display = 'none';
+    bw.parentNode.insertBefore(cl, bw.nextSibling);
+    speciesMeta[T] = Object.assign({}, m, { id: T, alpha: false, mega: false, attackKey: (info.move && movesData[info.move]) ? info.move : m.attackKey });
+    pokemonStats[T] = Object.assign({}, info.stats);
+    baseAppearance[T] = Object.assign({}, baseAppearance[id], { sizeClass: 'size-md' });
+    raidAliasMade[T] = true;
+    return T;
+}
 function raidFormLookup() { // nombre de la forma -> { id de línea, etapa (0 = base), rama }
     try { restoreBranchedStages(); } catch (e) {}
     const m = {};
@@ -28030,6 +28050,7 @@ function raidFormLookup() { // nombre de la forma -> { id de línea, etapa (0 = 
             else m[st.dexName || st.name] = { id: w.id, stage: i + 1, bi: null };
         });
     });
+    Object.keys(m).forEach(k => { const mm = speciesMeta[m[k].id]; if (mm && mm.alpha) { const t = raidEnsureTwin(m[k].id); if (t !== m[k].id) m[k] = { id: t, stage: 0, bi: null }; } }); // las megas de la Caja entran como pokémon normales, nunca como ALFA
     return m;
 }
 function raidTraitsFromEntry(f, e) {
@@ -38839,6 +38860,9 @@ window.PAMegaAI = (function () {
   }
   apply(); setInterval(apply, 700);
 })();
+</script>
+<script>
+try { Object.assign(BODY_DATA, {"Mega Alakazam": [1.2, 48, 50], "Mega Hawlucha": [1.0, 25, 50], "Mega Feraligatr": [2.3, 108.8, 87.5], "Mega Raichu X": [0.8, 30, 50], "Mega Raichu Y": [0.8, 30, 50], "Mega Staraptor": [1.2, 35, 50], "Mega Steelix": [10.5, 740, 50], "Mega Meganium": [2.4, 100.5, 87.5]}); } catch (e) {}
 </script>
 </body>
 </html>
